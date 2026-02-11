@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Block printing — blank page */
+@media print {
+  html, body, body * { display: none !important; visibility: hidden !important; }
+}
+
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--fg);
