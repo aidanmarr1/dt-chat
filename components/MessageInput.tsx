@@ -302,20 +302,18 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* Input row — default items-stretch so buttons match textarea height dynamically */}
+      {/* Input row — items-stretch (default) so buttons match textarea height */}
       <div className="flex gap-2 p-4">
-        {/* Attach button */}
-        <div className="flex items-center shrink-0">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
-            title="Attach file"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-            </svg>
-          </button>
-        </div>
+        {/* Attach button — stretches to row height, icon centered */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center justify-center px-2.5 shrink-0 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+          title="Attach file"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+          </svg>
+        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -324,12 +322,12 @@ export default function MessageInput({
           accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz"
         />
 
-        {/* Emoji button */}
-        <div className="relative shrink-0 flex items-center">
+        {/* Emoji button — wrapper stretches, button stretches inside */}
+        <div className="relative shrink-0 flex">
           <button
             ref={emojiToggleRef}
             onClick={() => setShowEmoji(!showEmoji)}
-            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+            className="flex items-center justify-center px-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
             title="Emoji"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -376,25 +374,23 @@ export default function MessageInput({
           )}
         </div>
 
-        {/* Send button */}
-        <div className="flex items-center shrink-0">
-          <button
-            onClick={handleSend}
-            disabled={disabled || uploading || (!value.trim() && !filePreview)}
-            className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
-          >
-            {uploading ? (
-              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            )}
-          </button>
-        </div>
+        {/* Send button — stretches to row height, icon centered */}
+        <button
+          onClick={handleSend}
+          disabled={disabled || uploading || (!value.trim() && !filePreview)}
+          className={`flex items-center justify-center px-2.5 shrink-0 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+        >
+          {uploading ? (
+            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );
