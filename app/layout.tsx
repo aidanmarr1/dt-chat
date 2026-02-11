@@ -35,18 +35,43 @@ export default function RootLayout({
             __html: [
               // Disable right-click context menu
               `document.addEventListener('contextmenu',function(e){e.preventDefault()},true);`,
-              // Block all DevTools keyboard shortcuts
+              // Block ALL DevTools / Save / Print keyboard shortcuts (Windows + Mac)
               `document.addEventListener('keydown',function(e){`,
-              `if(e.key==='F12')e.preventDefault();`,
-              `if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j'||e.key==='C'||e.key==='c'))e.preventDefault();`,
-              `if((e.ctrlKey||e.metaKey)&&(e.key==='U'||e.key==='u'||e.key==='S'||e.key==='s'))e.preventDefault();`,
+              // F12
+              `if(e.key==='F12'){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + Shift + I/J/C (DevTools panels)
+              `if((e.ctrlKey||e.metaKey)&&e.shiftKey&&/^[ijcIJC]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Alt/Option + Cmd + I (Mac DevTools shortcut ⌥⌘I)
+              `if(e.metaKey&&e.altKey&&/^[iI]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + U (View Source)
+              `if((e.ctrlKey||e.metaKey)&&/^[uU]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + S or Ctrl/Cmd + Shift + S (Save / Save As)
+              `if((e.ctrlKey||e.metaKey)&&/^[sS]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + P (Print)
+              `if((e.ctrlKey||e.metaKey)&&/^[pP]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + Shift + P (Chrome command palette)
+              `if((e.ctrlKey||e.metaKey)&&e.shiftKey&&/^[pP]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              // Ctrl/Cmd + G or Ctrl/Cmd + F (Find — can be used to explore page source)
+              // (not blocking find as it's normal UX)
               `},true);`,
+              // Block printing entirely
+              `window.addEventListener('beforeprint',function(e){e.preventDefault();`,
+              `document.body.style.display='none';`,
+              `setTimeout(function(){document.body.style.display=''},100)`,
+              `},true);`,
+              // Override window.print
+              `window.print=function(){};`,
+              `try{Object.defineProperty(window,'print',{configurable:false,writable:false,value:function(){}})}catch(e){}`,
               // Block text selection on non-input elements
               `document.addEventListener('selectstart',function(e){`,
               `var t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;`,
               `e.preventDefault()},true);`,
               // Block drag
               `document.addEventListener('dragstart',function(e){e.preventDefault()},true);`,
+              // Block Save Page via overriding Cmd+S at window level too
+              `window.addEventListener('keydown',function(e){`,
+              `if((e.ctrlKey||e.metaKey)&&/^[sSuUpP]$/.test(e.key)){e.preventDefault();e.stopImmediatePropagation();return false}`,
+              `},true);`,
             ].join(''),
           }}
         />
