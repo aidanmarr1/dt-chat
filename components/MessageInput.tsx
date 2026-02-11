@@ -302,18 +302,20 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* Input row */}
-      <div className="flex items-end gap-2 p-4">
+      {/* Input row — default items-stretch so buttons match textarea height dynamically */}
+      <div className="flex gap-2 p-4">
         {/* Attach button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="h-[42px] w-[42px] flex items-center justify-center border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
-          title="Attach file"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-          </svg>
-        </button>
+        <div className="flex items-center shrink-0">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+            title="Attach file"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+          </button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -323,11 +325,11 @@ export default function MessageInput({
         />
 
         {/* Emoji button */}
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 flex items-center">
           <button
             ref={emojiToggleRef}
             onClick={() => setShowEmoji(!showEmoji)}
-            className="h-[42px] w-[42px] flex items-center justify-center border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
             title="Emoji"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -363,7 +365,7 @@ export default function MessageInput({
             placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
             rows={1}
             style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
-            className="w-full min-h-[42px] px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
+            className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
           />
           {value.length > 1800 && (
             <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
@@ -375,22 +377,24 @@ export default function MessageInput({
         </div>
 
         {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={disabled || uploading || (!value.trim() && !filePreview)}
-          className={`h-[42px] w-[42px] flex items-center justify-center bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
-        >
-          {uploading ? (
-            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          )}
-        </button>
+        <div className="flex items-center shrink-0">
+          <button
+            onClick={handleSend}
+            disabled={disabled || uploading || (!value.trim() && !filePreview)}
+            className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+          >
+            {uploading ? (
+              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
