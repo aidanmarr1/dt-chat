@@ -1,0 +1,23 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const { path: segments } = await params;
+  const fileName = segments.join("/");
+
+  // If the stored path is a full URL (Vercel Blob), redirect to it
+  if (fileName.startsWith("http")) {
+    return NextResponse.redirect(fileName);
+  }
+
+  // Local filesystem files are not supported in production
+  return NextResponse.json({ error: "File not found" }, { status: 404 });
+}
