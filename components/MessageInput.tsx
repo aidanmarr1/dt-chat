@@ -307,7 +307,7 @@ export default function MessageInput({
         {/* Attach button */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0 self-stretch flex items-center"
+          className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
           title="Attach file"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -323,11 +323,11 @@ export default function MessageInput({
         />
 
         {/* Emoji button */}
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 flex items-center">
           <button
             ref={emojiToggleRef}
             onClick={() => setShowEmoji(!showEmoji)}
-            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 self-stretch flex items-center"
+            className="p-2.5 border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
             title="Emoji"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -378,7 +378,7 @@ export default function MessageInput({
         <button
           onClick={handleSend}
           disabled={disabled || uploading || (!value.trim() && !filePreview)}
-          className={`p-2.5 border border-transparent bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 self-stretch flex items-center ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+          className={`p-2.5 border border-transparent bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
         >
           {uploading ? (
             <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
