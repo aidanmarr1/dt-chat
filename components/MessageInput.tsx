@@ -304,6 +304,16 @@ export default function MessageInput({
 
       {/* Input row */}
       <div className="flex items-end gap-2 p-4">
+        {/* Attach button */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="h-[42px] w-[42px] flex items-center justify-center border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
+          title="Attach file"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+          </svg>
+        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -312,44 +322,32 @@ export default function MessageInput({
           accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz"
         />
 
-        {/* Input container — icons live inside so alignment is guaranteed */}
-        <div className="flex-1 flex items-end bg-surface border border-border rounded-xl focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] transition-all relative">
-          {/* Attach button */}
+        {/* Emoji button */}
+        <div className="relative shrink-0">
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 text-muted hover:text-foreground transition-all active:scale-90 shrink-0"
-            title="Attach file"
+            ref={emojiToggleRef}
+            onClick={() => setShowEmoji(!showEmoji)}
+            className="h-[42px] w-[42px] flex items-center justify-center border border-transparent text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+            title="Emoji"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
             </svg>
           </button>
+          {showEmoji && (
+            <EmojiPicker
+              onSelect={insertEmoji}
+              onClose={() => setShowEmoji(false)}
+              toggleRef={emojiToggleRef}
+            />
+          )}
+        </div>
 
-          {/* Emoji button */}
-          <div className="relative shrink-0">
-            <button
-              ref={emojiToggleRef}
-              onClick={() => setShowEmoji(!showEmoji)}
-              className="p-2.5 text-muted hover:text-foreground transition-all active:scale-90"
-              title="Emoji"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                <line x1="9" y1="9" x2="9.01" y2="9" />
-                <line x1="15" y1="9" x2="15.01" y2="9" />
-              </svg>
-            </button>
-            {showEmoji && (
-              <EmojiPicker
-                onSelect={insertEmoji}
-                onClose={() => setShowEmoji(false)}
-                toggleRef={emojiToggleRef}
-              />
-            )}
-          </div>
-
-          {/* Textarea */}
+        {/* Textarea */}
+        <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
             value={value}
@@ -364,8 +362,8 @@ export default function MessageInput({
             onPaste={handlePaste}
             placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
             rows={1}
-            style={{ transition: "height 0.12s ease-out" }}
-            className="flex-1 py-2.5 pr-4 pl-1 bg-transparent border-none text-foreground placeholder:text-muted focus:outline-none resize-none text-base sm:text-sm"
+            style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
+            className="w-full min-h-[42px] px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
           />
           {value.length > 1800 && (
             <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
@@ -380,7 +378,7 @@ export default function MessageInput({
         <button
           onClick={handleSend}
           disabled={disabled || uploading || (!value.trim() && !filePreview)}
-          className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+          className={`h-[42px] w-[42px] flex items-center justify-center bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
         >
           {uploading ? (
             <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
