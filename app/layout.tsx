@@ -26,18 +26,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
         <script
           dangerouslySetInnerHTML={{
-            __html: [
-              // Kill page if opened from saved file (file:// protocol) or offline
-              `(function(){`,
-              `if(location.protocol==='file:'||(!location.hostname&&location.protocol!=='https:'&&location.protocol!=='http:')){`,
-              `document.documentElement.innerHTML='';`,
-              `try{window.stop()}catch(e){}`,
-              `try{document.write('<html><head><title>Access Denied</title></head><body style=\"background:#000;color:#ff4444;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:system-ui;font-size:20px;font-weight:600;text-align:center\"><div>\\u26D4 This page cannot be viewed offline.</div></body></html>');document.close()}catch(e){}`,
-              `return}`,
-              // Continuously check — also catches if somehow loaded in unexpected context
-              `setInterval(function(){if(location.protocol==='file:'){document.documentElement.innerHTML='';try{window.stop()}catch(e){}}},500);`,
-              `})()`,
-            ].join(''),
+            __html: `(function(){if(location.protocol==='file:'){document.documentElement.innerHTML='';try{window.stop()}catch(e){}return}setInterval(function(){if(location.protocol==='file:'){document.documentElement.innerHTML=''}},500)})()`,
           }}
         />
         <script
