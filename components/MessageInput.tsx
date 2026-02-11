@@ -303,7 +303,7 @@ export default function MessageInput({
       )}
 
       {/* Input row */}
-      <div className="flex items-end gap-2 p-4">
+      <div className="flex items-center gap-2 p-4">
         {/* Attach button */}
         <button
           onClick={() => fileInputRef.current?.click()}

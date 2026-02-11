@@ -42,6 +42,7 @@ export default function ChatRoom() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
+  const deletedLocallyRef = useRef<Set<string>>(new Set());
   const router = useRouter();
 
   // Load sound preference
@@ -262,17 +263,22 @@ export default function ChatRoom() {
   }
 
   async function handleDelete(messageId: string) {
+    // Optimistic update — mark deleted immediately for instant feedback
+    deletedLocallyRef.current.add(messageId);
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId ? { ...msg, content: "", isDeleted: true } : msg
+      )
+    );
+
     try {
       const res = await fetch(`/api/messages/${messageId}`, { method: "DELETE" });
-      if (res.ok) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === messageId ? { ...msg, content: "", isDeleted: true } : msg
-          )
-        );
+      if (!res.ok) {
+        // Revert — next poll will restore the correct state
+        deletedLocallyRef.current.delete(messageId);
       }
     } catch {
-      // Handle silently
+      deletedLocallyRef.current.delete(messageId);
     }
   }
 
