@@ -324,6 +324,7 @@ export default function MessageInput({
         {/* Emoji button */}
         <div className="relative shrink-0">
           <button
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={() => setShowEmoji(!showEmoji)}
             className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-all active:scale-90"
             title="Emoji"
