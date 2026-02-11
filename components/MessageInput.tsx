@@ -302,16 +302,12 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* Input row
-           Textarea height (border-box) = border(2px) + py-2.5(20px) + line-height
-           Desktop (sm:text-sm): 2 + 20 + 20px = 42px
-           Mobile  (text-base):  2 + 20 + 24px = 46px
-           Buttons use the same py-2.5 + border + matching line-height so heights are identical */}
-      <div className="flex items-end gap-2 p-4">
+      {/* Input row */}
+      <div className="flex items-center gap-2 p-4">
         {/* Attach button */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="py-2.5 px-2.5 border border-transparent text-base sm:text-sm text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
+          className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
           title="Attach file"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
@@ -331,7 +327,7 @@ export default function MessageInput({
           <button
             ref={emojiToggleRef}
             onClick={() => setShowEmoji(!showEmoji)}
-            className="py-2.5 px-2.5 border border-transparent text-base sm:text-sm text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+            className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
             title="Emoji"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
@@ -382,7 +378,7 @@ export default function MessageInput({
         <button
           onClick={handleSend}
           disabled={disabled || uploading || (!value.trim() && !filePreview)}
-          className={`py-2.5 px-2.5 border border-transparent text-base sm:text-sm bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+          className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
         >
           {uploading ? (
             <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
