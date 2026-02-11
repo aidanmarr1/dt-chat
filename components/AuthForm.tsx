@@ -101,7 +101,7 @@ export default function AuthForm() {
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-gentle-float overflow-hidden">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 overflow-hidden">
             <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 512 512">
               <defs>
                 <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
