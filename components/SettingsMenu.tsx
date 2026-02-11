@@ -51,7 +51,7 @@ export default function SettingsMenu({ user, onAvatarChange }: SettingsMenuProps
                 <Avatar displayName={user.displayName} userId={user.id} avatarId={user.avatarId} size="lg" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground truncate">{user.displayName}</p>
+                <p className="text-sm font-semibold text-foreground truncate font-heading">{user.displayName}</p>
                 <p className="text-[11px] text-muted truncate">{user.email}</p>
               </div>
             </div>

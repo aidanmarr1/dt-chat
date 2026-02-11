@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, Libre_Baskerville } from "next/font/google";
 import ThemeProvider from "@/components/ThemeProvider";
 import { SHIELD_SCRIPT } from "@/lib/shield";
 import "./globals.css";
@@ -8,6 +8,12 @@ const dmSans = DM_Sans({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+const libreBaskerville = Libre_Baskerville({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -81,7 +87,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${dmSans.variable} antialiased`}>
+      <body className={`${dmSans.variable} ${libreBaskerville.variable} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

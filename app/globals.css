@@ -13,6 +13,7 @@
   --color-muted: var(--mtd);
   --color-accent: var(--acc);
   --font-sans: var(--font-inter);
+  --font-heading: var(--font-heading);
 }
 
 /* Dark theme (default) */

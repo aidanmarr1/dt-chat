@@ -66,7 +66,7 @@ export default function OnlineUsers({ users, count }: OnlineUsersProps) {
       {open && (
         <div className="absolute top-full mt-2 left-0 w-60 max-w-[calc(100vw-1.5rem)] bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-xl animate-slide-down overflow-hidden z-30">
           <div className="px-3 py-2.5 border-b border-border">
-            <p className="text-xs font-semibold text-foreground">Online Now</p>
+            <p className="text-xs font-semibold text-foreground font-heading">Online Now</p>
             <p className="text-[10px] text-muted">{users.length} {users.length === 1 ? "person" : "people"} active</p>
           </div>
           <div className="max-h-[50vh] sm:max-h-52 overflow-y-auto p-1.5">

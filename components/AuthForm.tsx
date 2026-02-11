@@ -113,8 +113,8 @@ export default function AuthForm() {
               <path d="M256 112c-88.4 0-160 60.3-160 134.6 0 42.1 22.9 79.8 58.8 105.2l-14.8 54.2 62.4-31.2c16.8 5.2 35 8 54 8 88.4 0 160-60.3 160-134.6S344.4 112 256 112z" fill="url(#fg)"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">D&T <span className="text-accent">Chat</span></h1>
-          <p className="text-sm text-muted mt-1">
+          <h1 className="text-2xl font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+          <p className="text-sm text-muted mt-1 font-heading">
             {tab === "login" ? "Welcome back" : "Create your account"}
           </p>
         </div>

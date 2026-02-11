@@ -52,7 +52,7 @@ export default function GateForm() {
             </svg>
           </div>
         </div>
-        <h1 className="text-2xl font-semibold text-center mb-2 tracking-tight">D&T <span className="text-accent">Chat</span></h1>
+        <h1 className="text-2xl font-semibold text-center mb-2 tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
         <p className="text-muted text-center text-sm mb-6">
           Enter the password to continue
         </p>

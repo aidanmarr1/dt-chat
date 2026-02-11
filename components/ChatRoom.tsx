@@ -399,7 +399,7 @@ export default function ChatRoom() {
       {/* Header */}
       <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
-          <h1 className="text-base sm:text-lg font-semibold tracking-tight">D&T <span className="text-accent">Chat</span></h1>
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
           <OnlineUsers users={onlineUsers} count={onlineCount} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -475,7 +475,7 @@ export default function ChatRoom() {
               </svg>
             </div>
             <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              <p className="text-foreground font-medium mb-1">No messages yet</p>
+              <p className="text-foreground font-medium mb-1 font-heading">No messages yet</p>
               <p className="text-muted text-sm">Start the conversation!</p>
               <p className="text-muted/50 text-xs mt-2">Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> to focus input</p>
             </div>

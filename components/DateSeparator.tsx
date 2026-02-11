@@ -25,7 +25,7 @@ export default function DateSeparator({ date }: DateSeparatorProps) {
   return (
     <div className="flex items-center gap-4 my-5 animate-fade-in">
       <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border/60" />
-      <span className={`text-[11px] font-medium px-3 py-1 rounded-full border transition-colors ${
+      <span className={`text-[11px] font-medium px-3 py-1 rounded-full border transition-colors font-heading ${
         isToday
           ? "text-accent bg-accent/5 border-accent/20"
           : "text-muted bg-surface border-border"
