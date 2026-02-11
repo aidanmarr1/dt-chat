@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message } from "@/lib/types";
@@ -84,6 +84,27 @@ export default function MessageInput({
         setFilePreview(null);
       } else {
         (e.target as HTMLTextAreaElement).blur();
+      }
+    }
+  }
+
+  // Block emoji input from keyboard / IME (only allow emojis from the picker)
+  const emojiRegex = /\p{Extended_Pictographic}/u;
+
+  function handleBeforeInput(e: FormEvent<HTMLTextAreaElement>) {
+    const inputEvent = e.nativeEvent as InputEvent;
+    if (inputEvent.data && emojiRegex.test(inputEvent.data)) {
+      e.preventDefault();
+    }
+  }
+
+  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    const text = e.clipboardData.getData("text");
+    if (emojiRegex.test(text)) {
+      e.preventDefault();
+      const stripped = text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, "");
+      if (stripped) {
+        document.execCommand("insertText", false, stripped);
       }
     }
   }
@@ -334,6 +355,8 @@ export default function MessageInput({
               handleInput();
             }}
             onKeyDown={handleKeyDown}
+            onBeforeInput={handleBeforeInput}
+            onPaste={handlePaste}
             placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
             rows={1}
             style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}

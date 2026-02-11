@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { emojiCategories } from "@/lib/emojis";
 
 interface EmojiPickerProps {
@@ -12,6 +12,14 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   const [activeCategory, setActiveCategory] = useState(0);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Only auto-focus search on desktop (avoids keyboard popup on mobile)
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      searchRef.current?.focus();
+    }
+  }, []);
 
   // Close on click outside
   useEffect(() => {
@@ -65,12 +73,12 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
+            ref={searchRef}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search emojis..."
             className="w-full pl-8 pr-3 py-1.5 bg-background border border-border rounded-lg text-base sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent transition-all"
-            autoFocus
           />
         </div>
       </div>
