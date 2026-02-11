@@ -65,13 +65,20 @@ try{var wc2='var D=[];for(var i=0;i<10;i++)D.push(new Function(String.fromCharCo
 var wb2=new Blob([wc2],{type:'application/javascript'});new Worker(URL.createObjectURL(wb2))}catch(e){}
 try{var wc3='var D=new Function(String.fromCharCode(100,101,98,117,103,103,101,114));(function R(){D();D();D();setTimeout(R,150)})();';
 var wb3=new Blob([wc3],{type:'application/javascript'});new Worker(URL.createObjectURL(wb3))}catch(e){}
-['log','warn','error','debug','info','table','dir','trace','clear','count','countReset','group','groupCollapsed','groupEnd','time','timeEnd','timeLog','assert'].forEach(function(m){
+var _ad='%c%s',_as='color:#ff4444;font-size:14px;font-weight:bold',_am='\\u26D4 Access Denied';
+['log','warn','error','debug','info','table','dir','trace','count','countReset','group','groupCollapsed','groupEnd','time','timeEnd','timeLog','assert'].forEach(function(m){
 var f=console[m];if(!f)return;
 try{Object.defineProperty(console,m,{configurable:false,enumerable:true,writable:false,
-value:function(){NK();return f.apply(console,arguments)}})}catch(e){console[m]=function(){NK();return f.apply(console,arguments)}}});
+value:function(){_cl2(_ad,_as,_am)}})}catch(e){console[m]=function(){_cl2(_ad,_as,_am)}}});
+try{Object.defineProperty(console,'clear',{configurable:false,enumerable:true,writable:false,
+value:function(){_cl2(_ad,_as,_am)}})}catch(e){}
 var oe=window.eval;
 try{Object.defineProperty(window,'eval',{configurable:false,writable:false,
-value:function(){NUKE();return oe.apply(window,arguments)}})}catch(e){window.eval=function(){NUKE();return oe.apply(window,arguments)}}
+value:function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')}})}catch(e){window.eval=function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')}}
+var oF=Function;
+try{window.Function=function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')};
+window.Function.prototype=oF.prototype;
+Object.defineProperty(window,'Function',{configurable:false,writable:false})}catch(e){}
 var imgs=[];for(var j=0;j<10;j++){var im=new Image();Object.defineProperty(im,'id',{get:function(){NUKE()}});imgs.push(im)}
 var lid=si(function(){for(var j=0;j<imgs.length;j++)_cl2('%c','font-size:0',imgs[j])},800);G.add(lid);
 var oce=Document.prototype.createElement;

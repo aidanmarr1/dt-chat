@@ -101,9 +101,16 @@ export default function AuthForm() {
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mb-4 animate-gentle-float">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-gentle-float overflow-hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 512 512">
+              <defs>
+                <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FCAA26"/>
+                  <stop offset="100%" stopColor="#E09500"/>
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="108" fill="var(--srf)"/>
+              <path d="M256 112c-88.4 0-160 60.3-160 134.6 0 42.1 22.9 79.8 58.8 105.2l-14.8 54.2 62.4-31.2c16.8 5.2 35 8 54 8 88.4 0 160-60.3 160-134.6S344.4 112 256 112z" fill="url(#fg)"/>
             </svg>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">D&T <span className="text-accent">Chat</span></h1>
