@@ -39,8 +39,8 @@ export default function MessageInput({
   const [justSent, setJustSent] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiToggleRef = useRef<HTMLButtonElement>(null);
   const lastTypingRef = useRef(0);
-  const emojiClosedAtRef = useRef(0);
 
   // Auto-focus textarea on mount + resize to fit restored draft
   useEffect(() => {
@@ -325,10 +325,8 @@ export default function MessageInput({
         {/* Emoji button */}
         <div className="relative shrink-0">
           <button
-            onClick={() => {
-              if (Date.now() - emojiClosedAtRef.current < 200) return;
-              setShowEmoji(!showEmoji);
-            }}
+            ref={emojiToggleRef}
+            onClick={() => setShowEmoji(!showEmoji)}
             className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-all active:scale-90"
             title="Emoji"
           >
@@ -342,7 +340,8 @@ export default function MessageInput({
           {showEmoji && (
             <EmojiPicker
               onSelect={insertEmoji}
-              onClose={() => { emojiClosedAtRef.current = Date.now(); setShowEmoji(false); }}
+              onClose={() => setShowEmoji(false)}
+              toggleRef={emojiToggleRef}
             />
           )}
         </div>

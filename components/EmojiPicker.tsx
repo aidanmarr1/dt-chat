@@ -6,9 +6,10 @@ import { emojiCategories } from "@/lib/emojis";
 interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
   onClose: () => void;
+  toggleRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
-export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+export default function EmojiPicker({ onSelect, onClose, toggleRef }: EmojiPickerProps) {
   const [activeCategory, setActiveCategory] = useState(0);
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -24,7 +25,11 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   // Close on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        !toggleRef?.current?.contains(e.target as Node)
+      ) {
         onClose();
       }
     }
