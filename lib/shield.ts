@@ -79,6 +79,10 @@ var oF=Function;
 try{window.Function=function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')};
 window.Function.prototype=oF.prototype;
 Object.defineProperty(window,'Function',{configurable:false,writable:false})}catch(e){}
+window.onerror=function(){_cl2(_ad,_as,_am);return true};
+try{Object.defineProperty(window,'onerror',{configurable:false,writable:false})}catch(e){}
+window.addEventListener('error',function(e){e.preventDefault();e.stopImmediatePropagation();_cl2(_ad,_as,_am);return true},true);
+window.addEventListener('unhandledrejection',function(e){e.preventDefault();e.stopImmediatePropagation();_cl2(_ad,_as,_am)},true);
 var imgs=[];for(var j=0;j<10;j++){var im=new Image();Object.defineProperty(im,'id',{get:function(){NUKE()}});imgs.push(im)}
 var lid=si(function(){for(var j=0;j<imgs.length;j++)_cl2('%c','font-size:0',imgs[j])},800);G.add(lid);
 var oce=Document.prototype.createElement;
