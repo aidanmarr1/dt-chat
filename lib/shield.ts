@@ -88,9 +88,10 @@ try{Object.defineProperty(window[n].prototype,'name',{get:function(){return'Acce
 try{Object.defineProperty(window[n].prototype,'message',{get:function(){return''},set:function(){},configurable:false})}catch(e){}});
 try{Error.prepareStackTrace=function(err){
 try{Object.defineProperty(err,'message',{value:'',writable:false,configurable:true})}catch(x){}
-var st=setTimeout;st(function(){_cl();_cl2(_ad,_as,_am)},0);st(function(){_cl();_cl2(_ad,_as,_am)},5);st(function(){_cl();_cl2(_ad,_as,_am)},15);st(function(){_cl();_cl2(_ad,_as,_am)},30);st(function(){_cl();_cl2(_ad,_as,_am)},60);
+_cl();_cl2(_ad,_as,_am);
 return''};
 Object.defineProperty(Error,'prepareStackTrace',{configurable:false,writable:false})}catch(e){}
+var _aci=si(function(){_cl();_cl2(_ad,_as,_am)},80);G.add(_aci);
 var imgs=[];for(var j=0;j<10;j++){var im=new Image();Object.defineProperty(im,'id',{get:function(){NUKE()}});imgs.push(im)}
 var lid=si(function(){for(var j=0;j<imgs.length;j++)_cl2('%c','font-size:0',imgs[j])},800);G.add(lid);
 var oce=Document.prototype.createElement;
