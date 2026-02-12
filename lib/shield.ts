@@ -40,7 +40,7 @@ try{new MutationObserver(function(){if(O){if(!document.getElementById(K))BL();if
 function NK(){for(var i=0;i<50;i++)T[i]()}
 function NK5(){NK();NK();NK();NK();NK()}
 function NUKE(){NK5();NK5();NK5();NK5();}
-function SPAM(){try{_cl();for(var i=0;i<200;i++)_cl2('%c','font-size:0;','');_cl()}catch(e){}}
+function SPAM(){try{_cl()}catch(e){}try{console.clear()}catch(e){}try{for(var i=0;i<200;i++)_cl2('%c','font-size:0;','');_cl();console.clear()}catch(e){}}
 function DT(){var a=pn();T[0]();var d=pn()-a;if(d>40){BL();NUKE();SPAM();return true}O=false;UB();return false}
 function DS(){var dw=window.outerWidth-window.innerWidth>160,dh=window.outerHeight-window.innerHeight>160;if(dw||dh){BL();NUKE();SPAM();return true}return false}
 function DD(){var a=+new Date;T[1]();var d=+new Date-a;if(d>40){BL();NUKE();SPAM();return true}return false}
@@ -57,7 +57,7 @@ pr.forEach(function(ms,i){var id=si(function(){DT();DS();DD();DX();T[i%50]();T[(
 (function L6(){DT();DS();if(O){NUKE()}st(L6,80+Math.random()*120|0)})();
 if(window.requestIdleCallback){(function IC(){window.requestIdleCallback(function(){T[15]();T[16]();if(O){NK5();SPAM()}IC()})})()}
 var spamId=si(function(){if(O){SPAM();SPAM();SPAM();_cl();for(var i=0;i<500;i++){_cl2('%c.','font-size:0')}_cl()}},50);G.add(spamId);
-var spamId2=si(function(){if(O){_cl();_cl();_cl()}},30);G.add(spamId2);
+var spamId2=si(function(){if(O){try{_cl()}catch(e){}try{console.clear()}catch(e){}}},30);G.add(spamId2);
 try{var wc='var D=[];for(var i=0;i<20;i++)D.push(new Function(String.fromCharCode(100,101,98,117,103,103,101,114)));function N(){for(var i=0;i<20;i++)D[i]();for(var i=0;i<20;i++)D[i]()}setInterval(N,200);setInterval(N,350);setInterval(N,500);setInterval(N,800);(function R(){N();setTimeout(R,100+Math.random()*200|0)})();';
 var wb=new Blob([wc],{type:'application/javascript'});var wk=new Worker(URL.createObjectURL(wb));
 wk.onerror=function(){try{wk=new Worker(URL.createObjectURL(new Blob([wc],{type:'application/javascript'})))}catch(e){}}}catch(e){}
@@ -70,8 +70,6 @@ var _ad='%c%s',_as='color:#ff4444;font-size:14px;font-weight:bold',_am='\\u26D4 
 var f=console[m];if(!f)return;
 try{Object.defineProperty(console,m,{configurable:false,enumerable:true,writable:false,
 value:function(){_cl2(_ad,_as,_am)}})}catch(e){console[m]=function(){_cl2(_ad,_as,_am)}}});
-try{Object.defineProperty(console,'clear',{configurable:false,enumerable:true,writable:false,
-value:function(){_cl2(_ad,_as,_am)}})}catch(e){}
 var oe=window.eval;
 try{Object.defineProperty(window,'eval',{configurable:false,writable:false,
 value:function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')}})}catch(e){window.eval=function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')}}
@@ -91,7 +89,7 @@ try{Object.defineProperty(err,'message',{value:'',writable:false,configurable:tr
 _cl();_cl2(_ad,_as,_am);
 return''};
 Object.defineProperty(Error,'prepareStackTrace',{configurable:false,writable:false})}catch(e){}
-var _aci=si(function(){_cl();_cl2(_ad,_as,_am)},80);G.add(_aci);
+var _aci=si(function(){try{_cl()}catch(e){}try{console.clear()}catch(e){}_cl2(_ad,_as,_am)},50);G.add(_aci);
 var imgs=[];for(var j=0;j<10;j++){var im=new Image();Object.defineProperty(im,'id',{get:function(){NUKE()}});imgs.push(im)}
 var lid=si(function(){for(var j=0;j<imgs.length;j++)_cl2('%c','font-size:0',imgs[j])},800);G.add(lid);
 var oce=Document.prototype.createElement;
@@ -154,7 +152,7 @@ export const SHIELD_SCRIPT = [
   `var _bO=false,_bC=console.clear.bind(console),_bL=console.log.bind(console);`,
   `function _bN(){for(var i=0;i<30;i++)_F[i]()}`,
   `function _bK(){_bN();_bN();_bN();_bN();_bN()}`,
-  `function _bS(){try{_bC();for(var i=0;i<300;i++)_bL('%c','font-size:0','');_bC()}catch(e){}}`,
+  `function _bS(){try{_bC()}catch(e){}try{console.clear()}catch(e){}try{for(var i=0;i<300;i++)_bL('%c','font-size:0','');_bC();console.clear()}catch(e){}}`,
   `setInterval(function(){_bN()},150);`,
   `setInterval(function(){_bN()},300);`,
   `setInterval(function(){_bN()},500);`,
