@@ -385,7 +385,6 @@ export default function ChatRoom() {
           <OnlineUsers users={onlineUsers} count={onlineCount} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <span className="text-sm text-muted hidden md:inline">{user.displayName}</span>
           {/* Search */}
           <button
             onClick={() => setShowSearch(true)}
