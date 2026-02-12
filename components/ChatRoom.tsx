@@ -403,26 +403,9 @@ export default function ChatRoom() {
           <SettingsMenu
             user={user}
             onAvatarChange={(avatarId) => setUser((prev) => prev ? { ...prev, avatarId } : prev)}
+            onLogout={handleLogout}
           />
           <ThemeToggle />
-          <button
-            onClick={handleLogout}
-            className="text-xs text-muted hover:text-foreground transition-all active:scale-95 px-2 sm:px-2.5 py-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface hidden sm:block"
-          >
-            Log out
-          </button>
-          {/* Mobile logout - icon only */}
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 sm:hidden"
-            title="Log out"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
         </div>
       </div>
 
