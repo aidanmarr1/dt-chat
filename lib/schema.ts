@@ -40,3 +40,13 @@ export const reactions = sqliteTable("reactions", {
   emoji: text("emoji").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
+
+export const readReceipts = sqliteTable("readReceipts", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id),
+  lastReadMessageId: text("last_read_message_id")
+    .notNull()
+    .references(() => messages.id),
+  readAt: integer("read_at", { mode: "timestamp" }).notNull(),
+});

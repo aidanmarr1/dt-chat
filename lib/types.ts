@@ -36,6 +36,7 @@ export interface Message {
   isDeleted?: boolean;
   isPinned?: boolean;
   pinnedByName?: string | null;
+  readBy?: { userId: string; displayName: string; avatarId?: string | null }[];
 }
 
 export interface OnlineUser {

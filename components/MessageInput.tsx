@@ -2,8 +2,9 @@
 
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
+import Avatar from "./Avatar";
 import { formatFileSize } from "@/lib/file-utils";
-import type { Message } from "@/lib/types";
+import type { Message, OnlineUser } from "@/lib/types";
 
 interface FilePreview {
   file: File;
@@ -16,6 +17,7 @@ interface MessageInputProps {
   disabled?: boolean;
   replyingTo?: Message | null;
   onCancelReply?: () => void;
+  onlineUsers?: OnlineUser[];
 }
 
 export default function MessageInput({
@@ -24,6 +26,7 @@ export default function MessageInput({
   disabled,
   replyingTo,
   onCancelReply,
+  onlineUsers = [],
 }: MessageInputProps) {
   const [value, setValue] = useState(() => {
     if (typeof window !== "undefined") {
@@ -37,6 +40,8 @@ export default function MessageInput({
   const [dragOver, setDragOver] = useState(false);
   const [fileError, setFileError] = useState("");
   const [justSent, setJustSent] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
@@ -73,6 +78,30 @@ export default function MessageInput({
   }, [onTyping]);
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    // Mention autocomplete keyboard nav
+    if (mentionQuery !== null && filteredMentionUsers.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex((i) => (i + 1) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex((i) => (i - 1 + filteredMentionUsers.length) % filteredMentionUsers.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        selectMention(filteredMentionUsers[mentionIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setMentionQuery(null);
+        return;
+      }
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -100,6 +129,14 @@ export default function MessageInput({
   }
 
   function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    // Check for pasted images first
+    const files = e.clipboardData.files;
+    if (files.length > 0 && files[0].type.startsWith("image/")) {
+      e.preventDefault();
+      handleFileSelect(files);
+      return;
+    }
+
     const text = e.clipboardData.getData("text");
     if (emojiRegex.test(text)) {
       e.preventDefault();
@@ -154,6 +191,44 @@ export default function MessageInput({
       el.style.height = Math.min(el.scrollHeight, 120) + "px";
     }
     handleTyping();
+    checkMention();
+  }
+
+  function checkMention() {
+    const el = textareaRef.current;
+    if (!el) { setMentionQuery(null); return; }
+    const cursor = el.selectionStart;
+    const textBefore = el.value.slice(0, cursor);
+    const match = textBefore.match(/@(\w*)$/);
+    if (match) {
+      setMentionQuery(match[1]);
+      setMentionIndex(0);
+    } else {
+      setMentionQuery(null);
+    }
+  }
+
+  const filteredMentionUsers = mentionQuery !== null
+    ? onlineUsers.filter((u) => u.displayName.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 5)
+    : [];
+
+  function selectMention(user: OnlineUser) {
+    const el = textareaRef.current;
+    if (!el) return;
+    const cursor = el.selectionStart;
+    const textBefore = el.value.slice(0, cursor);
+    const match = textBefore.match(/@(\w*)$/);
+    if (match) {
+      const start = cursor - match[0].length;
+      const newVal = el.value.slice(0, start) + `@${user.displayName} ` + el.value.slice(cursor);
+      setValue(newVal);
+      setMentionQuery(null);
+      setTimeout(() => {
+        const newCursor = start + user.displayName.length + 2;
+        el.selectionStart = el.selectionEnd = newCursor;
+        el.focus();
+      }, 0);
+    }
   }
 
   function handleFileSelect(files: FileList | null) {
@@ -348,6 +423,23 @@ export default function MessageInput({
 
         {/* Textarea */}
         <div className="flex-1 relative">
+          {/* Mention autocomplete dropdown */}
+          {mentionQuery !== null && filteredMentionUsers.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+              {filteredMentionUsers.map((u, i) => (
+                <button
+                  key={u.id}
+                  onMouseDown={(e) => { e.preventDefault(); selectMention(u); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
+                    i === mentionIndex ? "bg-accent/10 text-accent" : "text-foreground hover:bg-border/50"
+                  }`}
+                >
+                  <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
+                  <span className="font-medium">{u.displayName}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <textarea
             ref={textareaRef}
             value={value}

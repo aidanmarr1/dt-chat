@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { messages, users, reactions } from "@/lib/schema";
+import { messages, users, reactions, readReceipts } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { desc, eq, gt, sql } from "drizzle-orm";
 
@@ -100,6 +100,26 @@ export async function GET() {
     if (u) pinnerMap.set(pid, u.displayName);
   }
 
+  // Get all read receipts with user info
+  const allReceipts = await db
+    .select({
+      userId: readReceipts.userId,
+      lastReadMessageId: readReceipts.lastReadMessageId,
+      displayName: users.displayName,
+      avatarId: users.avatarId,
+    })
+    .from(readReceipts)
+    .innerJoin(users, eq(readReceipts.userId, users.id));
+
+  // Build a map: messageId -> array of readers
+  const readByMap = new Map<string, { userId: string; displayName: string; avatarId: string | null }[]>();
+  for (const r of allReceipts) {
+    if (r.userId === user.id) continue; // Don't show own read receipt
+    const key = r.lastReadMessageId;
+    if (!readByMap.has(key)) readByMap.set(key, []);
+    readByMap.get(key)!.push({ userId: r.userId, displayName: r.displayName, avatarId: r.avatarId });
+  }
+
   // Build response messages
   const responseMessages = rows.reverse().map((row) => {
     const reply = row.replyToId ? replyMap.get(row.replyToId) : null;
@@ -114,6 +134,7 @@ export async function GET() {
       replyContent: reply?.content ?? null,
       replyDisplayName: reply?.displayName ?? null,
       reactions: reactionMap.get(row.id) ?? [],
+      readBy: readByMap.get(row.id) ?? [],
     };
   });
 

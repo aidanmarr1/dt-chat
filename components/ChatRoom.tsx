@@ -34,24 +34,50 @@ export default function ChatRoom() {
   const [showNewMessages, setShowNewMessages] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [headerShadow, setHeaderShadow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
+  const lastReadReceiptRef = useRef<string | null>(null);
   const router = useRouter();
 
-  // Load sound preference
+  // Load sound + notification preferences
   useEffect(() => {
     const stored = localStorage.getItem("dt-sound");
     if (stored === "false") setSoundEnabled(false);
+    const notifStored = localStorage.getItem("dt-notifications");
+    if (notifStored === "true" && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      setNotificationsEnabled(true);
+    }
   }, []);
 
   function toggleSound() {
     const next = !soundEnabled;
     setSoundEnabled(next);
     localStorage.setItem("dt-sound", String(next));
+  }
+
+  function toggleNotifications() {
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false);
+      localStorage.setItem("dt-notifications", "false");
+      return;
+    }
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(true);
+      localStorage.setItem("dt-notifications", "true");
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") {
+          setNotificationsEnabled(true);
+          localStorage.setItem("dt-notifications", "true");
+        }
+      });
+    }
   }
 
   // Update page title with unread indicator
@@ -86,6 +112,10 @@ export default function ChatRoom() {
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setShowNewMessages(false);
+    if (latestMessageIdRef.current) {
+      postReadReceipt(latestMessageIdRef.current);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function scrollToMessage(messageId: string) {
@@ -142,12 +172,20 @@ export default function ChatRoom() {
           const latestId = newMessages[newMessages.length - 1].id;
           if (latestId !== latestMessageIdRef.current) {
             const prevLatest = latestMessageIdRef.current;
-            if (
-              prevLatest &&
-              soundEnabled &&
-              newMessages[newMessages.length - 1].userId !== user!.id
-            ) {
-              playNotificationSound();
+            const lastMsg = newMessages[newMessages.length - 1];
+            if (prevLatest && lastMsg.userId !== user!.id) {
+              if (soundEnabled) playNotificationSound();
+              if (
+                notificationsEnabled &&
+                typeof Notification !== "undefined" &&
+                Notification.permission === "granted" &&
+                document.visibilityState === "hidden"
+              ) {
+                new Notification(lastMsg.displayName, {
+                  body: lastMsg.content || lastMsg.fileName || "Sent a file",
+                  tag: "dt-chat",
+                });
+              }
             }
 
             latestMessageIdRef.current = latestId;
@@ -155,6 +193,7 @@ export default function ChatRoom() {
 
             if (isNearBottom()) {
               setTimeout(() => scrollToBottom(), 50);
+              postReadReceipt(latestId);
             } else {
               setShowNewMessages(true);
             }
@@ -170,7 +209,7 @@ export default function ChatRoom() {
     fetchMessages();
     const interval = setInterval(fetchMessages, 2000);
     return () => clearInterval(interval);
-  }, [user, isNearBottom, scrollToBottom, soundEnabled]);
+  }, [user, isNearBottom, scrollToBottom, soundEnabled, notificationsEnabled]);
 
   async function handleSend(
     content: string,
@@ -178,6 +217,7 @@ export default function ChatRoom() {
     replyToId?: string
   ) {
     try {
+      // Post read receipt after sending
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -299,6 +339,16 @@ export default function ChatRoom() {
     }
   }
 
+  function postReadReceipt(messageId: string) {
+    if (messageId === lastReadReceiptRef.current) return;
+    lastReadReceiptRef.current = messageId;
+    fetch("/api/read-receipts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastReadMessageId: messageId }),
+    }).catch(() => {});
+  }
+
   function handleTyping() {
     fetch("/api/typing", { method: "POST" }).catch(() => {});
   }
@@ -337,6 +387,7 @@ export default function ChatRoom() {
           onReply={(m) => setReplyingTo(m)}
           onEdit={handleEdit}
           onPin={handlePin}
+          currentDisplayName={user!.displayName}
         />
       );
     }
@@ -402,6 +453,8 @@ export default function ChatRoom() {
             onLogout={handleLogout}
             soundEnabled={soundEnabled}
             onSoundToggle={toggleSound}
+            notificationsEnabled={notificationsEnabled}
+            onNotificationsToggle={toggleNotifications}
           />
         </div>
       </div>
@@ -478,6 +531,7 @@ export default function ChatRoom() {
         onTyping={handleTyping}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
+        onlineUsers={onlineUsers}
       />
     </div>
   );

@@ -16,6 +16,7 @@ interface MessageBubbleProps {
   onReply: (message: Message) => void;
   onEdit: (messageId: string, content: string) => void;
   onPin: (messageId: string) => void;
+  currentDisplayName?: string;
 }
 
 function relativeTime(dateStr: string): string {
@@ -38,8 +39,8 @@ function emojiOnlyCount(text: string): number | null {
   return matches ? matches.length : null;
 }
 
-function renderContent(text: string, isOwn: boolean) {
-  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);
+function renderContent(text: string, isOwn: boolean, currentUserId?: string, currentDisplayName?: string) {
+  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
   return parts.map((part, i) => {
     if (part.match(/^(https?:\/\/|www\.)/)) {
       const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
@@ -57,6 +58,9 @@ function renderContent(text: string, isOwn: boolean) {
     }
     if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**") && part.length > 2) {
       return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    if (part.match(/^@\w+/)) {
+      return <span key={i} className="font-semibold text-accent">{part}</span>;
     }
     return part;
   });
@@ -92,6 +96,7 @@ export default function MessageBubble({
   onReply,
   onEdit,
   onPin,
+  currentDisplayName,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -101,6 +106,7 @@ export default function MessageBubble({
   const [showAbsoluteTime, setShowAbsoluteTime] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [copied, setCopied] = useState(false);
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,6 +130,13 @@ export default function MessageBubble({
     if (longPressRef.current) clearTimeout(longPressRef.current);
   }
 
+  function handleCopy() {
+    const text = message.content || (fileUrl ?? "");
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   // Check if within edit window (15 min)
   const canEdit = isOwn && !message.isDeleted && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
 
@@ -145,6 +158,10 @@ export default function MessageBubble({
       </div>
     );
   }
+
+  const isMentioned = !isOwn && currentDisplayName && message.content
+    ? new RegExp(`@${currentDisplayName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(message.content)
+    : false;
 
   const isImage = message.fileType?.startsWith("image/");
   const hasFile = !!message.filePath;
@@ -185,7 +202,7 @@ export default function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5" : "mb-3"
-        } animate-fade-in group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors`}
+        } animate-fade-in group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => { setHovered(false); setShowActions(false); }}
         onTouchStart={handleTouchStart}
@@ -303,7 +320,7 @@ export default function MessageBubble({
               {/* Text content */}
               {message.content && (
                 <p className="text-sm whitespace-pre-wrap break-words">
-                  {renderContent(message.content, isOwn)}
+                  {renderContent(message.content, isOwn, undefined, currentDisplayName)}
                 </p>
               )}
 
@@ -318,6 +335,17 @@ export default function MessageBubble({
 
           {/* Reactions */}
           <ReactionBar reactions={message.reactions || []} onToggle={(emoji) => onReaction(message.id, emoji)} />
+
+          {/* Read receipts */}
+          {isOwn && message.readBy && message.readBy.length > 0 && (
+            <div className={`flex gap-0.5 mt-0.5 ${isOwn ? "justify-end" : "justify-start"} px-1`}>
+              {message.readBy.map((reader) => (
+                <div key={reader.userId} title={`Seen by ${reader.displayName}`}>
+                  <Avatar displayName={reader.displayName} userId={reader.userId} avatarId={reader.avatarId} size="xs" />
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Timestamp */}
           <p
@@ -345,14 +373,22 @@ export default function MessageBubble({
                 </svg>
               </button>
 
+              <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"}>
+                {copied ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                )}
+              </button>
+
               {canEdit && (
-                <button onClick={() => { startEdit(); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "60ms" }} title="Edit">
+                <button onClick={() => { startEdit(); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "90ms" }} title="Edit">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
                 </button>
               )}
 
               <div className="relative">
-                <button onClick={() => setShowReactionPicker(!showReactionPicker)} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "120ms" }} title="React">
+                <button onClick={() => setShowReactionPicker(!showReactionPicker)} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "150ms" }} title="React">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
                 </button>
                 {showReactionPicker && (
@@ -378,6 +414,11 @@ export default function MessageBubble({
                       <line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
                     </svg>
                     {message.isPinned ? "Unpin" : "Pin"}
+                  </button>
+                  <div className="h-px bg-border mx-3" />
+                  <button onClick={() => { handleCopy(); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                    Copy
                   </button>
                   <div className="h-px bg-border mx-3" />
                   <button onClick={() => { setShowReactionPicker(true); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
