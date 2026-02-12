@@ -7,8 +7,6 @@ import MessageInput from "./MessageInput";
 import DateSeparator from "./DateSeparator";
 import TypingIndicator from "./TypingIndicator";
 import OnlineUsers from "./OnlineUsers";
-import ThemeToggle from "./ThemeToggle";
-import SoundToggle from "./SoundToggle";
 import SettingsMenu from "./SettingsMenu";
 import SearchMessages from "./SearchMessages";
 import PinnedMessages from "./PinnedMessages";
@@ -399,13 +397,13 @@ export default function ChatRoom() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </button>
-          <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
           <SettingsMenu
             user={user}
             onAvatarChange={(avatarId) => setUser((prev) => prev ? { ...prev, avatarId } : prev)}
             onLogout={handleLogout}
+            soundEnabled={soundEnabled}
+            onSoundToggle={toggleSound}
           />
-          <ThemeToggle />
         </div>
       </div>
 
