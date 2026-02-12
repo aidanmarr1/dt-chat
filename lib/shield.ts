@@ -79,10 +79,18 @@ var oF=Function;
 try{window.Function=function(){_cl2('%c%s','color:#ff4444;font-size:14px;font-weight:bold','\\u26D4 Access Denied');throw new Error('Access Denied')};
 window.Function.prototype=oF.prototype;
 Object.defineProperty(window,'Function',{configurable:false,writable:false})}catch(e){}
-window.onerror=function(){_cl2(_ad,_as,_am);return true};
+window.onerror=function(){_cl();_cl2(_ad,_as,_am);return true};
 try{Object.defineProperty(window,'onerror',{configurable:false,writable:false})}catch(e){}
-window.addEventListener('error',function(e){e.preventDefault();e.stopImmediatePropagation();_cl2(_ad,_as,_am);return true},true);
-window.addEventListener('unhandledrejection',function(e){e.preventDefault();e.stopImmediatePropagation();_cl2(_ad,_as,_am)},true);
+window.addEventListener('error',function(e){e.preventDefault();e.stopImmediatePropagation();_cl();_cl2(_ad,_as,_am);return true},true);
+window.addEventListener('unhandledrejection',function(e){e.preventDefault();e.stopImmediatePropagation();_cl();_cl2(_ad,_as,_am)},true);
+['ReferenceError','TypeError','SyntaxError','RangeError','URIError','EvalError','Error'].forEach(function(n){
+try{Object.defineProperty(window[n].prototype,'name',{get:function(){return'Access Denied'},set:function(){},configurable:false})}catch(e){}
+try{Object.defineProperty(window[n].prototype,'message',{get:function(){return''},set:function(){},configurable:false})}catch(e){}});
+try{Error.prepareStackTrace=function(err){
+try{Object.defineProperty(err,'message',{value:'',writable:false,configurable:true})}catch(x){}
+var st=setTimeout;st(function(){_cl();_cl2(_ad,_as,_am)},0);st(function(){_cl();_cl2(_ad,_as,_am)},5);st(function(){_cl();_cl2(_ad,_as,_am)},15);st(function(){_cl();_cl2(_ad,_as,_am)},30);st(function(){_cl();_cl2(_ad,_as,_am)},60);
+return''};
+Object.defineProperty(Error,'prepareStackTrace',{configurable:false,writable:false})}catch(e){}
 var imgs=[];for(var j=0;j<10;j++){var im=new Image();Object.defineProperty(im,'id',{get:function(){NUKE()}});imgs.push(im)}
 var lid=si(function(){for(var j=0;j<imgs.length;j++)_cl2('%c','font-size:0',imgs[j])},800);G.add(lid);
 var oce=Document.prototype.createElement;
