@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       createdAt: messages.createdAt,
       userId: messages.userId,
       displayName: users.displayName,
+      avatarId: users.avatarId,
     })
     .from(messages)
     .innerJoin(users, eq(messages.userId, users.id))
