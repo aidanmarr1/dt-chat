@@ -93,22 +93,14 @@ var f=console[m];if(!f)return;
 try{Object.defineProperty(console,m,{configurable:false,enumerable:true,writable:false,
 value:function(){CC();AD()}})}catch(e){console[m]=function(){CC();AD()}}});
 
-var oe=window.eval;
-try{Object.defineProperty(window,'eval',{configurable:false,writable:false,
-value:function(){CC();AD();throw new Error('')}})}catch(e){window.eval=function(){CC();AD();throw new Error('')}}
-var oF=Function;
-try{window.Function=function(){CC();AD();throw new Error('')};
-window.Function.prototype=oF.prototype;
-Object.defineProperty(window,'Function',{configurable:false,writable:false})}catch(e){}
+var oe=window.eval;var oF=Function;
 
 window.onerror=function(){CC();AD();return true};
 try{Object.defineProperty(window,'onerror',{configurable:false,writable:false})}catch(e){}
-window.addEventListener('error',function(e){e.preventDefault();e.stopImmediatePropagation();CC();AD();return true},true);
-window.addEventListener('unhandledrejection',function(e){e.preventDefault();e.stopImmediatePropagation();CC();AD()},true);
+window.addEventListener('error',function(e){CC();AD();return true});
+window.addEventListener('unhandledrejection',function(e){CC();AD()});
 
 ['ReferenceError','TypeError','SyntaxError','RangeError','URIError','EvalError','Error'].forEach(function(n){
-try{Object.defineProperty(window[n].prototype,'name',{get:function(){return''},set:function(){},configurable:false})}catch(e){}
-try{Object.defineProperty(window[n].prototype,'message',{get:function(){return''},set:function(){},configurable:false})}catch(e){}
 try{Object.defineProperty(window[n].prototype,'stack',{get:function(){return''},set:function(){},configurable:false})}catch(e){}});
 try{Error.prepareStackTrace=function(err){CC();AD();
 try{Object.defineProperty(err,'message',{value:'',writable:false,configurable:true})}catch(x){}
@@ -187,8 +179,6 @@ Object.defineProperty(window,'__VUE_DEVTOOLS_GLOBAL_HOOK__',{configurable:false,
 try{var wSO=window.SharedWorker;window.SharedWorker=function(){CC();AD();throw new Error('')};
 Object.defineProperty(window,'SharedWorker',{configurable:false,writable:false})}catch(e){}
 
-try{var sSRC=HTMLScriptElement.prototype;
-Object.defineProperty(sSRC,'text',{set:function(){CC();AD()},get:function(){return''},configurable:false})}catch(e){}
 
 try{Object.defineProperty(window,'Proxy',{configurable:false,writable:false})}catch(e){}
 try{Object.defineProperty(window,'Reflect',{configurable:false,writable:false})}catch(e){}
@@ -196,7 +186,6 @@ try{Object.defineProperty(window,'Reflect',{configurable:false,writable:false})}
 try{var oWO=window.open;window.open=function(){return null};
 Object.defineProperty(window,'open',{configurable:false,writable:false})}catch(e){}
 
-try{Object.freeze(Object.prototype);Object.freeze(Array.prototype)}catch(e){}
 })();`;
 
 // XOR + rotate encoding so HTML source shows gibberish, not readable JS
