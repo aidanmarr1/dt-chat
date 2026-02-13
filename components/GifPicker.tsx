@@ -11,6 +11,8 @@ interface Gif {
   height: number;
 }
 
+const CATEGORIES = ["All", "Reactions", "Funny", "Greetings", "Moods", "Party", "School"] as const;
+
 interface GifPickerProps {
   onSelect: (gifUrl: string) => void;
   onClose: () => void;
@@ -19,18 +21,21 @@ interface GifPickerProps {
 
 export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerProps) {
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<string>("All");
   const [gifs, setGifs] = useState<Gif[]>([]);
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const fetchGifs = useCallback(async (query: string) => {
+  const fetchGifs = useCallback(async (query: string, cat: string) => {
     setLoading(true);
     try {
-      const url = query
-        ? `/api/gifs?q=${encodeURIComponent(query)}`
-        : "/api/gifs";
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      if (cat && cat !== "All") params.set("category", cat);
+      const qs = params.toString();
+      const url = qs ? `/api/gifs?${qs}` : "/api/gifs";
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -42,21 +47,21 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
     setLoading(false);
   }, []);
 
-  // Load featured GIFs on mount
+  // Load GIFs on mount
   useEffect(() => {
-    fetchGifs("");
+    fetchGifs("", "All");
   }, [fetchGifs]);
 
   // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchGifs(search);
-    }, 400);
+      fetchGifs(search, category);
+    }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, fetchGifs]);
+  }, [search, category, fetchGifs]);
 
   // Auto-focus search on desktop
   useEffect(() => {
@@ -125,6 +130,26 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
         </div>
       </div>
 
+      {/* Category tabs */}
+      <div className="flex gap-1 px-2.5 py-1.5 border-b border-border overflow-x-auto scrollbar-none">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setCategory(cat);
+              setSearch("");
+            }}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${
+              category === cat
+                ? "bg-accent text-white"
+                : "bg-background text-muted hover:text-foreground hover:bg-background/80"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* GIF grid */}
       <div className="p-2 h-64 max-h-[50vh] overflow-y-auto">
         {loading ? (
@@ -133,7 +158,7 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
           </div>
         ) : gifs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-xs text-muted">
-            {search ? "No GIFs found" : "GIF service unavailable"}
+            {search ? "No GIFs found" : "No GIFs available"}
           </div>
         ) : (
           <div className="columns-2 gap-1.5">
@@ -158,9 +183,9 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
         )}
       </div>
 
-      {/* Powered by Tenor */}
+      {/* Footer */}
       <div className="px-2.5 py-1.5 border-t border-border">
-        <p className="text-[9px] text-muted text-center">Powered by Tenor</p>
+        <p className="text-[9px] text-muted text-center">D&T GIFs</p>
       </div>
     </div>
   );
