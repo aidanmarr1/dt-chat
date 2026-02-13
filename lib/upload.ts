@@ -21,8 +21,15 @@ const ARCHIVE_TYPES = [
   "application/x-tar",
   "application/gzip",
 ];
+const AUDIO_TYPES = [
+  "audio/webm",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/wav",
+];
 
-const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...ARCHIVE_TYPES];
+const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...ARCHIVE_TYPES, ...AUDIO_TYPES];
 
 export function isAllowedType(mimeType: string): boolean {
   return ALLOWED_TYPES.includes(mimeType);

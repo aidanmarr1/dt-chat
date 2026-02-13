@@ -388,6 +388,7 @@ export default function ChatRoom() {
           onEdit={handleEdit}
           onPin={handlePin}
           currentDisplayName={user!.displayName}
+          currentUserId={user!.id}
         />
       );
     }
@@ -433,7 +434,7 @@ export default function ChatRoom() {
       <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
           <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
-          <OnlineUsers users={onlineUsers} count={onlineCount} />
+          <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Search */}

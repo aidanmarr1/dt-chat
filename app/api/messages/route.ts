@@ -1,8 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { messages, users, reactions, readReceipts } from "@/lib/schema";
+import { messages, users, reactions, readReceipts, linkPreviews } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { desc, eq, gt, sql } from "drizzle-orm";
+
+function extractUrls(text: string): string[] {
+  const urlRegex = /https?:\/\/[^\s<]+/g;
+  const matches = text.match(urlRegex) || [];
+  // Filter out Tenor GIF URLs since those render inline
+  return matches.filter((url) => !url.includes("tenor.com/") && !url.includes("media.tenor.com/"));
+}
+
+async function fetchOpenGraph(url: string): Promise<{
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  siteName?: string;
+} | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "bot" },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return null;
+
+    const html = await res.text();
+    const first8k = html.slice(0, 8000);
+
+    const getMetaContent = (property: string): string | undefined => {
+      const regex = new RegExp(
+        `<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']|<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`,
+        "i"
+      );
+      const match = first8k.match(regex);
+      return match?.[1] || match?.[2] || undefined;
+    };
+
+    const title = getMetaContent("og:title") || first8k.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
+    const description = getMetaContent("og:description") || getMetaContent("description");
+    const imageUrl = getMetaContent("og:image");
+    const siteName = getMetaContent("og:site_name");
+
+    if (!title && !description) return null;
+
+    return { title, description, imageUrl, siteName };
+  } catch {
+    return null;
+  }
+}
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -120,6 +171,37 @@ export async function GET() {
     readByMap.get(key)!.push({ userId: r.userId, displayName: r.displayName, avatarId: r.avatarId });
   }
 
+  // Get link previews for these messages
+  const allLinkPreviews =
+    messageIds.length > 0
+      ? await db
+          .select()
+          .from(linkPreviews)
+          .where(
+            sql`${linkPreviews.messageId} IN (${sql.join(
+              messageIds.map((id) => sql`${id}`),
+              sql`, `
+            )})`
+          )
+      : [];
+
+  const linkPreviewMap = new Map<
+    string,
+    { id: string; url: string; title: string | null; description: string | null; imageUrl: string | null; siteName: string | null }[]
+  >();
+  for (const lp of allLinkPreviews) {
+    const key = lp.messageId;
+    if (!linkPreviewMap.has(key)) linkPreviewMap.set(key, []);
+    linkPreviewMap.get(key)!.push({
+      id: lp.id,
+      url: lp.url,
+      title: lp.title,
+      description: lp.description,
+      imageUrl: lp.imageUrl,
+      siteName: lp.siteName,
+    });
+  }
+
   // Build response messages
   const responseMessages = rows.reverse().map((row) => {
     const reply = row.replyToId ? replyMap.get(row.replyToId) : null;
@@ -135,6 +217,7 @@ export async function GET() {
       replyDisplayName: reply?.displayName ?? null,
       reactions: reactionMap.get(row.id) ?? [],
       readBy: readByMap.get(row.id) ?? [],
+      linkPreviews: linkPreviewMap.get(row.id) ?? [],
     };
   });
 
@@ -210,6 +293,34 @@ export async function POST(req: NextRequest) {
     .set({ lastActiveAt: now, typingAt: null })
     .where(eq(users.id, user.id));
 
+  // Fire-and-forget: extract URLs and fetch link previews
+  if (hasContent) {
+    const urls = extractUrls(content.trim());
+    if (urls.length > 0) {
+      (async () => {
+        for (const url of urls.slice(0, 3)) {
+          try {
+            const og = await fetchOpenGraph(url);
+            if (og) {
+              await db.insert(linkPreviews).values({
+                id: crypto.randomUUID(),
+                messageId,
+                url,
+                title: og.title || null,
+                description: og.description || null,
+                imageUrl: og.imageUrl || null,
+                siteName: og.siteName || null,
+                fetchedAt: new Date(),
+              });
+            }
+          } catch {
+            // skip failed previews
+          }
+        }
+      })();
+    }
+  }
+
   return NextResponse.json({
     message: {
       id: messageId,
@@ -230,6 +341,7 @@ export async function POST(req: NextRequest) {
       isDeleted: false,
       isPinned: false,
       pinnedByName: null,
+      linkPreviews: [],
     },
   });
 }

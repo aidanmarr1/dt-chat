@@ -11,18 +11,33 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { avatarId } = await req.json();
+  const body = await req.json();
+  const { avatarId, bio } = body;
 
-  if (avatarId !== null && !AVATAR_PRESETS.find((p) => p.id === avatarId)) {
-    return NextResponse.json({ error: "Invalid avatar" }, { status: 400 });
+  const updates: Record<string, unknown> = {};
+
+  if (avatarId !== undefined) {
+    if (avatarId !== null && !AVATAR_PRESETS.find((p) => p.id === avatarId)) {
+      return NextResponse.json({ error: "Invalid avatar" }, { status: 400 });
+    }
+    updates.avatarId = avatarId ?? null;
   }
 
-  await db
-    .update(users)
-    .set({ avatarId: avatarId ?? null })
-    .where(eq(users.id, user.id));
+  if (bio !== undefined) {
+    if (bio !== null && typeof bio === "string" && bio.length > 200) {
+      return NextResponse.json({ error: "Bio must be 200 characters or less" }, { status: 400 });
+    }
+    updates.bio = bio ?? null;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, user.id));
+  }
 
   return NextResponse.json({
-    user: { ...user, avatarId: avatarId ?? null },
+    user: { ...user, ...updates },
   });
 }

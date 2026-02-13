@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
   lastActiveAt: integer("last_active_at", { mode: "timestamp" }),
   typingAt: integer("typing_at"),
   avatarId: text("avatar_id"),
+  bio: text("bio"),
 });
 
 export const messages = sqliteTable("messages", {
@@ -39,6 +40,19 @@ export const reactions = sqliteTable("reactions", {
     .references(() => users.id),
   emoji: text("emoji").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const linkPreviews = sqliteTable("linkPreviews", {
+  id: text("id").primaryKey(),
+  messageId: text("message_id")
+    .notNull()
+    .references(() => messages.id),
+  url: text("url").notNull(),
+  title: text("title"),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  siteName: text("site_name"),
+  fetchedAt: integer("fetched_at", { mode: "timestamp" }).notNull(),
 });
 
 export const readReceipts = sqliteTable("readReceipts", {

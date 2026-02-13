@@ -5,6 +5,25 @@ export interface User {
   avatarId?: string | null;
 }
 
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  avatarId?: string | null;
+  bio?: string | null;
+  createdAt: string;
+  messageCount: number;
+}
+
+export interface LinkPreview {
+  id: string;
+  url: string;
+  title?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  siteName?: string | null;
+}
+
 export interface ReplyInfo {
   id: string;
   content: string;
@@ -37,6 +56,7 @@ export interface Message {
   isPinned?: boolean;
   pinnedByName?: string | null;
   readBy?: { userId: string; displayName: string; avatarId?: string | null }[];
+  linkPreviews?: LinkPreview[];
 }
 
 export interface OnlineUser {

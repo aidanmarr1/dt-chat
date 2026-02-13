@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
+import GifPicker from "./GifPicker";
+import VoiceRecorder from "./VoiceRecorder";
 import Avatar from "./Avatar";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message, OnlineUser } from "@/lib/types";
@@ -35,6 +37,8 @@ export default function MessageInput({
     return "";
   });
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showGif, setShowGif] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [filePreview, setFilePreview] = useState<FilePreview | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -45,6 +49,7 @@ export default function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
+  const gifToggleRef = useRef<HTMLButtonElement>(null);
   const lastTypingRef = useRef(0);
 
   // Auto-focus textarea on mount + resize to fit restored draft
@@ -279,6 +284,31 @@ export default function MessageInput({
     }
   }
 
+  function handleGifSelect(gifUrl: string) {
+    onSend(gifUrl, undefined, replyingTo?.id);
+    onCancelReply?.();
+  }
+
+  async function handleVoiceRecorded(file: File) {
+    setShowVoiceRecorder(false);
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const fileData = await res.json();
+        onSend("", fileData, replyingTo?.id);
+        onCancelReply?.();
+      }
+    } catch {
+      // ignore
+    }
+    setUploading(false);
+  }
+
+  const showMicButton = !value.trim() && !filePreview && !showVoiceRecorder;
+
   return (
     <div
       className={`border-t border-border glass ${
@@ -377,113 +407,157 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* Input row */}
-      <div className="flex items-center gap-2 p-4">
-        {/* Attach button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
-          title="Attach file"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-          </svg>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={(e) => handleFileSelect(e.target.files)}
-          accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz"
+      {/* Input row — or voice recorder */}
+      {showVoiceRecorder ? (
+        <VoiceRecorder
+          onRecorded={handleVoiceRecorded}
+          onCancel={() => setShowVoiceRecorder(false)}
         />
-
-        {/* Emoji button */}
-        <div className="relative shrink-0">
+      ) : (
+        <div className="flex items-center gap-2 p-4">
+          {/* Attach button */}
           <button
-            ref={emojiToggleRef}
-            onClick={() => setShowEmoji(!showEmoji)}
-            className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
-            title="Emoji"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
+            title="Attach file"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-              <line x1="9" y1="9" x2="9.01" y2="9" />
-              <line x1="15" y1="9" x2="15.01" y2="9" />
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
           </button>
-          {showEmoji && (
-            <EmojiPicker
-              onSelect={insertEmoji}
-              onClose={() => setShowEmoji(false)}
-              toggleRef={emojiToggleRef}
-            />
-          )}
-        </div>
-
-        {/* Textarea */}
-        <div className="flex-1 relative">
-          {/* Mention autocomplete dropdown */}
-          {mentionQuery !== null && filteredMentionUsers.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
-              {filteredMentionUsers.map((u, i) => (
-                <button
-                  key={u.id}
-                  onMouseDown={(e) => { e.preventDefault(); selectMention(u); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
-                    i === mentionIndex ? "bg-accent/10 text-accent" : "text-foreground hover:bg-border/50"
-                  }`}
-                >
-                  <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
-                  <span className="font-medium">{u.displayName}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => {
-              if (e.target.value.length <= 2000) {
-                setValue(e.target.value);
-              }
-              handleInput();
-            }}
-            onKeyDown={handleKeyDown}
-            onBeforeInput={handleBeforeInput}
-            onPaste={handlePaste}
-            placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
-            rows={1}
-            style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
-            className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => handleFileSelect(e.target.files)}
+            accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz,audio/*"
           />
-          {value.length > 1800 && (
-            <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
-              value.length > 1950 ? "text-red-400" : "text-muted"
-            }`}>
-              {value.length}/2000
-            </span>
-          )}
-        </div>
 
-        {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={disabled || uploading || (!value.trim() && !filePreview)}
-          className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
-        >
-          {uploading ? (
-            <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform block">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+          {/* Emoji button */}
+          <div className="relative shrink-0">
+            <button
+              ref={emojiToggleRef}
+              onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
+              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+              title="Emoji"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
+            </button>
+            {showEmoji && (
+              <EmojiPicker
+                onSelect={insertEmoji}
+                onClose={() => setShowEmoji(false)}
+                toggleRef={emojiToggleRef}
+              />
+            )}
+          </div>
+
+          {/* GIF button */}
+          <div className="relative shrink-0">
+            <button
+              ref={gifToggleRef}
+              onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
+              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
+              title="GIF"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
+              </svg>
+            </button>
+            {showGif && (
+              <GifPicker
+                onSelect={handleGifSelect}
+                onClose={() => setShowGif(false)}
+                toggleRef={gifToggleRef}
+              />
+            )}
+          </div>
+
+          {/* Textarea */}
+          <div className="flex-1 relative">
+            {/* Mention autocomplete dropdown */}
+            {mentionQuery !== null && filteredMentionUsers.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+                {filteredMentionUsers.map((u, i) => (
+                  <button
+                    key={u.id}
+                    onMouseDown={(e) => { e.preventDefault(); selectMention(u); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
+                      i === mentionIndex ? "bg-accent/10 text-accent" : "text-foreground hover:bg-border/50"
+                    }`}
+                  >
+                    <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
+                    <span className="font-medium">{u.displayName}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => {
+                if (e.target.value.length <= 2000) {
+                  setValue(e.target.value);
+                }
+                handleInput();
+              }}
+              onKeyDown={handleKeyDown}
+              onBeforeInput={handleBeforeInput}
+              onPaste={handlePaste}
+              placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
+              rows={1}
+              style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
+              className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
+            />
+            {value.length > 1800 && (
+              <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
+                value.length > 1950 ? "text-red-400" : "text-muted"
+              }`}>
+                {value.length}/2000
+              </span>
+            )}
+          </div>
+
+          {/* Mic button (shown when textarea empty and no file) */}
+          {showMicButton && (
+            <button
+              onClick={() => setShowVoiceRecorder(true)}
+              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
+              title="Voice message"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            </button>
           )}
-        </button>
-      </div>
+
+          {/* Send button */}
+          <button
+            onClick={handleSend}
+            disabled={disabled || uploading || (!value.trim() && !filePreview)}
+            className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+          >
+            {uploading ? (
+              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform block">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

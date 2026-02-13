@@ -5,6 +5,9 @@ import Avatar from "./Avatar";
 import ReactionBar from "./ReactionBar";
 import ReactionPicker from "./ReactionPicker";
 import ImageLightbox from "./ImageLightbox";
+import LinkPreviewCard from "./LinkPreviewCard";
+import AudioPlayer from "./AudioPlayer";
+import UserProfilePopover from "./UserProfilePopover";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message } from "@/lib/types";
 
@@ -17,6 +20,7 @@ interface MessageBubbleProps {
   onEdit: (messageId: string, content: string) => void;
   onPin: (messageId: string) => void;
   currentDisplayName?: string;
+  currentUserId?: string;
 }
 
 function relativeTime(dateStr: string): string {
@@ -39,10 +43,25 @@ function emojiOnlyCount(text: string): number | null {
   return matches ? matches.length : null;
 }
 
+function isTenorUrl(url: string): boolean {
+  return /^https?:\/\/media\.tenor\.com\/.+\.(gif|mp4)/i.test(url);
+}
+
+function isGifOnlyMessage(text: string): boolean {
+  const trimmed = text.trim();
+  return isTenorUrl(trimmed) && !trimmed.includes(" ");
+}
+
 function renderContent(text: string, isOwn: boolean, currentUserId?: string, currentDisplayName?: string) {
   const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
   return parts.map((part, i) => {
     if (part.match(/^(https?:\/\/|www\.)/)) {
+      // Render Tenor GIF URLs as inline images
+      if (isTenorUrl(part)) {
+        return (
+          <img key={i} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" />
+        );
+      }
       const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
       return (
         <a key={i} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
@@ -97,6 +116,7 @@ export default function MessageBubble({
   onEdit,
   onPin,
   currentDisplayName,
+  currentUserId,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -107,6 +127,7 @@ export default function MessageBubble({
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -164,13 +185,15 @@ export default function MessageBubble({
     : false;
 
   const isImage = message.fileType?.startsWith("image/");
+  const isAudio = message.fileType?.startsWith("audio/");
   const hasFile = !!message.filePath;
   const fileUrl = hasFile
     ? message.filePath!.startsWith("http")
       ? message.filePath!
       : `/api/files/${message.filePath}`
     : null;
-  const emojiCount = !hasFile && message.content ? emojiOnlyCount(message.content) : null;
+  const isGifOnly = !hasFile && message.content ? isGifOnlyMessage(message.content) : false;
+  const emojiCount = !hasFile && message.content && !isGifOnly ? emojiOnlyCount(message.content) : null;
   const isLargeEmoji = emojiCount !== null && emojiCount >= 1 && emojiCount <= 3;
 
   function startEdit() {
@@ -213,7 +236,7 @@ export default function MessageBubble({
       >
         {/* Avatar for others */}
         {!isOwn && !isGrouped && (
-          <div className="mr-2 mt-auto">
+          <div className="mr-2 mt-auto cursor-pointer" onClick={() => setShowProfile(true)}>
             <Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" />
           </div>
         )}
@@ -223,7 +246,7 @@ export default function MessageBubble({
           {/* Display name + pin indicator */}
           {!isOwn && !isGrouped && (
             <p className="text-xs text-muted mb-1 px-1 font-medium">
-              {message.displayName}
+              <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => setShowProfile(true)}>{message.displayName}</span>
               {message.isPinned && (
                 <span className="ml-1.5 text-accent" title={`Pinned by ${message.pinnedByName || "someone"}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="inline -mt-0.5"><line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" strokeWidth="2" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" /></svg>
@@ -293,7 +316,9 @@ export default function MessageBubble({
               {/* File attachment */}
               {hasFile && fileUrl && (
                 <div className="mb-1.5">
-                  {isImage ? (
+                  {isAudio ? (
+                    <AudioPlayer src={fileUrl} isOwn={isOwn} />
+                  ) : isImage ? (
                     <div className="relative">
                       {!imageLoaded && <div className="w-full h-48 rounded-lg animate-shimmer" />}
                       <img
@@ -329,6 +354,15 @@ export default function MessageBubble({
                 <p className={`text-[10px] mt-0.5 ${isOwn ? "text-background/50" : "text-muted"}`} title={`Edited ${new Date(message.editedAt).toLocaleString()}`}>
                   (edited)
                 </p>
+              )}
+
+              {/* Link previews */}
+              {message.linkPreviews && message.linkPreviews.length > 0 && (
+                <div>
+                  {message.linkPreviews.map((lp) => (
+                    <LinkPreviewCard key={lp.id} preview={lp} isOwn={isOwn} />
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -445,6 +479,13 @@ export default function MessageBubble({
       </div>
 
       {lightboxSrc && <ImageLightbox src={lightboxSrc} alt={message.fileName || "Image"} onClose={() => setLightboxSrc(null)} />}
+      {showProfile && (
+        <UserProfilePopover
+          userId={message.userId}
+          currentUserId={currentUserId}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </>
   );
 }

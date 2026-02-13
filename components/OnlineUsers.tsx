@@ -2,15 +2,18 @@
 
 import { useState, useRef, useEffect } from "react";
 import Avatar from "./Avatar";
+import UserProfilePopover from "./UserProfilePopover";
 import type { OnlineUser } from "@/lib/types";
 
 interface OnlineUsersProps {
   users: OnlineUser[];
   count: number;
+  currentUserId?: string;
 }
 
-export default function OnlineUsers({ users, count }: OnlineUsersProps) {
+export default function OnlineUsers({ users, count, currentUserId }: OnlineUsersProps) {
   const [open, setOpen] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,9 +74,10 @@ export default function OnlineUsers({ users, count }: OnlineUsersProps) {
           </div>
           <div className="max-h-[50vh] sm:max-h-52 overflow-y-auto p-1.5">
             {users.map((u, i) => (
-              <div
+              <button
                 key={u.id}
-                className="flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 rounded-lg hover:bg-background/60 transition-colors animate-fade-in"
+                onClick={() => setProfileUserId(u.id)}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 rounded-lg hover:bg-background/60 transition-colors animate-fade-in text-left"
                 style={{ animationDelay: `${i * 30}ms` }}
               >
                 <div className="relative">
@@ -83,10 +87,18 @@ export default function OnlineUsers({ users, count }: OnlineUsersProps) {
                 <span className="text-sm text-foreground truncate flex-1">
                   {u.displayName}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
+      )}
+
+      {profileUserId && (
+        <UserProfilePopover
+          userId={profileUserId}
+          currentUserId={currentUserId}
+          onClose={() => setProfileUserId(null)}
+        />
       )}
     </div>
   );
