@@ -258,6 +258,10 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   animation: recording-pulse 1s ease-in-out infinite;
 }
 
+/* Chat font size preferences */
+html[data-font-size="small"] .msg-text { font-size: 0.8125rem; }
+html[data-font-size="large"] .msg-text { font-size: 0.9375rem; }
+
 /* Text selection color */
 ::selection {
   background: var(--acc);

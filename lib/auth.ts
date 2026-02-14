@@ -38,6 +38,7 @@ export async function getCurrentUser() {
       email: users.email,
       displayName: users.displayName,
       avatarId: users.avatarId,
+      bio: users.bio,
     })
     .from(users)
     .where(eq(users.id, payload.userId))

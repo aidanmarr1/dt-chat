@@ -3,6 +3,7 @@ export interface User {
   email: string;
   displayName: string;
   avatarId?: string | null;
+  bio?: string | null;
 }
 
 export interface UserProfile {

@@ -451,6 +451,7 @@ export default function ChatRoom() {
           <SettingsMenu
             user={user}
             onAvatarChange={(avatarId) => setUser((prev) => prev ? { ...prev, avatarId } : prev)}
+            onBioChange={(bio) => setUser((prev) => prev ? { ...prev, bio } : prev)}
             onLogout={handleLogout}
             soundEnabled={soundEnabled}
             onSoundToggle={toggleSound}

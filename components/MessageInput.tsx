@@ -44,6 +44,7 @@ export default function MessageInput({
   const [dragOver, setDragOver] = useState(false);
   const [fileError, setFileError] = useState("");
   const [justSent, setJustSent] = useState(false);
+  const [enterToSend, setEnterToSend] = useState(true);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,6 +52,18 @@ export default function MessageInput({
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
   const gifToggleRef = useRef<HTMLButtonElement>(null);
   const lastTypingRef = useRef(0);
+
+  // Load enter-to-send preference
+  useEffect(() => {
+    const stored = localStorage.getItem("dt-enter-to-send");
+    if (stored === "false") setEnterToSend(false);
+    const handler = () => {
+      const v = localStorage.getItem("dt-enter-to-send");
+      setEnterToSend(v !== "false");
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
 
   // Auto-focus textarea on mount + resize to fit restored draft
   useEffect(() => {
@@ -107,9 +120,16 @@ export default function MessageInput({
       }
     }
 
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    if (enterToSend) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    } else {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleSend();
+      }
     }
     if (e.key === "Escape") {
       if (replyingTo) {
@@ -510,7 +530,7 @@ export default function MessageInput({
               onKeyDown={handleKeyDown}
               onBeforeInput={handleBeforeInput}
               onPaste={handlePaste}
-              placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : "Type a message..."}
+              placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)"}
               rows={1}
               style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
               className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"

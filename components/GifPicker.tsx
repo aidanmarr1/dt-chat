@@ -11,8 +11,6 @@ interface Gif {
   height: number;
 }
 
-const CATEGORIES = ["All", "Reactions", "Funny", "Greetings", "Moods", "Party", "School"] as const;
-
 interface GifPickerProps {
   onSelect: (gifUrl: string) => void;
   onClose: () => void;
@@ -21,7 +19,7 @@ interface GifPickerProps {
 
 export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerProps) {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<string>("All");
+  const category = "All";
   const [gifs, setGifs] = useState<Gif[]>([]);
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
@@ -128,26 +126,6 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
             className="w-full pl-8 pr-3 py-1.5 bg-background border border-border rounded-lg text-base sm:text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent transition-all"
           />
         </div>
-      </div>
-
-      {/* Category tabs */}
-      <div className="flex gap-1 px-2.5 py-1.5 border-b border-border overflow-x-auto scrollbar-none">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setCategory(cat);
-              setSearch("");
-            }}
-            className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${
-              category === cat
-                ? "bg-accent text-white"
-                : "bg-background text-muted hover:text-foreground hover:bg-background/80"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
       </div>
 
       {/* GIF grid */}

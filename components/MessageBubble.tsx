@@ -344,7 +344,7 @@ export default function MessageBubble({
 
               {/* Text content */}
               {message.content && (
-                <p className="text-sm whitespace-pre-wrap break-words">
+                <p className="text-sm whitespace-pre-wrap break-words msg-text">
                   {renderContent(message.content, isOwn, undefined, currentDisplayName)}
                 </p>
               )}
