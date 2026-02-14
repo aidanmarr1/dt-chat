@@ -154,7 +154,7 @@ export default function AuthForm() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How others will see you"
-                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] transition-all"
+                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all"
                 required
               />
             </div>
@@ -167,7 +167,7 @@ export default function AuthForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] transition-all"
+              className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all"
               required
             />
           </div>
@@ -180,7 +180,7 @@ export default function AuthForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={tab === "signup" ? "At least 6 characters" : "Enter your password"}
-                className="w-full px-4 py-3 pr-11 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] transition-all"
+                className="w-full px-4 py-3 pr-11 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all"
                 required
               />
               <button
@@ -227,7 +227,7 @@ export default function AuthForm() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Type it again"
-                  className={`w-full px-4 py-3 pr-11 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] transition-all ${
+                  className={`w-full px-4 py-3 pr-11 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all ${
                     confirmPassword && confirmPassword !== password
                       ? "border-red-400/50"
                       : confirmPassword && confirmPassword === password

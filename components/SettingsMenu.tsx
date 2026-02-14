@@ -5,10 +5,31 @@ import { createPortal } from "react-dom";
 import AvatarPicker from "./AvatarPicker";
 import Avatar from "./Avatar";
 import { useTheme } from "./ThemeProvider";
+import type { AccentColor, Density } from "./ThemeProvider";
 import type { User } from "@/lib/types";
 
-type Tab = "account" | "avatar" | "appearance";
+type Tab = "account" | "avatar" | "appearance" | "shortcuts";
 type FontSize = "small" | "default" | "large";
+
+const ACCENT_COLORS: { id: AccentColor; label: string; dark: string; light: string }[] = [
+  { id: "gold",   label: "Gold",   dark: "#FCAA26", light: "#E09500" },
+  { id: "blue",   label: "Blue",   dark: "#3B82F6", light: "#2563EB" },
+  { id: "green",  label: "Green",  dark: "#22C55E", light: "#16A34A" },
+  { id: "purple", label: "Purple", dark: "#A855F7", light: "#9333EA" },
+  { id: "red",    label: "Red",    dark: "#EF4444", light: "#DC2626" },
+  { id: "pink",   label: "Pink",   dark: "#EC4899", light: "#DB2777" },
+  { id: "teal",   label: "Teal",   dark: "#14B8A6", light: "#0D9488" },
+];
+
+const SHORTCUTS: { keys: string[]; description: string }[] = [
+  { keys: ["Enter"], description: "Send message" },
+  { keys: ["Shift", "Enter"], description: "New line in message" },
+  { keys: ["Esc"], description: "Close modal / Cancel reply" },
+  { keys: ["@"], description: "Mention a user" },
+  { keys: ["Cmd", "V"], description: "Paste image to attach" },
+  { keys: ["Double-click"], description: "Quick react with thumbs up" },
+  { keys: ["Long press"], description: "Open message actions (mobile)" },
+];
 
 interface SettingsMenuProps {
   user: User;
@@ -25,7 +46,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("account");
   const [mounted, setMounted] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme, accentColor, setAccentColor, density, setDensity } = useTheme();
 
   // Bio editing
   const [bioValue, setBioValue] = useState(user.bio ?? "");
@@ -154,6 +175,18 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
         </svg>
       ),
     },
+    {
+      id: "shortcuts",
+      label: "Shortcuts",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="M6 8h.01" /><path d="M10 8h.01" /><path d="M14 8h.01" /><path d="M18 8h.01" />
+          <path d="M8 12h.01" /><path d="M12 12h.01" /><path d="M16 12h.01" />
+          <path d="M7 16h10" />
+        </svg>
+      ),
+    },
   ];
 
   function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -162,7 +195,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
         onClick={onToggle}
         className={`relative w-12 h-7 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${
           on
-            ? "shadow-[0_0_8px_rgba(252,170,38,0.3)]"
+            ? "shadow-[0_0_8px_rgba(var(--acc-rgb),0.3)]"
             : "shadow-inner"
         }`}
         style={{ backgroundColor: on ? "var(--accent)" : "color-mix(in srgb, var(--bg) 70%, var(--bdr))" }}
@@ -209,11 +242,21 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     );
   }
 
-  function SectionLabel({ children }: { children: React.ReactNode }) {
+  function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
     return (
-      <p className="text-[11px] font-medium text-muted uppercase tracking-wider mb-2 px-0.5">{children}</p>
+      <p className="text-[11px] font-medium text-muted uppercase tracking-wider mb-2 px-0.5 flex items-center gap-1.5 group/label">
+        {icon && (
+          <span className="inline-flex text-muted group-hover/label:text-accent group-hover/label:scale-110 transition-all duration-200">
+            {icon}
+          </span>
+        )}
+        {children}
+      </p>
     );
   }
+
+  // Font size preview text mapping
+  const fontSizePreviewPx = fontSize === "small" ? "13px" : fontSize === "large" ? "15px" : "14px";
 
   const modal = open && mounted ? (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
@@ -224,7 +267,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
       />
 
       {/* Mobile: full-screen sheet from bottom. Desktop: centered modal */}
-      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[560px] sm:h-[min(34rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[560px] sm:h-[min(38rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
 
         {/* === MOBILE HEADER === */}
         <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-border sm:hidden">
@@ -304,6 +347,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
         {/* === CONTENT === */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div key={tab} className="animate-tab-enter">
           {/* Account */}
           {tab === "account" && (
             <div className="p-4 sm:p-6">
@@ -399,42 +443,110 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
               <p className="text-xs text-muted mb-5">Customize your experience</p>
 
               <div className="space-y-5">
-                {/* Theme section */}
+                {/* Theme section — Visual cards */}
                 <div>
-                  <SectionLabel>Theme</SectionLabel>
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                        {theme === "dark" ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="5" />
-                            <line x1="12" y1="1" x2="12" y2="3" />
-                            <line x1="12" y1="21" x2="12" y2="23" />
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                            <line x1="1" y1="12" x2="3" y2="12" />
-                            <line x1="21" y1="12" x2="23" y2="12" />
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                          </svg>
+                  <SectionLabel icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                  }>Theme</SectionLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Dark theme card */}
+                    <button
+                      onClick={() => setTheme("dark")}
+                      className={`relative rounded-xl border-2 p-3 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                        theme === "dark"
+                          ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
+                          : "border-border hover:border-muted"
+                      }`}
+                    >
+                      {/* Mini mockup */}
+                      <div className="rounded-lg overflow-hidden border border-[#2C2C2C] bg-[#141414] p-2 mb-2">
+                        <div className="h-1.5 w-8 rounded-full bg-[#2C2C2C] mb-1.5" />
+                        <div className="flex gap-1.5">
+                          <div className="h-3 flex-1 rounded bg-[#FAFAFA] opacity-90" />
+                          <div className="h-3 w-6 rounded bg-[#FCAA26]" style={{ backgroundColor: "var(--acc)" }} />
+                        </div>
+                        <div className="h-2 w-12 rounded bg-[#2C2C2C] mt-1.5" />
+                        <div className="flex gap-1.5 mt-1">
+                          <div className="h-3 flex-1 rounded bg-[#181818]" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">Dark</span>
+                        {theme === "dark" && (
+                          <span className="text-[10px] font-medium text-accent">Active</span>
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">Dark mode</p>
-                        <p className="text-[11px] text-muted">{theme === "dark" ? "Currently active" : "Switch to dark mode"}</p>
+                    </button>
+
+                    {/* Light theme card */}
+                    <button
+                      onClick={() => setTheme("light")}
+                      className={`relative rounded-xl border-2 p-3 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                        theme === "light"
+                          ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
+                          : "border-border hover:border-muted"
+                      }`}
+                    >
+                      {/* Mini mockup */}
+                      <div className="rounded-lg overflow-hidden border border-[#E5E5E5] bg-[#F9F9F9] p-2 mb-2">
+                        <div className="h-1.5 w-8 rounded-full bg-[#E5E5E5] mb-1.5" />
+                        <div className="flex gap-1.5">
+                          <div className="h-3 flex-1 rounded bg-[#141414] opacity-90" />
+                          <div className="h-3 w-6 rounded" style={{ backgroundColor: "var(--acc)" }} />
+                        </div>
+                        <div className="h-2 w-12 rounded bg-[#E5E5E5] mt-1.5" />
+                        <div className="flex gap-1.5 mt-1">
+                          <div className="h-3 flex-1 rounded bg-[#F0F0F0]" />
+                        </div>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">Light</span>
+                        {theme === "light" && (
+                          <span className="text-[10px] font-medium text-accent">Active</span>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Accent color section */}
+                <div>
+                  <SectionLabel icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                    </svg>
+                  }>Accent Color</SectionLabel>
+                  <div className="p-3.5 rounded-xl bg-background border border-border">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      {ACCENT_COLORS.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => setAccentColor(c.id)}
+                          title={c.label}
+                          className={`w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95 ${
+                            accentColor === c.id
+                              ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110"
+                              : "hover:ring-1 hover:ring-border"
+                          }`}
+                          style={{ backgroundColor: theme === "dark" ? c.dark : c.light }}
+                        />
+                      ))}
                     </div>
-                    <ToggleSwitch on={theme === "dark"} onToggle={toggleTheme} />
+                    <p className="text-[11px] text-muted mt-2.5">
+                      {ACCENT_COLORS.find((c) => c.id === accentColor)?.label ?? "Gold"}
+                    </p>
                   </div>
                 </div>
 
                 {/* Chat section */}
                 <div>
-                  <SectionLabel>Chat</SectionLabel>
+                  <SectionLabel icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  }>Chat</SectionLabel>
                   <div className="space-y-3">
                     {/* Font size */}
                     <div className="p-3.5 rounded-xl bg-background border border-border">
@@ -460,6 +572,46 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         ]}
                         onChange={(id) => handleFontSizeChange(id as FontSize)}
                       />
+                      {/* Live chat preview */}
+                      <div className="mt-3 p-3 rounded-lg bg-surface border border-border/50">
+                        <p className="text-[10px] text-muted mb-2 uppercase tracking-wider">Preview</p>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-start">
+                            <div className="px-3 py-1.5 rounded-xl bg-background border border-border rounded-bl-sm max-w-[75%]">
+                              <p style={{ fontSize: fontSizePreviewPx }} className="text-foreground">Hey, how&apos;s it going?</p>
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <div className="px-3 py-1.5 rounded-xl bg-foreground text-background rounded-br-sm max-w-[75%]">
+                              <p style={{ fontSize: fontSizePreviewPx }}>Pretty good! Just working on the project.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chat density */}
+                    <div className="p-3.5 rounded-xl bg-background border border-border">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">Message density</p>
+                          <p className="text-[11px] text-muted">Adjust spacing between messages</p>
+                        </div>
+                      </div>
+                      <SegmentedControl
+                        value={density}
+                        options={[
+                          { id: "compact", label: "Compact" },
+                          { id: "default", label: "Default" },
+                          { id: "comfortable", label: "Comfortable" },
+                        ]}
+                        onChange={(id) => setDensity(id as Density)}
+                      />
                     </div>
 
                     {/* Enter to send */}
@@ -483,7 +635,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
                 {/* Notifications section */}
                 <div>
-                  <SectionLabel>Notifications</SectionLabel>
+                  <SectionLabel icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                  }>Notifications</SectionLabel>
                   <div className="space-y-3">
                     {/* Sound */}
                     <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
@@ -540,6 +696,36 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
               </div>
             </div>
           )}
+
+          {/* Shortcuts */}
+          {tab === "shortcuts" && (
+            <div className="p-4 sm:p-6">
+              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Keyboard Shortcuts</h3>
+              <p className="text-xs text-muted mb-5">Quick actions for power users</p>
+
+              <div className="space-y-1">
+                {SHORTCUTS.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-background transition-colors"
+                  >
+                    <span className="text-sm text-foreground">{s.description}</span>
+                    <div className="flex items-center gap-1">
+                      {s.keys.map((k, j) => (
+                        <span key={j} className="flex items-center gap-1">
+                          {j > 0 && <span className="text-[10px] text-muted">+</span>}
+                          <kbd className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-md bg-background border border-border text-[11px] font-mono font-medium text-muted shadow-sm">
+                            {k}
+                          </kbd>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          </div>
         </div>
 
         {/* Close button — desktop only */}

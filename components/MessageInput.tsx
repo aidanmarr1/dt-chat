@@ -533,7 +533,7 @@ export default function MessageInput({
               placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)"}
               rows={1}
               style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
-              className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(252,170,38,0.12)] resize-none text-base sm:text-sm"
+              className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] resize-none text-base sm:text-sm"
             />
             {value.length > 1800 && (
               <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${

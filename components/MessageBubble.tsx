@@ -224,7 +224,7 @@ export default function MessageBubble({
       <div
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
-          isGrouped ? "mb-0.5" : "mb-3"
+          isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
         } animate-fade-in group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => { setHovered(false); setShowActions(false); }}
