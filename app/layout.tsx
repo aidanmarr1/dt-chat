@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Libre_Baskerville } from "next/font/google";
 import ThemeProvider from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/Toast";
 import { SHIELD_SCRIPT } from "@/lib/shield";
 import "./globals.css";
 
@@ -88,7 +89,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${libreBaskerville.variable} antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><ToastProvider>{children}</ToastProvider></ThemeProvider>
       </body>
     </html>
   );

@@ -52,3 +52,36 @@ export async function PATCH(
   return NextResponse.json({ success: true });
 }
 
+// Delete message (soft delete)
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const { id: messageId } = await params;
+
+  const message = await db.select().from(messages).where(eq(messages.id, messageId)).get();
+  if (!message) {
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
+  }
+
+  if (message.userId !== user.id) {
+    return NextResponse.json({ error: "Not your message" }, { status: 403 });
+  }
+
+  if (message.deletedAt) {
+    return NextResponse.json({ error: "Already deleted" }, { status: 400 });
+  }
+
+  await db
+    .update(messages)
+    .set({ deletedAt: new Date() })
+    .where(eq(messages.id, messageId));
+
+  return NextResponse.json({ success: true });
+}
+

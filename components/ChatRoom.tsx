@@ -10,6 +10,7 @@ import OnlineUsers from "./OnlineUsers";
 import SettingsMenu from "./SettingsMenu";
 import SearchMessages from "./SearchMessages";
 import PinnedMessages from "./PinnedMessages";
+import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
 import type { Message, User, OnlineUser } from "@/lib/types";
 
@@ -25,6 +26,13 @@ function isGroupable(a: Message, b: Message): boolean {
   return diff < 2 * 60 * 1000;
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function ChatRoom() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -32,6 +40,7 @@ export default function ChatRoom() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showNewMessages, setShowNewMessages] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -39,11 +48,27 @@ export default function ChatRoom() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
+  const [isOffline, setIsOffline] = useState(false);
+  const [failedPolls, setFailedPolls] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
   const lastReadReceiptRef = useRef<string | null>(null);
+  const lastSeenCountRef = useRef(0);
   const router = useRouter();
+  const { toast } = useToast();
+
+  // Track online/offline status
+  useEffect(() => {
+    function goOffline() { setIsOffline(true); }
+    function goOnline() { setIsOffline(false); setFailedPolls(0); }
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
 
   // Load sound + notification preferences
   useEffect(() => {
@@ -85,8 +110,14 @@ export default function ChatRoom() {
 
   // Update page title with unread indicator
   useEffect(() => {
-    document.title = showNewMessages ? "(New) D&T Chat" : "D&T Chat";
-  }, [showNewMessages]);
+    if (showNewMessages && unreadCount > 0) {
+      document.title = `(${unreadCount}) D&T Chat`;
+    } else if (showNewMessages) {
+      document.title = "(New) D&T Chat";
+    } else {
+      document.title = "D&T Chat";
+    }
+  }, [showNewMessages, unreadCount]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -115,6 +146,7 @@ export default function ChatRoom() {
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setShowNewMessages(false);
+    setUnreadCount(0);
     if (latestMessageIdRef.current) {
       postReadReceipt(latestMessageIdRef.current);
     }
@@ -157,6 +189,10 @@ export default function ChatRoom() {
         if (!res.ok) return;
         const data = await res.json();
 
+        // Successful poll — clear failed state
+        setFailedPolls(0);
+        setIsOffline(false);
+
         const newMessages: Message[] = data.messages.map(
           (m: { createdAt: string | Date } & Omit<Message, "createdAt">) => ({
             ...m,
@@ -197,7 +233,13 @@ export default function ChatRoom() {
             if (isNearBottom()) {
               setTimeout(() => scrollToBottom(), 50);
               postReadReceipt(latestId);
+              lastSeenCountRef.current = newMessages.length;
             } else {
+              // Count unread since user scrolled up
+              const newCount = newMessages.length - lastSeenCountRef.current;
+              if (newCount > 0) {
+                setUnreadCount((prev) => prev + (newMessages.length - (messages.length || lastSeenCountRef.current)));
+              }
               setShowNewMessages(true);
             }
           } else {
@@ -205,14 +247,24 @@ export default function ChatRoom() {
           }
         }
       } catch {
-        // Silently retry on next poll
+        setFailedPolls((prev) => prev + 1);
       }
     }
 
     fetchMessages();
     const interval = setInterval(fetchMessages, 2000);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isNearBottom, scrollToBottom, soundEnabled, notificationsEnabled]);
+
+  // When user scrolls to bottom, reset unread
+  useEffect(() => {
+    if (isAtBottom) {
+      setShowNewMessages(false);
+      setUnreadCount(0);
+      lastSeenCountRef.current = messages.length;
+    }
+  }, [isAtBottom, messages.length]);
 
   async function handleSend(
     content: string,
@@ -240,9 +292,10 @@ export default function ChatRoom() {
 
       setMessages((prev) => [...prev, newMsg]);
       latestMessageIdRef.current = newMsg.id;
+      lastSeenCountRef.current = messages.length + 1;
       setTimeout(() => scrollToBottom(), 50);
     } catch {
-      // Handle error silently
+      toast("Failed to send message", "error");
     }
   }
 
@@ -296,9 +349,44 @@ export default function ChatRoom() {
               : msg
           )
         );
+        toast("Message edited");
       }
     } catch {
-      // Handle silently
+      toast("Failed to edit", "error");
+    }
+  }
+
+  async function handleDelete(messageId: string) {
+    // Optimistically mark as deleted
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId ? { ...msg, isDeleted: true } : msg
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/messages/${messageId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast("Message deleted");
+      } else {
+        // Revert on failure
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId ? { ...msg, isDeleted: false } : msg
+          )
+        );
+        toast("Failed to delete", "error");
+      }
+    } catch {
+      // Revert on failure
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, isDeleted: false } : msg
+        )
+      );
+      toast("Failed to delete", "error");
     }
   }
 
@@ -320,6 +408,8 @@ export default function ChatRoom() {
       )
     );
 
+    toast(wantAction === "pin" ? "Message pinned" : "Message unpinned");
+
     try {
       await fetch(`/api/messages/${messageId}/pin`, {
         method: "POST",
@@ -339,6 +429,7 @@ export default function ChatRoom() {
             : m
         )
       );
+      toast("Failed to update pin", "error");
     }
   }
 
@@ -362,6 +453,7 @@ export default function ChatRoom() {
   }
 
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
+  const showConnectionIssue = isOffline || failedPolls >= 3;
 
   // Build grouped messages with day separators
   function renderMessages() {
@@ -389,6 +481,7 @@ export default function ChatRoom() {
           onReaction={handleReaction}
           onReply={(m) => setReplyingTo(m)}
           onEdit={handleEdit}
+          onDelete={handleDelete}
           onPin={handlePin}
           currentDisplayName={user!.displayName}
           currentUserId={user!.id}
@@ -434,6 +527,22 @@ export default function ChatRoom() {
 
   return (
     <div className="flex flex-col h-dvh" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      {/* Connection status banner */}
+      {showConnectionIssue && (
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-500 text-xs font-medium animate-slide-down-banner">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
+          {isOffline ? "You're offline" : "Reconnecting..."}
+        </div>
+      )}
+
       {/* Header */}
       <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
@@ -498,8 +607,8 @@ export default function ChatRoom() {
               </svg>
             </div>
             <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              <p className="text-foreground font-medium mb-1 font-heading">No messages yet</p>
-              <p className="text-muted text-sm">Start the conversation!</p>
+              <p className="text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
+              <p className="text-muted text-sm">No messages yet — start the conversation!</p>
               <p className="text-muted/50 text-xs mt-2">Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> to focus input</p>
             </div>
           </div>
@@ -526,7 +635,11 @@ export default function ChatRoom() {
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9" />
             </svg>
-            {showNewMessages ? "New messages" : "Scroll to bottom"}
+            {showNewMessages
+              ? unreadCount > 0
+                ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}`
+                : "New messages"
+              : "Scroll to bottom"}
           </button>
         </div>
       )}
