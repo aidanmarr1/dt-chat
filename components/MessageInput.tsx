@@ -3,10 +3,21 @@
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
 import GifPicker from "./GifPicker";
+import { useToast } from "./Toast";
 
 import Avatar from "./Avatar";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message, OnlineUser } from "@/lib/types";
+
+const SLASH_COMMANDS: { name: string; description: string; type: "text" | "action"; value?: string; action?: string }[] = [
+  { name: "shrug", description: "Send ¯\\_(ツ)_/¯", type: "text", value: "¯\\_(ツ)_/¯" },
+  { name: "tableflip", description: "Send (╯°□°)╯︵ ┻━┻", type: "text", value: "(╯°□°)╯︵ ┻━┻" },
+  { name: "unflip", description: "Send ┬─┬ノ( º _ ºノ)", type: "text", value: "┬─┬ノ( º _ ºノ)" },
+  { name: "lenny", description: "Send ( ͡° ͜ʖ ͡°)", type: "text", value: "( ͡° ͜ʖ ͡°)" },
+  { name: "disapprove", description: "Send ಠ_ಠ", type: "text", value: "ಠ_ಠ" },
+  { name: "giphy", description: "Open GIF picker", type: "action", action: "gif" },
+  { name: "poll", description: "Create a poll", type: "action", action: "poll" },
+];
 
 interface FilePreview {
   file: File;
@@ -49,6 +60,10 @@ export default function MessageInput({
   const [enterToSend, setEnterToSend] = useState(true);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+  const [aiChecking, setAiChecking] = useState(false);
+  const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
@@ -98,6 +113,30 @@ export default function MessageInput({
   }, [onTyping]);
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    // Slash command keyboard nav
+    if (slashQuery !== null && filteredSlashCommands.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSlashIndex((i) => (i + 1) % filteredSlashCommands.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSlashIndex((i) => (i - 1 + filteredSlashCommands.length) % filteredSlashCommands.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        executeCommand(filteredSlashCommands[slashIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setSlashQuery(null);
+        return;
+      }
+    }
+
     // Mention autocomplete keyboard nav
     if (mentionQuery !== null && filteredMentionUsers.length > 0) {
       if (e.key === "ArrowDown") {
@@ -176,7 +215,47 @@ export default function MessageInput({
 
   async function handleSend() {
     const trimmed = value.trim();
-    if ((!trimmed && !filePreview) || disabled || uploading) return;
+    if ((!trimmed && !filePreview) || disabled || uploading || aiChecking) return;
+
+    // Intercept slash commands typed directly (e.g. user types "/shrug" and hits Enter)
+    if (trimmed.startsWith("/") && !trimmed.includes(" ")) {
+      const cmdName = trimmed.slice(1).toLowerCase();
+      const cmd = SLASH_COMMANDS.find((c) => c.name === cmdName);
+      if (cmd) {
+        executeCommand(cmd);
+        return;
+      }
+    }
+
+    // AI message check
+    const aiCheckEnabled = typeof window !== "undefined" && localStorage.getItem("dt-ai-check") === "true";
+    if (aiCheckEnabled && trimmed && !filePreview) {
+      setAiChecking(true);
+      try {
+        const res = await fetch("/api/check-message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: trimmed }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.ok && data.corrected) {
+            setValue(data.corrected);
+            setAiChecking(false);
+            toast("Message corrected — press send again", "info");
+            if (textareaRef.current) {
+              textareaRef.current.style.height = "auto";
+              textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
+              textareaRef.current.focus();
+            }
+            return;
+          }
+        }
+      } catch {
+        // On error, proceed with sending
+      }
+      setAiChecking(false);
+    }
 
     let fileData: { fileName: string; fileType: string; fileSize: number; filePath: string } | undefined;
 
@@ -219,6 +298,49 @@ export default function MessageInput({
     }
     handleTyping();
     checkMention();
+    checkSlashCommand();
+  }
+
+  function checkSlashCommand() {
+    const el = textareaRef.current;
+    if (!el) { setSlashQuery(null); return; }
+    const text = el.value;
+    // Only trigger when the entire input starts with /
+    if (text.startsWith("/")) {
+      const query = text.slice(1);
+      // Don't show if there are spaces (command already typed, user is writing more)
+      if (!query.includes(" ")) {
+        setSlashQuery(query);
+        setSlashIndex(0);
+      } else {
+        setSlashQuery(null);
+      }
+    } else {
+      setSlashQuery(null);
+    }
+  }
+
+  const filteredSlashCommands = slashQuery !== null
+    ? SLASH_COMMANDS.filter((c) => c.name.toLowerCase().startsWith(slashQuery.toLowerCase())).slice(0, 7)
+    : [];
+
+  function executeCommand(cmd: typeof SLASH_COMMANDS[0]) {
+    setSlashQuery(null);
+    setValue("");
+    if (cmd.type === "text" && cmd.value) {
+      onSend(cmd.value, undefined, replyingTo?.id);
+      onCancelReply?.();
+      setJustSent(true);
+      setTimeout(() => setJustSent(false), 350);
+    } else if (cmd.action === "gif") {
+      setShowGif(true);
+    } else if (cmd.action === "poll" && onCreatePoll) {
+      onCreatePoll();
+    }
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
+    }
   }
 
   function checkMention() {
@@ -491,6 +613,23 @@ export default function MessageInput({
 
           {/* Textarea */}
           <div className="flex-1 relative">
+            {/* Slash command dropdown */}
+            {slashQuery !== null && filteredSlashCommands.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+                {filteredSlashCommands.map((cmd, i) => (
+                  <button
+                    key={cmd.name}
+                    onMouseDown={(e) => { e.preventDefault(); executeCommand(cmd); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors ${
+                      i === slashIndex ? "bg-accent/10 text-accent" : "text-foreground hover:bg-border/50"
+                    }`}
+                  >
+                    <span className="font-mono text-xs text-accent font-medium">/{cmd.name}</span>
+                    <span className="text-muted text-xs">{cmd.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Mention autocomplete dropdown */}
             {mentionQuery !== null && filteredMentionUsers.length > 0 && (
               <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
@@ -537,10 +676,10 @@ export default function MessageInput({
           {/* Send button */}
           <button
             onClick={handleSend}
-            disabled={disabled || uploading || (!value.trim() && !filePreview)}
+            disabled={disabled || uploading || aiChecking || (!value.trim() && !filePreview)}
             className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
           >
-            {uploading ? (
+            {uploading || aiChecking ? (
               <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
