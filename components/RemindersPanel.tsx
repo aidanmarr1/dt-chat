@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { Reminder } from "@/lib/types";
 
 interface RemindersPanelProps {
@@ -16,6 +17,15 @@ export default function RemindersPanel({
   onDelete,
 }: RemindersPanelProps) {
   const sortedReminders = [...reminders].sort((a, b) => a.reminderTime - b.reminderTime);
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   function formatTime(ts: number): string {
     const d = new Date(ts);
@@ -66,10 +76,11 @@ export default function RemindersPanel({
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {sortedReminders.map((r) => (
+              {sortedReminders.map((r, i) => (
                 <div
                   key={r.id}
-                  className="px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group"
+                  className="px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group animate-fade-in"
+                  style={{ animationDelay: `${i * 50}ms` }}
                   onClick={() => {
                     onScrollTo(r.messageId);
                     onClose();

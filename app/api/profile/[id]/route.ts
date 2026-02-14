@@ -22,6 +22,7 @@ export async function GET(
       email: users.email,
       avatarId: users.avatarId,
       bio: users.bio,
+      status: users.status,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -45,6 +46,7 @@ export async function GET(
       email: user.email,
       avatarId: user.avatarId ?? null,
       bio: user.bio ?? null,
+      status: user.status ?? null,
       createdAt: user.createdAt.toISOString(),
       messageCount: countResult?.count ?? 0,
     },

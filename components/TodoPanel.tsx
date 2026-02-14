@@ -1,23 +1,64 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useToast } from "./Toast";
 import type { TodoItem } from "@/lib/types";
 
 interface TodoPanelProps {
   onClose: () => void;
+  onTodoCountChange?: (count: number) => void;
 }
 
-export default function TodoPanel({ onClose }: TodoPanelProps) {
+function relativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.max(0, Math.floor((now - then) / 1000));
+
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 172800) return "yesterday";
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [newText, setNewText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("dt-todos-show-completed") !== "false";
+    }
+    return true;
+  });
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchTodos();
     inputRef.current?.focus();
   }, []);
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  // Persist show completed preference
+  useEffect(() => {
+    localStorage.setItem("dt-todos-show-completed", String(showCompleted));
+  }, [showCompleted]);
+
+  // Notify parent of uncompleted count
+  useEffect(() => {
+    const uncompleted = todos.filter((t) => !t.completed).length;
+    onTodoCountChange?.(uncompleted);
+  }, [todos, onTodoCountChange]);
 
   async function fetchTodos() {
     try {
@@ -52,6 +93,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
     setTodos((prev) => [...prev, optimistic]);
     setNewText("");
     inputRef.current?.focus();
+    toast("Task added");
 
     try {
       const res = await fetch("/api/todos", {
@@ -75,6 +117,15 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
     if (!todo) return;
 
     const newCompleted = !todo.completed;
+
+    // Trigger checkbox animation
+    setAnimatingIds((prev) => new Set(prev).add(id));
+    setTimeout(() => setAnimatingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    }), 300);
+
     setTodos((prev) =>
       prev.map((t) =>
         t.id === id
@@ -82,6 +133,8 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
           : t
       )
     );
+
+    toast(newCompleted ? "Task completed" : "Task uncompleted");
 
     try {
       const res = await fetch(`/api/todos/${id}`, {
@@ -105,6 +158,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
   async function handleDelete(id: string) {
     const prev = todos;
     setTodos((t) => t.filter((item) => item.id !== id));
+    toast("Task deleted");
 
     try {
       const res = await fetch(`/api/todos/${id}`, { method: "DELETE" });
@@ -186,17 +240,22 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
             <div>
               {/* Uncompleted */}
               <div className="divide-y divide-border">
-                {uncompleted.map((todo) => (
-                  <div key={todo.id} className="flex items-start gap-3 px-4 py-3 group hover:bg-surface/50 transition-colors">
+                {uncompleted.map((todo, i) => (
+                  <div
+                    key={todo.id}
+                    className="flex items-start gap-3 px-4 py-3 group hover:bg-surface/50 transition-colors animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
                     <button
                       onClick={() => handleToggle(todo.id)}
-                      className="mt-0.5 w-5 h-5 rounded-md border-2 border-border hover:border-accent transition-colors shrink-0 flex items-center justify-center"
+                      className={`mt-0.5 w-5 h-5 rounded-md border-2 border-border hover:border-accent transition-all shrink-0 flex items-center justify-center active:scale-90 ${animatingIds.has(todo.id) ? "animate-pop-in" : ""}`}
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-foreground break-words">{todo.text}</p>
                       <p className="text-[10px] text-muted mt-0.5">
                         Added by {todo.createdByName}
                       </p>
+                      <p className="text-[10px] text-muted/60">{relativeTime(todo.createdAt)}</p>
                     </div>
                     <button
                       onClick={() => handleDelete(todo.id)}
@@ -211,7 +270,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
                 ))}
               </div>
 
-              {/* Completed */}
+              {/* Completed — only show toggle if there are completed items */}
               {completed.length > 0 && (
                 <div>
                   <button
@@ -236,11 +295,15 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
                   </button>
                   {showCompleted && (
                     <div className="divide-y divide-border">
-                      {completed.map((todo) => (
-                        <div key={todo.id} className="flex items-start gap-3 px-4 py-3 group hover:bg-surface/50 transition-colors">
+                      {completed.map((todo, i) => (
+                        <div
+                          key={todo.id}
+                          className="flex items-start gap-3 px-4 py-3 group hover:bg-surface/50 transition-colors animate-fade-in"
+                          style={{ animationDelay: `${i * 50}ms` }}
+                        >
                           <button
                             onClick={() => handleToggle(todo.id)}
-                            className="mt-0.5 w-5 h-5 rounded-md border-2 border-accent bg-accent/20 transition-colors shrink-0 flex items-center justify-center"
+                            className={`mt-0.5 w-5 h-5 rounded-md border-2 border-accent bg-accent/20 transition-all shrink-0 flex items-center justify-center active:scale-90 ${animatingIds.has(todo.id) ? "animate-pop-in" : ""}`}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                               <polyline points="20 6 9 17 4 12" />
@@ -251,6 +314,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
                             <p className="text-[10px] text-muted/60 mt-0.5">
                               Completed by {todo.completedByName || "someone"}
                             </p>
+                            <p className="text-[10px] text-muted/60">{relativeTime(todo.createdAt)}</p>
                           </div>
                           <button
                             onClick={() => handleDelete(todo.id)}

@@ -33,6 +33,7 @@ interface MessageBubbleProps {
   timeFormat?: TimeFormat;
   onReminder?: (messageId: string, time: number) => void;
   hasReminder?: boolean;
+  reminderTime?: number | null;
   replyCount?: number;
   onViewThread?: (messageId: string) => void;
 }
@@ -138,6 +139,7 @@ export default function MessageBubble({
   timeFormat = "12h",
   onReminder,
   hasReminder,
+  reminderTime,
   replyCount = 0,
   onViewThread,
 }: MessageBubbleProps) {
@@ -293,11 +295,15 @@ export default function MessageBubble({
             <div
               className="px-3 py-1.5 mb-1 rounded-lg bg-background border-l-2 border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
               onClick={() => {
-                const el = document.getElementById(message.replyToId!);
-                if (el) {
-                  el.scrollIntoView({ behavior: "smooth", block: "center" });
-                  el.classList.add("!bg-accent/10");
-                  setTimeout(() => el.classList.remove("!bg-accent/10"), 1500);
+                if (onViewThread) {
+                  onViewThread(message.replyToId!);
+                } else {
+                  const el = document.getElementById(message.replyToId!);
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    el.classList.add("!bg-accent/10");
+                    setTimeout(() => el.classList.remove("!bg-accent/10"), 1500);
+                  }
                 }
               }}
             >
@@ -421,7 +427,13 @@ export default function MessageBubble({
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
-              Reminder set
+              {reminderTime ? (() => {
+                const d = new Date(reminderTime);
+                const now = new Date();
+                const isToday = d.toDateString() === now.toDateString();
+                const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                return `Reminder: ${isToday ? "Today" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${time}`;
+              })() : "Reminder set"}
             </p>
           )}
 

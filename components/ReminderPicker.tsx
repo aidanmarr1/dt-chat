@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "./Toast";
 
 interface ReminderPickerProps {
   onSet: (time: number) => void;
@@ -10,6 +11,16 @@ interface ReminderPickerProps {
 export default function ReminderPicker({ onSet, onClose }: ReminderPickerProps) {
   const [customDate, setCustomDate] = useState("");
   const [customTime, setCustomTime] = useState("");
+  const { toast } = useToast();
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   function getTomorrow9am(): number {
     const d = new Date();
@@ -28,7 +39,10 @@ export default function ReminderPicker({ onSet, onClose }: ReminderPickerProps) 
   function handleCustom() {
     if (!customDate || !customTime) return;
     const dt = new Date(`${customDate}T${customTime}`);
-    if (dt.getTime() <= Date.now()) return;
+    if (dt.getTime() <= Date.now()) {
+      toast("Pick a time in the future", "error");
+      return;
+    }
     onSet(dt.getTime());
   }
 

@@ -28,6 +28,44 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function isTenorUrl(url: string): boolean {
+  return /^https?:\/\/media\.tenor\.com\/.+\.(gif|mp4)/i.test(url);
+}
+
+function renderContent(text: string, isOwn: boolean) {
+  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
+  return parts.map((part, i) => {
+    if (part.match(/^(https?:\/\/|www\.)/)) {
+      if (isTenorUrl(part)) {
+        return (
+          <img key={i} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" />
+        );
+      }
+      const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
+      return (
+        <a key={i} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
+          {displayText}
+        </a>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 1) {
+      return <code key={i} className="px-1.5 py-0.5 rounded text-[13px] font-mono border bg-background border-border">{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**") && part.length > 2) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    if (part.match(/^@\w+/)) {
+      return <span key={i} className="font-semibold text-accent">{part}</span>;
+    }
+    return part;
+  });
+}
+
+const MAX_REPLY_LENGTH = 2000;
+
 export default function ThreadPanel({
   parentMessage,
   replies,
@@ -43,6 +81,20 @@ export default function ThreadPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [replies.length]);
+
+  // Auto-focus reply input on open
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   function handleSend() {
     const trimmed = replyText.trim();
@@ -92,7 +144,8 @@ export default function ThreadPanel({
             return (
               <div
                 key={msg.id}
-                className={`${isParent ? "pb-3 border-b border-border mb-3" : ""}`}
+                className={`${isParent ? "pb-3 border-b border-border mb-3" : "animate-fade-in"}`}
+                style={!isParent ? { animationDelay: `${(i - 1) * 50}ms` } : undefined}
               >
                 <div className="flex items-start gap-2">
                   <Avatar displayName={msg.displayName} userId={msg.userId} avatarId={msg.avatarId} size="sm" />
@@ -105,13 +158,13 @@ export default function ThreadPanel({
                         {formatDate(msg.createdAt)} {formatTime(msg.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words mt-0.5">
+                    <div className="text-sm text-foreground whitespace-pre-wrap break-words mt-0.5">
                       {msg.isDeleted ? (
                         <span className="italic text-muted">This message was deleted</span>
                       ) : (
-                        msg.content
+                        renderContent(msg.content, isOwn)
                       )}
-                    </p>
+                    </div>
                     {msg.fileName && (
                       <p className="text-xs text-muted mt-0.5">{msg.fileName}</p>
                     )}
@@ -120,6 +173,18 @@ export default function ThreadPanel({
               </div>
             );
           })}
+
+          {/* Empty state when no replies */}
+          {replies.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 gap-3 text-muted animate-fade-in">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              <p className="text-sm">No replies yet</p>
+              <p className="text-xs text-muted/60">Start the conversation!</p>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
 
@@ -129,7 +194,7 @@ export default function ThreadPanel({
             <textarea
               ref={inputRef}
               value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
+              onChange={(e) => setReplyText(e.target.value.slice(0, MAX_REPLY_LENGTH))}
               onKeyDown={handleKeyDown}
               placeholder={`Reply as ${currentDisplayName}...`}
               className="flex-1 text-sm bg-surface border border-border rounded-xl px-3 py-2 text-foreground placeholder:text-muted resize-none focus:border-accent focus:outline-none max-h-24"
@@ -145,6 +210,7 @@ export default function ThreadPanel({
               </svg>
             </button>
           </div>
+          <p className="text-[10px] text-muted text-right mt-1">{replyText.length}/{MAX_REPLY_LENGTH}</p>
         </div>
       </div>
     </>

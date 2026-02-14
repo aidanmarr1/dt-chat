@@ -92,6 +92,9 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground font-heading">{profile.displayName}</h3>
                   <p className="text-xs text-muted">{profile.email}</p>
+                  {profile.status && (
+                    <p className="text-xs text-foreground/70 mt-1 px-2 py-0.5 rounded-full bg-surface inline-block">{profile.status}</p>
+                  )}
                 </div>
               </div>
 

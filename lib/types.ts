@@ -13,6 +13,7 @@ export interface UserProfile {
   email: string;
   avatarId?: string | null;
   bio?: string | null;
+  status?: string | null;
   createdAt: string;
   messageCount: number;
 }

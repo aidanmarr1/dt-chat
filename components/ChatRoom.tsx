@@ -74,6 +74,8 @@ export default function ChatRoom() {
   const [threadParentId, setThreadParentId] = useState<string | null>(null);
   // Feature 5: Todos
   const [showTodos, setShowTodos] = useState(false);
+  const [todoCount, setTodoCount] = useState(0);
+  const todoCountFetched = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
@@ -592,6 +594,20 @@ export default function ChatRoom() {
     router.push("/auth");
   }
 
+  // Fetch todo count on mount for badge
+  useEffect(() => {
+    if (todoCountFetched.current) return;
+    todoCountFetched.current = true;
+    fetch("/api/todos")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.todos) {
+          setTodoCount(data.todos.filter((t: { completed: boolean }) => !t.completed).length);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // === Feature 2: Reminder handlers ===
   function handleSetReminder(messageId: string, reminderTime: number) {
     const msg = messages.find((m) => m.id === messageId);
@@ -620,14 +636,43 @@ export default function ChatRoom() {
     toast("Reminder removed");
   }
 
+  // Snooze a reminder
+  function handleSnoozeReminder(reminder: Reminder, minutes: number) {
+    const snoozed: Reminder = {
+      ...reminder,
+      id: crypto.randomUUID(),
+      reminderTime: Date.now() + minutes * 60 * 1000,
+    };
+    setReminders((prev) => {
+      const next = [...prev, snoozed];
+      localStorage.setItem("dt-reminders", JSON.stringify(next));
+      return next;
+    });
+    toast(`Snoozed for ${minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`}`);
+  }
+
   // Check reminders periodically
   useEffect(() => {
     if (reminders.length === 0) return;
     const interval = setInterval(() => {
       const now = Date.now();
-      const due = reminders.filter((r) => r.reminderTime <= now);
+
+      // Orphan cleanup: remove reminders whose message no longer exists
+      const messageIds = new Set(messages.map((m) => m.id));
+      const orphans = reminders.filter((r) => !messageIds.has(r.messageId) && messages.length > 0);
+      if (orphans.length > 0) {
+        setReminders((prev) => {
+          const next = prev.filter((r) => messageIds.has(r.messageId) || messages.length === 0);
+          localStorage.setItem("dt-reminders", JSON.stringify(next));
+          return next;
+        });
+      }
+
+      const due = reminders.filter((r) => r.reminderTime <= now && messageIds.has(r.messageId));
       if (due.length === 0) return;
       for (const r of due) {
+        // Play sound on reminder fire
+        if (soundEnabled) playNotificationSound();
         toast(`Reminder: ${r.messagePreview}`);
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("Reminder", { body: r.messagePreview, tag: `reminder-${r.id}` });
@@ -642,7 +687,7 @@ export default function ChatRoom() {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reminders]);
+  }, [reminders, messages, soundEnabled]);
 
   // === Feature 3: Status handler ===
   async function handleSetStatus(status: string | null) {
@@ -682,6 +727,7 @@ export default function ChatRoom() {
   }
 
   const reminderMessageIds = new Set(reminders.map((r) => r.messageId));
+  const reminderTimeMap = new Map(reminders.map((r) => [r.messageId, r.reminderTime]));
 
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
   const showConnectionIssue = isOffline || failedPolls >= 3;
@@ -723,6 +769,7 @@ export default function ChatRoom() {
           timeFormat={timeFormat}
           onReminder={handleSetReminder}
           hasReminder={reminderMessageIds.has(msg.id)}
+          reminderTime={reminderTimeMap.get(msg.id) ?? null}
           replyCount={replyCountMap.get(msg.id) || 0}
           onViewThread={handleViewThread}
         />
@@ -789,9 +836,12 @@ export default function ChatRoom() {
             <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
             <button
               onClick={() => setShowStatusPicker(true)}
-              className="text-[10px] text-muted hover:text-accent transition-colors truncate max-w-[120px]"
+              className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:border-accent text-muted hover:text-accent transition-all truncate max-w-[140px] flex items-center gap-1"
               title="Set your status"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
               {user?.status || "Set status"}
             </button>
           </div>
@@ -826,12 +876,17 @@ export default function ChatRoom() {
           {/* To-Do */}
           <button
             onClick={() => setShowTodos(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
             title="To-do list"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
+            {todoCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                {todoCount > 9 ? "9+" : todoCount}
+              </span>
+            )}
           </button>
           {/* Reminders */}
           <button
@@ -937,7 +992,7 @@ export default function ChatRoom() {
 
       {/* Todo panel */}
       {showTodos && (
-        <TodoPanel onClose={() => setShowTodos(false)} />
+        <TodoPanel onClose={() => setShowTodos(false)} onTodoCountChange={setTodoCount} />
       )}
 
       {/* Celebration effects */}

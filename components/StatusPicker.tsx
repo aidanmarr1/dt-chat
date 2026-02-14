@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface StatusPickerProps {
   currentStatus?: string | null;
@@ -19,6 +19,21 @@ const PRESETS = [
 
 export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPickerProps) {
   const [custom, setCustom] = useState(currentStatus || "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  // Auto-focus custom input
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   return (
     <>
@@ -54,6 +69,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
             <div className="h-px bg-border mb-3" />
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 type="text"
                 value={custom}
                 onChange={(e) => setCustom(e.target.value.slice(0, 100))}
@@ -74,6 +90,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
                 Set
               </button>
             </div>
+            <p className="text-[10px] text-muted mt-1.5 px-1">Auto-clears after 4 hours</p>
             {currentStatus && (
               <button
                 onClick={() => { onSet(null); onClose(); }}
