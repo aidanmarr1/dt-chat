@@ -196,7 +196,7 @@ export default function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isGrouped ? "mb-0.5" : "mb-3"} animate-fade-in`}
       >
-        {!isOwn && !isGrouped && <div className="mr-2 mt-auto"><Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" /></div>}
+        {!isOwn && !isGrouped && <div className="mr-2 mt-1"><Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" /></div>}
         {!isOwn && isGrouped && <div className="w-6 mr-2" />}
         <div className="max-w-[88%] sm:max-w-[75%]">
           {!isOwn && !isGrouped && <p className="text-xs text-muted mb-1 px-1 font-medium">{message.displayName}</p>}
@@ -265,7 +265,7 @@ export default function MessageBubble({
       >
         {/* Avatar for others */}
         {!isOwn && !isGrouped && (
-          <div className="mr-2 mt-auto cursor-pointer" onClick={() => setShowProfile(true)}>
+          <div className="mr-2 mt-1 cursor-pointer" onClick={() => setShowProfile(true)}>
             <Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" />
           </div>
         )}
