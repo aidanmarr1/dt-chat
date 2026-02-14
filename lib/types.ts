@@ -58,6 +58,7 @@ export interface Message {
   pinnedByName?: string | null;
   readBy?: { userId: string; displayName: string; avatarId?: string | null }[];
   linkPreviews?: LinkPreview[];
+  poll?: Poll | null;
 }
 
 export interface OnlineUser {
@@ -71,4 +72,31 @@ export interface MessagesResponse {
   onlineCount: number;
   onlineUsers: OnlineUser[];
   typingUsers: string[];
+}
+
+export interface Bookmark {
+  messageId: string;
+  content: string;
+  displayName: string;
+  createdAt: string;
+  bookmarkedAt: string;
+  fileName?: string | null;
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  voted: boolean;
+  voterNames: string[];
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+  totalVotes: number;
+  createdBy: string;
+  createdByName: string;
+  createdAt: string;
 }

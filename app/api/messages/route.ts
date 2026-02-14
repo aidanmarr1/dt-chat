@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { messages, users, reactions, readReceipts, linkPreviews } from "@/lib/schema";
+import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { ensurePollTables } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
 
 function extractUrls(text: string): string[] {
@@ -202,10 +203,78 @@ export async function GET() {
     });
   }
 
+  // Ensure poll tables exist before trying to query them
+  await ensurePollTables();
+
+  // Enrich poll messages
+  const pollMessageIds = rows
+    .filter((r) => !r.deletedAt && r.content.startsWith("::poll::"))
+    .map((r) => r.content.replace("::poll::", ""));
+
+  const pollMap = new Map<string, {
+    id: string;
+    question: string;
+    options: { id: string; text: string; votes: number; voted: boolean; voterNames: string[] }[];
+    totalVotes: number;
+    createdBy: string;
+    createdByName: string;
+    createdAt: string;
+  }>();
+
+  if (pollMessageIds.length > 0) {
+    try {
+      for (const pollId of pollMessageIds) {
+        const poll = await db.select().from(polls).where(eq(polls.id, pollId)).get();
+        if (!poll) continue;
+
+        const votes = await db.select().from(pollVotes).where(eq(pollVotes.pollId, pollId));
+        const pollOptions: { id: string; text: string }[] = JSON.parse(poll.options);
+
+        // Get voter names
+        const voterIds = [...new Set(votes.map((v) => v.userId))];
+        const voterNameMap = new Map<string, string>();
+        for (const vid of voterIds) {
+          const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, vid)).get();
+          if (u) voterNameMap.set(vid, u.displayName);
+        }
+
+        const creatorUser = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, poll.createdBy)).get();
+
+        const enrichedOptions = pollOptions.map((o) => {
+          const optVotes = votes.filter((v) => v.optionId === o.id);
+          return {
+            id: o.id,
+            text: o.text,
+            votes: optVotes.length,
+            voted: optVotes.some((v) => v.userId === user.id),
+            voterNames: optVotes.map((v) => voterNameMap.get(v.userId) || "Unknown"),
+          };
+        });
+
+        pollMap.set(pollId, {
+          id: pollId,
+          question: poll.question,
+          options: enrichedOptions,
+          totalVotes: votes.length,
+          createdBy: poll.createdBy,
+          createdByName: creatorUser?.displayName || "Unknown",
+          createdAt: poll.createdAt instanceof Date ? poll.createdAt.toISOString() : String(poll.createdAt),
+        });
+      }
+    } catch {
+      // Poll tables may not exist yet — skip enrichment
+    }
+  }
+
   // Build response messages
   const responseMessages = rows.reverse().map((row) => {
     const reply = row.replyToId ? replyMap.get(row.replyToId) : null;
     const isDeleted = !!row.deletedAt;
+
+    // Check if this is a poll message
+    const pollId = !isDeleted && row.content.startsWith("::poll::") ? row.content.replace("::poll::", "") : null;
+    const poll = pollId ? pollMap.get(pollId) ?? null : null;
+
     return {
       ...row,
       content: isDeleted ? "" : row.content,
@@ -218,6 +287,7 @@ export async function GET() {
       reactions: reactionMap.get(row.id) ?? [],
       readBy: readByMap.get(row.id) ?? [],
       linkPreviews: linkPreviewMap.get(row.id) ?? [],
+      poll,
     };
   });
 

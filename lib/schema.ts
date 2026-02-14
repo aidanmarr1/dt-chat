@@ -64,3 +64,26 @@ export const readReceipts = sqliteTable("readReceipts", {
     .references(() => messages.id),
   readAt: integer("read_at", { mode: "timestamp" }).notNull(),
 });
+
+export const polls = sqliteTable("polls", {
+  id: text("id").primaryKey(),
+  question: text("question").notNull(),
+  options: text("options").notNull(), // JSON array of {id, text}
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  messageId: text("message_id").references(() => messages.id),
+});
+
+export const pollVotes = sqliteTable("pollVotes", {
+  id: text("id").primaryKey(),
+  pollId: text("poll_id")
+    .notNull()
+    .references(() => polls.id),
+  optionId: text("option_id").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});

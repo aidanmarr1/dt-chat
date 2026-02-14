@@ -8,6 +8,7 @@ import ImageLightbox from "./ImageLightbox";
 import LinkPreviewCard from "./LinkPreviewCard";
 import AudioPlayer from "./AudioPlayer";
 import UserProfilePopover from "./UserProfilePopover";
+import PollCard from "./PollCard";
 import { useToast } from "./Toast";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message } from "@/lib/types";
@@ -23,6 +24,9 @@ interface MessageBubbleProps {
   onEdit: (messageId: string, content: string) => void;
   onDelete: (messageId: string) => void;
   onPin: (messageId: string) => void;
+  onBookmark?: (messageId: string) => void;
+  isBookmarked?: boolean;
+  onVote?: (pollId: string, optionId: string) => void;
   currentDisplayName?: string;
   currentUserId?: string;
   timeFormat?: TimeFormat;
@@ -121,6 +125,9 @@ export default function MessageBubble({
   onEdit,
   onDelete,
   onPin,
+  onBookmark,
+  isBookmarked,
+  onVote,
   currentDisplayName,
   currentUserId,
   timeFormat = "12h",
@@ -201,8 +208,9 @@ export default function MessageBubble({
       ? message.filePath!
       : `/api/files/${message.filePath}`
     : null;
-  const isGifOnly = !hasFile && message.content ? isGifOnlyMessage(message.content) : false;
-  const emojiCount = !hasFile && message.content && !isGifOnly ? emojiOnlyCount(message.content) : null;
+  const isPollMessage = message.content?.startsWith("::poll::");
+  const isGifOnly = !hasFile && message.content && !isPollMessage ? isGifOnlyMessage(message.content) : false;
+  const emojiCount = !hasFile && message.content && !isGifOnly && !isPollMessage ? emojiOnlyCount(message.content) : null;
   const isLargeEmoji = emojiCount !== null && emojiCount >= 1 && emojiCount <= 3;
 
   function startEdit() {
@@ -351,8 +359,13 @@ export default function MessageBubble({
                 </div>
               )}
 
+              {/* Poll content */}
+              {isPollMessage && message.poll && onVote && (
+                <PollCard poll={message.poll} onVote={onVote} isOwn={isOwn} />
+              )}
+
               {/* Text content */}
-              {message.content && (
+              {message.content && !isPollMessage && (
                 <p className="text-sm whitespace-pre-wrap break-words msg-text">
                   {renderContent(message.content, isOwn, undefined, currentDisplayName)}
                 </p>
@@ -416,6 +429,14 @@ export default function MessageBubble({
                 </svg>
               </button>
 
+              {onBookmark && (
+                <button onClick={() => onBookmark(message.id)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${isBookmarked ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "45ms" }} title={isBookmarked ? "Remove bookmark" : "Bookmark"}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                  </svg>
+                </button>
+              )}
+
               <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"}>
                 {copied ? (
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -474,6 +495,17 @@ export default function MessageBubble({
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                     Copy
                   </button>
+                  {onBookmark && (
+                    <>
+                      <div className="h-px bg-border mx-3" />
+                      <button onClick={() => { onBookmark(message.id); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isBookmarked ? "text-accent" : "text-muted"}>
+                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                        </svg>
+                        {isBookmarked ? "Remove Bookmark" : "Bookmark"}
+                      </button>
+                    </>
+                  )}
                   <div className="h-px bg-border mx-3" />
                   <button onClick={() => { setShowReactionPicker(true); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>

@@ -10,9 +10,12 @@ import OnlineUsers from "./OnlineUsers";
 import SettingsMenu from "./SettingsMenu";
 import SearchMessages from "./SearchMessages";
 import PinnedMessages from "./PinnedMessages";
+import BookmarksPanel from "./BookmarksPanel";
+import MediaGallery from "./MediaGallery";
+import PollCreator from "./PollCreator";
 import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
-import type { Message, User, OnlineUser } from "@/lib/types";
+import type { Message, User, OnlineUser, Bookmark } from "@/lib/types";
 
 function isSameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
@@ -47,6 +50,10 @@ export default function ChatRoom() {
   const [headerShadow, setHeaderShadow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
   const [isOffline, setIsOffline] = useState(false);
   const [failedPolls, setFailedPolls] = useState(0);
@@ -80,6 +87,11 @@ export default function ChatRoom() {
     }
     const tf = localStorage.getItem("dt-time-format");
     if (tf === "24h") setTimeFormat("24h");
+    // Load bookmarks
+    try {
+      const storedBookmarks = localStorage.getItem("dt-bookmarks");
+      if (storedBookmarks) setBookmarks(JSON.parse(storedBookmarks));
+    } catch { /* ignore */ }
   }, []);
 
   function toggleSound() {
@@ -433,6 +445,109 @@ export default function ChatRoom() {
     }
   }
 
+  function handleBookmark(messageId: string) {
+    setBookmarks((prev) => {
+      const exists = prev.find((b) => b.messageId === messageId);
+      let next: Bookmark[];
+      if (exists) {
+        next = prev.filter((b) => b.messageId !== messageId);
+        toast("Bookmark removed");
+      } else {
+        const msg = messages.find((m) => m.id === messageId);
+        if (!msg) return prev;
+        next = [
+          {
+            messageId: msg.id,
+            content: msg.content,
+            displayName: msg.displayName,
+            createdAt: msg.createdAt,
+            bookmarkedAt: new Date().toISOString(),
+            fileName: msg.fileName,
+          },
+          ...prev,
+        ];
+        toast("Message bookmarked");
+      }
+      localStorage.setItem("dt-bookmarks", JSON.stringify(next));
+      return next;
+    });
+  }
+
+  async function handleVote(pollId: string, optionId: string) {
+    // Optimistic update
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (!msg.poll || msg.poll.id !== pollId) return msg;
+        const currentVoted = msg.poll.options.find((o) => o.voted);
+        const updatedOptions = msg.poll.options.map((o) => {
+          if (o.id === optionId) {
+            // Toggle this option
+            if (o.voted) {
+              return { ...o, voted: false, votes: o.votes - 1 };
+            }
+            return { ...o, voted: true, votes: o.votes + 1 };
+          }
+          // Remove vote from previously voted option
+          if (currentVoted && o.id === currentVoted.id && currentVoted.id !== optionId) {
+            return { ...o, voted: false, votes: o.votes - 1 };
+          }
+          return o;
+        });
+
+        const clickedWasVoted = msg.poll.options.find((o) => o.id === optionId)?.voted;
+        const totalDelta = clickedWasVoted ? -1 : (currentVoted && currentVoted.id !== optionId ? 0 : 1);
+
+        return {
+          ...msg,
+          poll: {
+            ...msg.poll,
+            options: updatedOptions,
+            totalVotes: msg.poll.totalVotes + totalDelta,
+          },
+        };
+      })
+    );
+
+    try {
+      await fetch(`/api/polls/${pollId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optionId }),
+      });
+    } catch {
+      toast("Failed to vote", "error");
+    }
+  }
+
+  async function handleCreatePoll(question: string, options: string[]) {
+    setShowPollCreator(false);
+    try {
+      const res = await fetch("/api/polls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, options }),
+      });
+      if (!res.ok) {
+        toast("Failed to create poll", "error");
+        return;
+      }
+      const data = await res.json();
+      const newMsg: Message = {
+        ...data.message,
+        createdAt:
+          typeof data.message.createdAt === "string"
+            ? data.message.createdAt
+            : new Date(data.message.createdAt).toISOString(),
+      };
+      setMessages((prev) => [...prev, newMsg]);
+      latestMessageIdRef.current = newMsg.id;
+      lastSeenCountRef.current = messages.length + 1;
+      setTimeout(() => scrollToBottom(), 50);
+    } catch {
+      toast("Failed to create poll", "error");
+    }
+  }
+
   function postReadReceipt(messageId: string) {
     if (messageId === lastReadReceiptRef.current) return;
     lastReadReceiptRef.current = messageId;
@@ -454,6 +569,7 @@ export default function ChatRoom() {
 
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
   const showConnectionIssue = isOffline || failedPolls >= 3;
+  const bookmarkedIds = new Set(bookmarks.map((b) => b.messageId));
 
   // Build grouped messages with day separators
   function renderMessages() {
@@ -483,6 +599,9 @@ export default function ChatRoom() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onPin={handlePin}
+          onBookmark={handleBookmark}
+          isBookmarked={bookmarkedIds.has(msg.id)}
+          onVote={handleVote}
           currentDisplayName={user!.displayName}
           currentUserId={user!.id}
           timeFormat={timeFormat}
@@ -550,6 +669,31 @@ export default function ChatRoom() {
           <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Media gallery */}
+          <button
+            onClick={() => setShowMediaGallery(true)}
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+            title="Media gallery"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+          </button>
+          {/* Bookmarks */}
+          <button
+            onClick={() => setShowBookmarks(true)}
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+            title="Bookmarks"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+            </svg>
+            {bookmarks.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                {bookmarks.length > 9 ? "9+" : bookmarks.length}
+              </span>
+            )}
+          </button>
           {/* Search */}
           <button
             onClick={() => setShowSearch(true)}
@@ -579,6 +723,29 @@ export default function ChatRoom() {
         <SearchMessages
           onClose={() => setShowSearch(false)}
           onScrollTo={scrollToMessage}
+        />
+      )}
+
+      {/* Bookmarks panel */}
+      {showBookmarks && (
+        <BookmarksPanel
+          bookmarks={bookmarks}
+          onClose={() => setShowBookmarks(false)}
+          onScrollTo={scrollToMessage}
+          onRemove={handleBookmark}
+        />
+      )}
+
+      {/* Media gallery */}
+      {showMediaGallery && (
+        <MediaGallery onClose={() => setShowMediaGallery(false)} />
+      )}
+
+      {/* Poll creator */}
+      {showPollCreator && (
+        <PollCreator
+          onClose={() => setShowPollCreator(false)}
+          onCreate={handleCreatePoll}
         />
       )}
 
@@ -651,6 +818,7 @@ export default function ChatRoom() {
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         onlineUsers={onlineUsers}
+        onCreatePoll={() => setShowPollCreator(true)}
       />
     </div>
   );
