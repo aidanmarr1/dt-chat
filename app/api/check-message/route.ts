@@ -29,12 +29,7 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `You fix spelling and grammar in chat messages. Rules:
-- If the message has NO errors, reply with exactly: OK
-- If it HAS errors, reply with ONLY the fixed message. Nothing else. No quotes, no explanation, no prefixes.
-- Keep the same tone and casualness. Only fix real misspellings and broken grammar.
-- Do NOT change slang or abbreviations like "u", "ur", "lol", "brb", "ngl", etc.
-- Do NOT add punctuation that wasn't there.`,
+            content: `You fix spelling AND grammar in chat messages. If the message has no errors, reply with exactly: OK. If it has errors, reply with ONLY the corrected message — no quotes, no explanation, no prefixes, just the fixed text. Fix misspellings, wrong words (there/they're/their, your/you're, no/know, etc.), missing apostrophes, and bad grammar. Keep the casual tone.`,
           },
           { role: "user", content: message },
         ],
