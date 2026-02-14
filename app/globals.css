@@ -270,25 +270,6 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   animation: online-pulse 2s ease-in-out infinite;
 }
 
-/* Voice recording waveform bars */
-@keyframes waveform {
-  0%, 100% { height: 20%; }
-  50% { height: 80%; }
-}
-
-@utility animate-waveform {
-  animation: waveform 0.8s ease-in-out infinite;
-}
-
-/* Recording pulse */
-@keyframes recording-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@utility animate-recording-pulse {
-  animation: recording-pulse 1s ease-in-out infinite;
-}
 
 /* Chat font size preferences */
 html[data-font-size="small"] .msg-text { font-size: 0.8125rem; }

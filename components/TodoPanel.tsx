@@ -261,7 +261,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
                     </div>
                     <button
                       onClick={() => handleDelete(todo.id)}
-                      className="p-1 rounded hover:bg-red-500/10 text-muted hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 shrink-0"
+                      className="p-1 rounded hover:bg-red-500/10 text-muted hover:text-red-400 transition-all sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
                       title="Delete"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -320,7 +320,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
                           </div>
                           <button
                             onClick={() => handleDelete(todo.id)}
-                            className="p-1 rounded hover:bg-red-500/10 text-muted hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 shrink-0"
+                            className="p-1 rounded hover:bg-red-500/10 text-muted hover:text-red-400 transition-all sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
                             title="Delete"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

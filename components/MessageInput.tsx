@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
 import GifPicker from "./GifPicker";
-import VoiceRecorder from "./VoiceRecorder";
+
 import Avatar from "./Avatar";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message, OnlineUser } from "@/lib/types";
@@ -40,7 +40,7 @@ export default function MessageInput({
   });
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+
   const [filePreview, setFilePreview] = useState<FilePreview | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -311,25 +311,6 @@ export default function MessageInput({
     onCancelReply?.();
   }
 
-  async function handleVoiceRecorded(file: File) {
-    setShowVoiceRecorder(false);
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) {
-        const fileData = await res.json();
-        onSend("", fileData, replyingTo?.id);
-        onCancelReply?.();
-      }
-    } catch {
-      // ignore
-    }
-    setUploading(false);
-  }
-
-  const showMicButton = !value.trim() && !filePreview && !showVoiceRecorder;
 
   return (
     <div
@@ -429,13 +410,7 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* Input row — or voice recorder */}
-      {showVoiceRecorder ? (
-        <VoiceRecorder
-          onRecorded={handleVoiceRecorded}
-          onCancel={() => setShowVoiceRecorder(false)}
-        />
-      ) : (
+      {/* Input row */}
         <div className="flex items-center gap-2 p-4">
           {/* Attach button */}
           <button
@@ -559,21 +534,6 @@ export default function MessageInput({
             )}
           </div>
 
-          {/* Mic button (shown when textarea empty and no file) */}
-          {showMicButton && (
-            <button
-              onClick={() => setShowVoiceRecorder(true)}
-              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
-              title="Voice message"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="22" />
-              </svg>
-            </button>
-          )}
-
           {/* Send button */}
           <button
             onClick={handleSend}
@@ -592,7 +552,6 @@ export default function MessageInput({
             )}
           </button>
         </div>
-      )}
     </div>
   );
 }
