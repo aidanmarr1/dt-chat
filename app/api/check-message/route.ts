@@ -12,51 +12,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    // If no API key configured, just pass through
     return NextResponse.json({ ok: true });
   }
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Fix any spelling or grammar errors in the message below. Rules:
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          {
+            role: "system",
+            content: `You fix spelling and grammar in chat messages. Rules:
 - If the message has NO errors, reply with exactly: OK
-- If the message HAS errors, reply with ONLY the fixed message. Nothing else. No quotes, no explanation, no commentary, no prefixes like "Corrected:" — just the raw fixed message text.
-- Keep the same tone, slang, and casualness. Only fix actual misspellings and broken grammar.
-- Do NOT change intentional abbreviations like "u", "ur", "lol", "brb", etc.
-- Do NOT add punctuation to casual chat messages that don't need it.
-
-${message}`,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 500,
+- If it HAS errors, reply with ONLY the fixed message. Nothing else. No quotes, no explanation, no prefixes.
+- Keep the same tone and casualness. Only fix real misspellings and broken grammar.
+- Do NOT change slang or abbreviations like "u", "ur", "lol", "brb", "ngl", etc.
+- Do NOT add punctuation that wasn't there.`,
           },
-        }),
-      }
-    );
+          { role: "user", content: message },
+        ],
+        temperature: 0.1,
+        max_tokens: 500,
+      }),
+    });
 
     if (!res.ok) {
-      // API error — let the message through
       return NextResponse.json({ ok: true });
     }
 
     const data = await res.json();
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+    const reply = data?.choices?.[0]?.message?.content?.trim() ?? "";
 
     if (!reply || reply === "OK") {
       return NextResponse.json({ ok: true });
@@ -64,7 +56,6 @@ ${message}`,
 
     return NextResponse.json({ ok: false, corrected: reply });
   } catch {
-    // On any error, let the message through
     return NextResponse.json({ ok: true });
   }
 }
