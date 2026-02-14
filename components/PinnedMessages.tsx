@@ -16,12 +16,27 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin }: Pinned
 
   const latest = messages[messages.length - 1];
 
+  function handleBarKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (messages.length > 1) {
+        setExpanded(!expanded);
+      } else {
+        onScrollTo(latest.id);
+      }
+    }
+  }
+
   return (
     <div className="border-b border-border bg-accent/5">
       {/* Collapsed: show latest pinned */}
       <button
         onClick={() => messages.length > 1 ? setExpanded(!expanded) : onScrollTo(latest.id)}
+        onKeyDown={handleBarKeyDown}
         className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-accent/10 transition-colors"
+        tabIndex={0}
+        role="button"
+        aria-expanded={messages.length > 1 ? expanded : undefined}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0">
           <line x1="12" y1="17" x2="12" y2="22" />
@@ -47,10 +62,11 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin }: Pinned
       {/* Expanded: show all pinned */}
       {expanded && (
         <div className="border-t border-border/50 max-h-[40vh] sm:max-h-48 overflow-y-auto animate-fade-scale">
-          {messages.map((msg) => (
+          {messages.map((msg, i) => (
             <div
               key={msg.id}
-              className="flex items-center gap-2 px-4 py-2 hover:bg-accent/10 transition-colors group"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-accent/10 transition-colors group animate-fade-in"
+              style={{ animationDelay: `${i * 50}ms` }}
             >
               <button
                 onClick={() => onScrollTo(msg.id)}

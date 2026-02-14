@@ -171,7 +171,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
           {/* Results list */}
           {!loading && results.length > 0 && (
             <>
-              <div className="px-4 pt-2.5 pb-1.5">
+              <div className="px-4 pt-2.5 pb-1.5 animate-fade-in">
                 <span className="text-[11px] font-medium text-muted">
                   {results.length} result{results.length !== 1 ? "s" : ""}
                 </span>
@@ -180,11 +180,12 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
                 <button
                   key={r.id}
                   onClick={() => handleResultClick(r.id)}
-                  className={`w-full text-left px-4 py-2.5 transition-colors flex items-start gap-3 ${
+                  className={`w-full text-left px-4 py-2.5 transition-colors flex items-start gap-3 animate-fade-in ${
                     selectedIndex === i
                       ? "bg-accent/10"
                       : "hover:bg-background active:bg-border/30"
                   }`}
+                  style={{ animationDelay: `${i * 50}ms` }}
                 >
                   <div className="shrink-0 mt-0.5">
                     <Avatar displayName={r.displayName} userId={r.userId} avatarId={r.avatarId} size="sm" />

@@ -2,14 +2,20 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface ToastItem {
   id: number;
   message: string;
   type: "success" | "info" | "error";
+  action?: ToastAction;
 }
 
 interface ToastContextValue {
-  toast: (message: string, type?: "success" | "info" | "error") => void;
+  toast: (message: string, type?: "success" | "info" | "error", action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextValue>({ toast: () => {} });
@@ -23,19 +29,23 @@ let nextId = 0;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const toast = useCallback((message: string, type: "success" | "info" | "error" = "success") => {
+  const dismiss = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const toast = useCallback((message: string, type: "success" | "info" | "error" = "success", action?: ToastAction) => {
     const id = ++nextId;
-    setToasts((prev) => [...prev.slice(-2), { id, message, type }]);
+    setToasts((prev) => [...prev.slice(-2), { id, message, type, action }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2500);
+    }, action ? 4000 : 2500);
   }, []);
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
       {/* Toast container */}
-      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none" aria-live="polite">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -54,6 +64,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
             )}
             {t.message}
+            {t.action && (
+              <button
+                onClick={() => {
+                  t.action!.onClick();
+                  dismiss(t.id);
+                }}
+                className={`ml-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 active:scale-95 ${
+                  t.type === "success"
+                    ? "bg-white/20 text-white"
+                    : t.type === "error"
+                    ? "bg-white/20 text-white"
+                    : "bg-accent/15 text-accent"
+                }`}
+              >
+                {t.action.label}
+              </button>
+            )}
           </div>
         ))}
       </div>

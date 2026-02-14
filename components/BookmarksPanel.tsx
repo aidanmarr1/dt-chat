@@ -1,6 +1,20 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useSwipeToClose } from "@/lib/hooks/useSwipeToClose";
 import type { Bookmark } from "@/lib/types";
+
+function relativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.max(0, Math.floor((now - then) / 1000));
+
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 172800) return "yesterday";
+  return `${Math.floor(diff / 86400)}d ago`;
+}
 
 interface BookmarksPanelProps {
   bookmarks: Bookmark[];
@@ -15,10 +29,30 @@ export default function BookmarksPanel({
   onScrollTo,
   onRemove,
 }: BookmarksPanelProps) {
+  const [filter, setFilter] = useState("");
+  const panelRef = useSwipeToClose(onClose);
+
+  // Escape key to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  const filtered = filter.trim()
+    ? bookmarks.filter(
+        (bm) =>
+          (bm.content || "").toLowerCase().includes(filter.toLowerCase()) ||
+          bm.displayName.toLowerCase().includes(filter.toLowerCase())
+      )
+    : bookmarks;
+
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div ref={panelRef} className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -35,6 +69,30 @@ export default function BookmarksPanel({
           </button>
         </div>
 
+        {/* Search filter */}
+        {bookmarks.length > 0 && (
+          <div className="px-4 py-2 border-b border-border">
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter bookmarks..."
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted focus:outline-none"
+              />
+              {filter && (
+                <button onClick={() => setFilter("")} className="text-muted hover:text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Bookmark list */}
         <div className="flex-1 overflow-y-auto">
           {bookmarks.length === 0 ? (
@@ -45,12 +103,18 @@ export default function BookmarksPanel({
               <p className="text-sm">No bookmarks yet</p>
               <p className="text-xs text-muted/60">Bookmark messages to save them here</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center py-10 gap-2 text-muted">
+              <p className="text-sm">No matches</p>
+              <p className="text-xs text-muted/60">Try a different search term</p>
+            </div>
           ) : (
             <div className="divide-y divide-border">
-              {bookmarks.map((bm) => (
+              {filtered.map((bm, i) => (
                 <div
                   key={bm.messageId}
-                  className="px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group"
+                  className="px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group animate-fade-in"
+                  style={{ animationDelay: `${i * 50}ms` }}
                   onClick={() => {
                     onScrollTo(bm.messageId);
                     onClose();
@@ -65,7 +129,7 @@ export default function BookmarksPanel({
                       <p className="text-[10px] text-muted mt-1">
                         {new Date(bm.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                         {" \u00b7 "}
-                        Saved {new Date(bm.bookmarkedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        Saved {relativeTime(bm.bookmarkedAt)}
                       </p>
                     </div>
                     <button

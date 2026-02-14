@@ -28,7 +28,11 @@ const SHORTCUTS: { keys: string[]; description: string }[] = [
   { keys: ["Shift", "Enter"], description: "New line in message" },
   { keys: ["Esc"], description: "Close modal / Cancel reply" },
   { keys: ["@"], description: "Mention a user" },
+  { keys: ["Cmd", "F"], description: "Search messages" },
+  { keys: ["Cmd", "K"], description: "Search messages (alt)" },
+  { keys: ["Cmd", "B"], description: "Toggle bookmarks" },
   { keys: ["Cmd", "V"], description: "Paste image to attach" },
+  { keys: ["/"], description: "Focus message input" },
   { keys: ["Double-click"], description: "Quick react with thumbs up" },
   { keys: ["Long press"], description: "Open message actions (mobile)" },
 ];

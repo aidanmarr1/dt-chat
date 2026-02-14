@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSwipeToClose } from "@/lib/hooks/useSwipeToClose";
 import { useToast } from "./Toast";
 import type { TodoItem } from "@/lib/types";
 
@@ -34,6 +35,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const panelRef = useSwipeToClose(onClose);
 
   useEffect(() => {
     fetchTodos();
@@ -174,7 +176,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div ref={panelRef} className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">

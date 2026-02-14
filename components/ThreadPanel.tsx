@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSwipeToClose } from "@/lib/hooks/useSwipeToClose";
 import Avatar from "./Avatar";
 import type { Message } from "@/lib/types";
 
@@ -30,6 +31,14 @@ function formatDate(dateStr: string): string {
 
 function isTenorUrl(url: string): boolean {
   return /^https?:\/\/media\.tenor\.com\/.+\.(gif|mp4)/i.test(url);
+}
+
+function isImageFile(fileName: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(fileName);
+}
+
+function isAudioFile(fileName: string): boolean {
+  return /\.(mp3|wav|ogg|m4a|webm|aac)$/i.test(fileName);
 }
 
 function renderContent(text: string, isOwn: boolean) {
@@ -64,6 +73,37 @@ function renderContent(text: string, isOwn: boolean) {
   });
 }
 
+function renderFileAttachment(msg: Message) {
+  if (!msg.fileName) return null;
+
+  if (msg.filePath && isImageFile(msg.fileName)) {
+    return (
+      <div className="mt-1.5">
+        <img
+          src={msg.filePath}
+          alt={msg.fileName}
+          className="max-w-full max-h-48 rounded-lg border border-border object-cover"
+          loading="lazy"
+        />
+        <p className="text-[10px] text-muted mt-0.5">{msg.fileName}</p>
+      </div>
+    );
+  }
+
+  if (msg.filePath && isAudioFile(msg.fileName)) {
+    return (
+      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0">
+          <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+        </svg>
+        Voice message
+      </div>
+    );
+  }
+
+  return <p className="text-xs text-muted mt-0.5">{msg.fileName}</p>;
+}
+
 const MAX_REPLY_LENGTH = 2000;
 
 export default function ThreadPanel({
@@ -77,6 +117,7 @@ export default function ThreadPanel({
   const [replyText, setReplyText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useSwipeToClose(onClose);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -116,7 +157,7 @@ export default function ThreadPanel({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div ref={panelRef} className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -165,9 +206,7 @@ export default function ThreadPanel({
                         renderContent(msg.content, isOwn)
                       )}
                     </div>
-                    {msg.fileName && (
-                      <p className="text-xs text-muted mt-0.5">{msg.fileName}</p>
-                    )}
+                    {renderFileAttachment(msg)}
                   </div>
                 </div>
               </div>

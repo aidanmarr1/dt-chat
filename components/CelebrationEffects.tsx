@@ -44,6 +44,7 @@ function detectCelebration(content: string): "confetti" | "fire" | "hearts" | "s
 
 export default function CelebrationEffects({ messages, reduceMotion }: CelebrationEffectsProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animFrameRef = useRef<number>(0);
   const lastMessageIdRef = useRef<string | null>(null);
@@ -112,6 +113,13 @@ export default function CelebrationEffects({ messages, reduceMotion }: Celebrati
 
     // Play celebration sound
     playCelebrationSound();
+
+    // Flash effect for fireworks
+    if (effect === "firework" && flashRef.current) {
+      const el = flashRef.current;
+      el.style.opacity = "0.15";
+      setTimeout(() => { el.style.opacity = "0"; }, 100);
+    }
 
     let count: number;
     if (effect === "confetti") count = 80;
@@ -302,10 +310,18 @@ export default function CelebrationEffects({ messages, reduceMotion }: Celebrati
   if (reduceMotion) return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[60]"
-      style={{ width: "100vw", height: "100vh" }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="fixed inset-0 pointer-events-none z-[60]"
+        style={{ width: "100vw", height: "100vh" }}
+      />
+      {/* Flash overlay for firework effect */}
+      <div
+        ref={flashRef}
+        className="fixed inset-0 pointer-events-none z-[59] bg-white opacity-0 transition-opacity"
+        style={{ transitionDuration: "100ms" }}
+      />
+    </>
   );
 }

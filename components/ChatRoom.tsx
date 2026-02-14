@@ -171,6 +171,14 @@ export default function ChatRoom() {
         e.preventDefault();
         setShowSearch(true);
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "b") {
+        e.preventDefault();
+        setShowBookmarks((prev) => !prev);
+      }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -673,7 +681,10 @@ export default function ChatRoom() {
       for (const r of due) {
         // Play sound on reminder fire
         if (soundEnabled) playNotificationSound();
-        toast(`Reminder: ${r.messagePreview}`);
+        toast(`Reminder: ${r.messagePreview}`, "info", {
+          label: "Snooze 15m",
+          onClick: () => handleSnoozeReminder(r, 15),
+        });
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("Reminder", { body: r.messagePreview, tag: `reminder-${r.id}` });
         }
