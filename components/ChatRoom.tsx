@@ -38,6 +38,7 @@ export default function ChatRoom() {
   const [headerShadow, setHeaderShadow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
@@ -52,6 +53,8 @@ export default function ChatRoom() {
     if (notifStored === "true" && typeof Notification !== "undefined" && Notification.permission === "granted") {
       setNotificationsEnabled(true);
     }
+    const tf = localStorage.getItem("dt-time-format");
+    if (tf === "24h") setTimeFormat("24h");
   }, []);
 
   function toggleSound() {
@@ -389,6 +392,7 @@ export default function ChatRoom() {
           onPin={handlePin}
           currentDisplayName={user!.displayName}
           currentUserId={user!.id}
+          timeFormat={timeFormat}
         />
       );
     }

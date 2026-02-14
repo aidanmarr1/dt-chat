@@ -11,6 +11,8 @@ import UserProfilePopover from "./UserProfilePopover";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message } from "@/lib/types";
 
+type TimeFormat = "12h" | "24h";
+
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -21,6 +23,7 @@ interface MessageBubbleProps {
   onPin: (messageId: string) => void;
   currentDisplayName?: string;
   currentUserId?: string;
+  timeFormat?: TimeFormat;
 }
 
 function relativeTime(dateStr: string): string {
@@ -117,6 +120,7 @@ export default function MessageBubble({
   onPin,
   currentDisplayName,
   currentUserId,
+  timeFormat = "12h",
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -309,8 +313,8 @@ export default function MessageBubble({
             <div
               className={`px-4 py-2.5 rounded-xl ${
                 isOwn
-                  ? `bg-foreground text-background rounded-br-sm shadow-sm shadow-foreground/10 ${isGrouped ? "rounded-tr-sm" : ""}`
-                  : `bg-surface border border-border text-foreground rounded-bl-sm ${isGrouped ? "rounded-tl-sm" : ""}`
+                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-sm shadow-foreground/10 ${isGrouped ? "rounded-tr-sm" : ""}`
+                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm ${isGrouped ? "rounded-tl-sm" : ""}`
               }`}
             >
               {/* File attachment */}
@@ -388,7 +392,7 @@ export default function MessageBubble({
             onClick={() => setShowAbsoluteTime((v) => !v)}
           >
             {showAbsoluteTime
-              ? new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+              ? new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: timeFormat !== "24h" })
               : relativeTime(message.createdAt)}
           </p>
 

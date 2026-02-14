@@ -3,13 +3,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
+export type ThemePreference = "light" | "dark" | "system";
 export type AccentColor = "gold" | "blue" | "green" | "purple" | "red" | "pink" | "teal";
 export type Density = "compact" | "default" | "comfortable";
 
 interface ThemeContextValue {
   theme: Theme;
+  themePreference: ThemePreference;
   toggleTheme: () => void;
   setTheme: (t: Theme) => void;
+  setThemePreference: (p: ThemePreference) => void;
   accentColor: AccentColor;
   setAccentColor: (c: AccentColor) => void;
   density: Density;
@@ -18,8 +21,10 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "dark",
+  themePreference: "dark",
   toggleTheme: () => {},
   setTheme: () => {},
+  setThemePreference: () => {},
   accentColor: "gold",
   setAccentColor: () => {},
   density: "default",
@@ -30,14 +35,26 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
+function getSystemTheme(): Theme {
+  if (typeof window === "undefined") return "dark";
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
+  const [themePreference, setThemePreferenceState] = useState<ThemePreference>("dark");
   const [accentColor, setAccentColorState] = useState<AccentColor>("gold");
   const [density, setDensityState] = useState<Density>("default");
 
   useEffect(() => {
-    const stored = localStorage.getItem("dt-theme") as Theme | null;
-    if (stored === "light" || stored === "dark") {
+    const stored = localStorage.getItem("dt-theme");
+    if (stored === "system") {
+      setThemePreferenceState("system");
+      const resolved = getSystemTheme();
+      setThemeState(resolved);
+      document.documentElement.setAttribute("data-theme", resolved);
+    } else if (stored === "light" || stored === "dark") {
+      setThemePreferenceState(stored);
       setThemeState(stored);
       document.documentElement.setAttribute("data-theme", stored);
     } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
@@ -56,15 +73,42 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
+  // Listen for OS theme changes when preference is "system"
+  useEffect(() => {
+    if (themePreference !== "system") return;
+    const mql = window.matchMedia("(prefers-color-scheme: light)");
+    function handleChange(e: MediaQueryListEvent) {
+      const resolved = e.matches ? "light" : "dark";
+      setThemeState(resolved);
+      document.documentElement.setAttribute("data-theme", resolved);
+    }
+    mql.addEventListener("change", handleChange);
+    return () => mql.removeEventListener("change", handleChange);
+  }, [themePreference]);
+
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
     applyTheme(next);
   }
 
   function applyTheme(next: Theme) {
+    setThemePreferenceState(next);
     setThemeState(next);
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("dt-theme", next);
+  }
+
+  function setThemePreference(pref: ThemePreference) {
+    setThemePreferenceState(pref);
+    localStorage.setItem("dt-theme", pref);
+    if (pref === "system") {
+      const resolved = getSystemTheme();
+      setThemeState(resolved);
+      document.documentElement.setAttribute("data-theme", resolved);
+    } else {
+      setThemeState(pref);
+      document.documentElement.setAttribute("data-theme", pref);
+    }
   }
 
   function setAccentColor(c: AccentColor) {
@@ -90,7 +134,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme: applyTheme, accentColor, setAccentColor, density, setDensity }}>
+    <ThemeContext.Provider value={{ theme, themePreference, toggleTheme, setTheme: applyTheme, setThemePreference, accentColor, setAccentColor, density, setDensity }}>
       {children}
     </ThemeContext.Provider>
   );
