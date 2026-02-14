@@ -41,7 +41,10 @@ export default function RemindersPanel({
               <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
               <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
             </svg>
-            <h2 className="text-base font-semibold font-heading">Reminders</h2>
+            <div>
+              <h2 className="text-base font-semibold font-heading">Your Reminders</h2>
+              <p className="text-[10px] text-muted">Private -- only visible to you</p>
+            </div>
             <span className="text-xs text-muted">({reminders.length})</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">

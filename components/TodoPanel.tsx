@@ -127,7 +127,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
               <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
-            <h2 className="text-base font-semibold font-heading">To-Do List</h2>
+            <h2 className="text-base font-semibold font-heading">Shared To-Do List</h2>
             <span className="text-xs text-muted">({uncompleted.length} remaining)</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">
@@ -135,6 +135,14 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+        </div>
+
+        {/* Shared label */}
+        <div className="px-4 py-2 bg-accent/5 border-b border-border flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <p className="text-[11px] text-muted">Visible to everyone -- tasks you add and complete are shared with the whole group.</p>
         </div>
 
         {/* Add input */}
@@ -172,7 +180,7 @@ export default function TodoPanel({ onClose }: TodoPanelProps) {
                 <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
               </svg>
               <p className="text-sm">No tasks yet</p>
-              <p className="text-xs text-muted/60">Add a task above to get started</p>
+              <p className="text-xs text-muted/60">Add a shared task above -- everyone in the chat will see it</p>
             </div>
           ) : (
             <div>
