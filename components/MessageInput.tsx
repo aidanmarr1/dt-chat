@@ -223,7 +223,7 @@ export default function MessageInput({
       }
     }
 
-    // AI message check
+    // AI message check — auto-correct and send
     const aiCheckEnabled = typeof window !== "undefined" && localStorage.getItem("dt-ai-check") === "true";
     if (aiCheckEnabled && trimmed && !filePreview) {
       setAiChecking(true);
@@ -236,19 +236,25 @@ export default function MessageInput({
         if (res.ok) {
           const data = await res.json();
           if (!data.ok && data.corrected) {
-            setValue(data.corrected);
+            // Auto-send the corrected version
+            onSend(data.corrected, undefined, replyingTo?.id);
+            setValue("");
+            localStorage.removeItem("dt-draft");
+            setFilePreview(null);
+            onCancelReply?.();
             setAiChecking(false);
-            toast("Message corrected — press send again", "info");
+            toast("Message auto-corrected", "success");
+            setJustSent(true);
+            setTimeout(() => setJustSent(false), 350);
             if (textareaRef.current) {
               textareaRef.current.style.height = "auto";
-              textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
               textareaRef.current.focus();
             }
             return;
           }
         }
       } catch {
-        // On error, proceed with sending
+        // On error, proceed with sending as-is
       }
       setAiChecking(false);
     }
