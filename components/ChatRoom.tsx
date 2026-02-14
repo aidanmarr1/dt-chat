@@ -701,12 +701,12 @@ export default function ChatRoom() {
   }, [reminders, messages, soundEnabled]);
 
   // === Feature 3: Status handler ===
-  async function handleSetStatus(status: string | null) {
+  async function handleSetStatus(status: string | null, expiresIn?: number | null) {
     try {
       await fetch("/api/status", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, expiresIn }),
       });
       setUser((prev) => prev ? { ...prev, status } : prev);
       toast(status ? "Status updated" : "Status cleared");

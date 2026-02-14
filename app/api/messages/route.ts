@@ -292,12 +292,12 @@ export async function GET() {
     };
   });
 
-  // Auto-clear statuses older than 4 hours
-  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+  // Auto-clear expired statuses (statusExpiresAt = null means "don't clear")
+  const now = new Date();
   await db
     .update(users)
-    .set({ status: null, statusSetAt: null })
-    .where(sql`${users.statusSetAt} IS NOT NULL AND ${users.statusSetAt} < ${fourHoursAgo.getTime() / 1000}`);
+    .set({ status: null, statusSetAt: null, statusExpiresAt: null })
+    .where(sql`${users.statusExpiresAt} IS NOT NULL AND ${users.statusExpiresAt} < ${Math.floor(now.getTime() / 1000)}`);
 
   // Get online users (active in last 30s)
   const thirtySecondsAgo = new Date(Date.now() - 30_000);

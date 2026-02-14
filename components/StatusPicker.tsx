@@ -4,9 +4,17 @@ import { useState, useEffect, useRef } from "react";
 
 interface StatusPickerProps {
   currentStatus?: string | null;
-  onSet: (status: string | null) => void;
+  onSet: (status: string | null, expiresIn: number | null) => void;
   onClose: () => void;
 }
+
+const EXPIRY_OPTIONS = [
+  { label: "Don't clear", value: "never" },
+  { label: "30 minutes", value: "30" },
+  { label: "1 hour", value: "60" },
+  { label: "4 hours", value: "240" },
+  { label: "Today", value: "today" },
+] as const;
 
 const PRESETS = [
   { emoji: "\u{1F4DA}", text: "Studying" },
@@ -19,7 +27,18 @@ const PRESETS = [
 
 export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPickerProps) {
   const [custom, setCustom] = useState(currentStatus || "");
+  const [selectedExpiry, setSelectedExpiry] = useState("240");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  function resolveExpiresIn(): number | null {
+    if (selectedExpiry === "never") return null;
+    if (selectedExpiry === "today") {
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      return Math.max(1, Math.ceil((end.getTime() - Date.now()) / 60000));
+    }
+    return Number(selectedExpiry);
+  }
 
   // Escape key to close
   useEffect(() => {
@@ -56,7 +75,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
             {PRESETS.map((p) => (
               <button
                 key={p.text}
-                onClick={() => { onSet(`${p.emoji} ${p.text}`); onClose(); }}
+                onClick={() => { onSet(`${p.emoji} ${p.text}`, resolveExpiresIn()); onClose(); }}
                 className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
               >
                 <span className="text-base">{p.emoji}</span>
@@ -77,23 +96,34 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
                 className="flex-1 text-sm bg-surface border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && custom.trim()) {
-                    onSet(custom.trim());
+                    onSet(custom.trim(), resolveExpiresIn());
                     onClose();
                   }
                 }}
               />
               <button
-                onClick={() => { if (custom.trim()) { onSet(custom.trim()); onClose(); } }}
+                onClick={() => { if (custom.trim()) { onSet(custom.trim(), resolveExpiresIn()); onClose(); } }}
                 disabled={!custom.trim()}
                 className="px-3 py-2 text-sm font-medium rounded-lg bg-accent text-background disabled:opacity-40 hover:opacity-90 transition-opacity"
               >
                 Set
               </button>
             </div>
-            <p className="text-[10px] text-muted mt-1.5 px-1">Auto-clears after 4 hours</p>
+            <div className="flex items-center gap-1.5 mt-1.5 px-1">
+              <label className="text-[10px] text-muted whitespace-nowrap">Clear after:</label>
+              <select
+                value={selectedExpiry}
+                onChange={(e) => setSelectedExpiry(e.target.value)}
+                className="text-[10px] text-muted bg-surface border border-border rounded px-1.5 py-0.5 focus:border-accent focus:outline-none"
+              >
+                {EXPIRY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             {currentStatus && (
               <button
-                onClick={() => { onSet(null); onClose(); }}
+                onClick={() => { onSet(null, null); onClose(); }}
                 className="w-full mt-2 text-xs text-muted hover:text-red-400 py-1.5 transition-colors"
               >
                 Clear status

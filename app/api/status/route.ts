@@ -14,11 +14,24 @@ export async function PATCH(req: NextRequest) {
   await ensureStatusColumn();
 
   const body = await req.json();
-  const { status } = body;
+  const { status, expiresIn } = body;
 
   if (status !== null && status !== undefined) {
     if (typeof status !== "string" || status.length > 100) {
       return NextResponse.json({ error: "Status must be 100 characters or less" }, { status: 400 });
+    }
+  }
+
+  let statusExpiresAt: Date | null = null;
+  if (status) {
+    if (expiresIn === null) {
+      // "Don't clear" — no expiry
+      statusExpiresAt = null;
+    } else if (typeof expiresIn === "number") {
+      statusExpiresAt = new Date(Date.now() + expiresIn * 60 * 1000);
+    } else {
+      // Default: 4 hours for backward compat
+      statusExpiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
     }
   }
 
@@ -27,6 +40,7 @@ export async function PATCH(req: NextRequest) {
     .set({
       status: status || null,
       statusSetAt: status ? new Date() : null,
+      statusExpiresAt: status ? statusExpiresAt : null,
     })
     .where(eq(users.id, user.id));
 

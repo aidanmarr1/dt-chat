@@ -43,6 +43,11 @@ export async function ensureStatusColumn() {
   } catch {
     // Column already exists
   }
+  try {
+    await client.execute(`ALTER TABLE users ADD COLUMN status_expires_at INTEGER`);
+  } catch {
+    // Column already exists
+  }
   statusInitialized = true;
 }
 
