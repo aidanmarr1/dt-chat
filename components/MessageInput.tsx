@@ -10,13 +10,9 @@ import { formatFileSize } from "@/lib/file-utils";
 import type { Message, OnlineUser } from "@/lib/types";
 
 const SLASH_COMMANDS: { name: string; description: string; type: "text" | "action"; value?: string; action?: string }[] = [
-  { name: "shrug", description: "Send ¯\\_(ツ)_/¯", type: "text", value: "¯\\_(ツ)_/¯" },
-  { name: "tableflip", description: "Send (╯°□°)╯︵ ┻━┻", type: "text", value: "(╯°□°)╯︵ ┻━┻" },
-  { name: "unflip", description: "Send ┬─┬ノ( º _ ºノ)", type: "text", value: "┬─┬ノ( º _ ºノ)" },
-  { name: "lenny", description: "Send ( ͡° ͜ʖ ͡°)", type: "text", value: "( ͡° ͜ʖ ͡°)" },
-  { name: "disapprove", description: "Send ಠ_ಠ", type: "text", value: "ಠ_ಠ" },
   { name: "giphy", description: "Open GIF picker", type: "action", action: "gif" },
   { name: "poll", description: "Create a poll", type: "action", action: "poll" },
+  { name: "shrug", description: "¯\\_(ツ)_/¯", type: "text", value: "¯\\_(ツ)_/¯" },
 ];
 
 interface FilePreview {

@@ -880,6 +880,26 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       </div>
                       <ToggleSwitch on={enterToSend} onToggle={handleEnterToSendToggle} />
                     </div>
+
+                    {/* AI Writing Assistant */}
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
+                          <p className="text-[11px] text-muted">{aiCheck ? "Checks spelling & grammar before sending" : "Fix spelling & grammar before sending"}</p>
+                        </div>
+                      </div>
+                      <ToggleSwitch on={aiCheck} onToggle={() => {
+                        const next = !aiCheck;
+                        setAiCheck(next);
+                        localStorage.setItem("dt-ai-check", String(next));
+                      }} />
+                    </div>
                   </div>
                 </div>
 
@@ -1032,28 +1052,8 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                   <ToggleSwitch on={showOnline} onToggle={() => handlePrivacyToggle("dt-show-online", showOnline, setShowOnline)} />
                 </div>
 
-                {/* AI Writing Assistant */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(3)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
-                      <p className="text-[11px] text-muted">{aiCheck ? "Checks spelling & grammar before sending" : "Check messages for errors before sending"}</p>
-                    </div>
-                  </div>
-                  <ToggleSwitch on={aiCheck} onToggle={() => {
-                    const next = !aiCheck;
-                    setAiCheck(next);
-                    localStorage.setItem("dt-ai-check", String(next));
-                  }} />
-                </div>
-
                 {/* Clear local data */}
-                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(4)}>
+                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(3)}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
