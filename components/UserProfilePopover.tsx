@@ -82,7 +82,8 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div
           ref={ref}
-          className="w-full max-w-xs bg-surface border border-border rounded-2xl shadow-2xl animate-fade-scale overflow-hidden [backface-visibility:hidden]"
+          className="w-full max-w-xs bg-surface border border-border rounded-2xl shadow-2xl animate-fade-scale overflow-hidden [backface-visibility:hidden] [&_*]:!transition-none"
+          style={{ transition: "none" }}
           onClick={(e) => e.stopPropagation()}
         >
           {loading ? (
@@ -99,9 +100,9 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
               <p className="text-sm text-muted">{error}</p>
             </div>
           ) : profile ? (
-            <div className="divide-y divide-border">
+            <>
               {/* Header */}
-              <div className="p-5 pb-3 flex flex-col items-center gap-3">
+              <div className="p-5 pb-3 flex flex-col items-center gap-3 border-b border-border">
                 <Avatar displayName={profile.displayName} userId={profile.id} avatarId={profile.avatarId} size="lg" />
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground font-heading">{profile.displayName}</h3>
@@ -113,7 +114,7 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
               </div>
 
               {/* Bio */}
-              <div className="px-5 py-3">
+              <div className="px-5 py-3 border-b border-border">
                 <p className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-1.5">Bio</p>
                 {editingBio ? (
                   <div>
@@ -167,7 +168,7 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
                   <p className="text-sm text-foreground">{profile.messageCount.toLocaleString()}</p>
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="p-8 text-center text-sm text-muted">User not found</div>
           )}
