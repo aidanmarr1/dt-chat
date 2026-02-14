@@ -135,7 +135,6 @@ export default function MessageBubble({
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const { toast } = useToast();
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -433,18 +432,10 @@ export default function MessageBubble({
 
               {isOwn && (
                 <button
-                  onClick={() => {
-                    if (confirmDelete) {
-                      onDelete(message.id);
-                      setConfirmDelete(false);
-                    } else {
-                      setConfirmDelete(true);
-                      setTimeout(() => setConfirmDelete(false), 3000);
-                    }
-                  }}
-                  className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${confirmDelete ? "bg-red-500/15 border-red-500/30 text-red-400" : "bg-surface/90 border-border hover:bg-border hover:border-red-400/30 hover:text-red-400"}`}
+                  onClick={() => onDelete(message.id)}
+                  className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-red-500/15 hover:border-red-400/30 hover:text-red-400 transition-all active:scale-90 shadow-sm animate-pop-in"
                   style={{ animationDelay: "120ms" }}
-                  title={confirmDelete ? "Click again to confirm" : "Delete"}
+                  title="Delete"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                 </button>
