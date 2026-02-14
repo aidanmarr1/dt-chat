@@ -10,6 +10,8 @@ export const users = sqliteTable("users", {
   typingAt: integer("typing_at"),
   avatarId: text("avatar_id"),
   bio: text("bio"),
+  status: text("status"),
+  statusSetAt: integer("status_set_at", { mode: "timestamp" }),
 });
 
 export const messages = sqliteTable("messages", {
@@ -74,6 +76,19 @@ export const polls = sqliteTable("polls", {
     .references(() => users.id),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   messageId: text("message_id").references(() => messages.id),
+});
+
+export const todos = sqliteTable("todos", {
+  id: text("id").primaryKey(),
+  text: text("text").notNull(),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+  completedBy: text("completed_by"),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  completedAt: integer("completed_at", { mode: "timestamp" }),
+  position: integer("position").notNull().default(0),
 });
 
 export const pollVotes = sqliteTable("pollVotes", {

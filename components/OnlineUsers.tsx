@@ -84,9 +84,14 @@ export default function OnlineUsers({ users, count, currentUserId }: OnlineUsers
                   <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-surface glow-green" />
                 </div>
-                <span className="text-sm text-foreground truncate flex-1">
-                  {u.displayName}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm text-foreground truncate block">
+                    {u.displayName}
+                  </span>
+                  {u.status && (
+                    <span className="text-[10px] text-muted truncate block">{u.status}</span>
+                  )}
+                </div>
               </button>
             ))}
           </div>

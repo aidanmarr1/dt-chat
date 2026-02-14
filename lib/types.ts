@@ -4,6 +4,7 @@ export interface User {
   displayName: string;
   avatarId?: string | null;
   bio?: string | null;
+  status?: string | null;
 }
 
 export interface UserProfile {
@@ -65,6 +66,26 @@ export interface OnlineUser {
   id: string;
   displayName: string;
   avatarId?: string | null;
+  status?: string | null;
+}
+
+export interface Reminder {
+  id: string;
+  messageId: string;
+  messagePreview: string;
+  reminderTime: number;
+  createdAt: number;
+}
+
+export interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  completedByName?: string | null;
+  createdByName: string;
+  createdAt: string;
+  completedAt?: string | null;
+  position: number;
 }
 
 export interface MessagesResponse {

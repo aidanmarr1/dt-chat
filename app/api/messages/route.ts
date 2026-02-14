@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { ensurePollTables } from "@/lib/init-tables";
+import { ensurePollTables, ensureStatusColumn } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
 
 function extractUrls(text: string): string[] {
@@ -203,8 +203,9 @@ export async function GET() {
     });
   }
 
-  // Ensure poll tables exist before trying to query them
+  // Ensure poll tables and status column exist
   await ensurePollTables();
+  await ensureStatusColumn();
 
   // Enrich poll messages
   const pollMessageIds = rows
@@ -291,10 +292,17 @@ export async function GET() {
     };
   });
 
+  // Auto-clear statuses older than 4 hours
+  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+  await db
+    .update(users)
+    .set({ status: null, statusSetAt: null })
+    .where(sql`${users.statusSetAt} IS NOT NULL AND ${users.statusSetAt} < ${fourHoursAgo.getTime() / 1000}`);
+
   // Get online users (active in last 30s)
   const thirtySecondsAgo = new Date(Date.now() - 30_000);
   const onlineUsers = await db
-    .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId })
+    .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId, status: users.status })
     .from(users)
     .where(gt(users.lastActiveAt, thirtySecondsAgo));
 

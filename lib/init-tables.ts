@@ -28,3 +28,39 @@ export async function ensurePollTables() {
 
   initialized = true;
 }
+
+let statusInitialized = false;
+
+export async function ensureStatusColumn() {
+  if (statusInitialized) return;
+  try {
+    await client.execute(`ALTER TABLE users ADD COLUMN status TEXT`);
+  } catch {
+    // Column already exists
+  }
+  try {
+    await client.execute(`ALTER TABLE users ADD COLUMN status_set_at INTEGER`);
+  } catch {
+    // Column already exists
+  }
+  statusInitialized = true;
+}
+
+let todoInitialized = false;
+
+export async function ensureTodoTable() {
+  if (todoInitialized) return;
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS todos (
+      id TEXT PRIMARY KEY,
+      text TEXT NOT NULL,
+      completed INTEGER NOT NULL DEFAULT 0,
+      completed_by TEXT,
+      created_by TEXT NOT NULL REFERENCES users(id),
+      created_at INTEGER NOT NULL,
+      completed_at INTEGER,
+      position INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  todoInitialized = true;
+}

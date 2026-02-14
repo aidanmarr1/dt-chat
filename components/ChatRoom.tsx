@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
@@ -13,9 +13,15 @@ import PinnedMessages from "./PinnedMessages";
 import BookmarksPanel from "./BookmarksPanel";
 import MediaGallery from "./MediaGallery";
 import PollCreator from "./PollCreator";
+import CelebrationEffects from "./CelebrationEffects";
+import ReminderPicker from "./ReminderPicker";
+import RemindersPanel from "./RemindersPanel";
+import StatusPicker from "./StatusPicker";
+import ThreadPanel from "./ThreadPanel";
+import TodoPanel from "./TodoPanel";
 import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
-import type { Message, User, OnlineUser, Bookmark } from "@/lib/types";
+import type { Message, User, OnlineUser, Bookmark, Reminder } from "@/lib/types";
 
 function isSameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
@@ -57,6 +63,17 @@ export default function ChatRoom() {
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
   const [isOffline, setIsOffline] = useState(false);
   const [failedPolls, setFailedPolls] = useState(0);
+  // Feature 1: Celebration Effects
+  const [reduceMotion, setReduceMotion] = useState(false);
+  // Feature 2: Reminders
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [showReminders, setShowReminders] = useState(false);
+  // Feature 3: Status
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
+  // Feature 4: Threads
+  const [threadParentId, setThreadParentId] = useState<string | null>(null);
+  // Feature 5: Todos
+  const [showTodos, setShowTodos] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
@@ -91,6 +108,14 @@ export default function ChatRoom() {
     try {
       const storedBookmarks = localStorage.getItem("dt-bookmarks");
       if (storedBookmarks) setBookmarks(JSON.parse(storedBookmarks));
+    } catch { /* ignore */ }
+    // Load reduce motion preference
+    const rm = localStorage.getItem("dt-reduce-motion");
+    if (rm === "true") setReduceMotion(true);
+    // Load reminders
+    try {
+      const storedReminders = localStorage.getItem("dt-reminders");
+      if (storedReminders) setReminders(JSON.parse(storedReminders));
     } catch { /* ignore */ }
   }, []);
 
@@ -567,6 +592,97 @@ export default function ChatRoom() {
     router.push("/auth");
   }
 
+  // === Feature 2: Reminder handlers ===
+  function handleSetReminder(messageId: string, reminderTime: number) {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg) return;
+    const reminder: Reminder = {
+      id: crypto.randomUUID(),
+      messageId,
+      messagePreview: msg.content?.slice(0, 100) || msg.fileName || "Message",
+      reminderTime,
+      createdAt: Date.now(),
+    };
+    setReminders((prev) => {
+      const next = [...prev, reminder];
+      localStorage.setItem("dt-reminders", JSON.stringify(next));
+      return next;
+    });
+    toast("Reminder set");
+  }
+
+  function handleDeleteReminder(reminderId: string) {
+    setReminders((prev) => {
+      const next = prev.filter((r) => r.id !== reminderId);
+      localStorage.setItem("dt-reminders", JSON.stringify(next));
+      return next;
+    });
+    toast("Reminder removed");
+  }
+
+  // Check reminders periodically
+  useEffect(() => {
+    if (reminders.length === 0) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const due = reminders.filter((r) => r.reminderTime <= now);
+      if (due.length === 0) return;
+      for (const r of due) {
+        toast(`Reminder: ${r.messagePreview}`);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Reminder", { body: r.messagePreview, tag: `reminder-${r.id}` });
+        }
+        scrollToMessage(r.messageId);
+      }
+      setReminders((prev) => {
+        const next = prev.filter((r) => r.reminderTime > now);
+        localStorage.setItem("dt-reminders", JSON.stringify(next));
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reminders]);
+
+  // === Feature 3: Status handler ===
+  async function handleSetStatus(status: string | null) {
+    try {
+      await fetch("/api/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      setUser((prev) => prev ? { ...prev, status } : prev);
+      toast(status ? "Status updated" : "Status cleared");
+    } catch {
+      toast("Failed to update status", "error");
+    }
+  }
+
+  // === Feature 4: Thread computed values ===
+  const replyCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const msg of messages) {
+      if (msg.replyToId) {
+        map.set(msg.replyToId, (map.get(msg.replyToId) || 0) + 1);
+      }
+    }
+    return map;
+  }, [messages]);
+
+  const threadParent = threadParentId ? messages.find((m) => m.id === threadParentId) : null;
+  const threadReplies = threadParentId ? messages.filter((m) => m.replyToId === threadParentId) : [];
+
+  function handleViewThread(messageId: string) {
+    setThreadParentId(messageId);
+  }
+
+  async function handleThreadReply(content: string, replyToId: string) {
+    await handleSend(content, undefined, replyToId);
+  }
+
+  const reminderMessageIds = new Set(reminders.map((r) => r.messageId));
+
   const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
   const showConnectionIssue = isOffline || failedPolls >= 3;
   const bookmarkedIds = new Set(bookmarks.map((b) => b.messageId));
@@ -605,6 +721,10 @@ export default function ChatRoom() {
           currentDisplayName={user!.displayName}
           currentUserId={user!.id}
           timeFormat={timeFormat}
+          onReminder={handleSetReminder}
+          hasReminder={reminderMessageIds.has(msg.id)}
+          replyCount={replyCountMap.get(msg.id) || 0}
+          onViewThread={handleViewThread}
         />
       );
     }
@@ -665,7 +785,16 @@ export default function ChatRoom() {
       {/* Header */}
       <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
-          <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+            <button
+              onClick={() => setShowStatusPicker(true)}
+              className="text-[10px] text-muted hover:text-accent transition-colors truncate max-w-[120px]"
+              title="Set your status"
+            >
+              {user?.status || "Set status"}
+            </button>
+          </div>
           <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -691,6 +820,32 @@ export default function ChatRoom() {
             {bookmarks.length > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
                 {bookmarks.length > 9 ? "9+" : bookmarks.length}
+              </span>
+            )}
+          </button>
+          {/* To-Do */}
+          <button
+            onClick={() => setShowTodos(true)}
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+            title="To-do list"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </button>
+          {/* Reminders */}
+          <button
+            onClick={() => setShowReminders(true)}
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+            title="Reminders"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            {reminders.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                {reminders.length > 9 ? "9+" : reminders.length}
               </span>
             )}
           </button>
@@ -748,6 +903,45 @@ export default function ChatRoom() {
           onCreate={handleCreatePoll}
         />
       )}
+
+      {/* Reminders panel */}
+      {showReminders && (
+        <RemindersPanel
+          reminders={reminders}
+          onClose={() => setShowReminders(false)}
+          onScrollTo={scrollToMessage}
+          onDelete={handleDeleteReminder}
+        />
+      )}
+
+      {/* Status picker */}
+      {showStatusPicker && (
+        <StatusPicker
+          currentStatus={user?.status}
+          onSet={handleSetStatus}
+          onClose={() => setShowStatusPicker(false)}
+        />
+      )}
+
+      {/* Thread panel */}
+      {threadParent && (
+        <ThreadPanel
+          parentMessage={threadParent}
+          replies={threadReplies}
+          currentUserId={user!.id}
+          currentDisplayName={user!.displayName}
+          onClose={() => setThreadParentId(null)}
+          onReply={handleThreadReply}
+        />
+      )}
+
+      {/* Todo panel */}
+      {showTodos && (
+        <TodoPanel onClose={() => setShowTodos(false)} />
+      )}
+
+      {/* Celebration effects */}
+      <CelebrationEffects messages={messages} reduceMotion={reduceMotion} />
 
       {/* Pinned messages */}
       <PinnedMessages

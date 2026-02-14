@@ -9,6 +9,7 @@ import LinkPreviewCard from "./LinkPreviewCard";
 import AudioPlayer from "./AudioPlayer";
 import UserProfilePopover from "./UserProfilePopover";
 import PollCard from "./PollCard";
+import ReminderPicker from "./ReminderPicker";
 import { useToast } from "./Toast";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message } from "@/lib/types";
@@ -30,6 +31,10 @@ interface MessageBubbleProps {
   currentDisplayName?: string;
   currentUserId?: string;
   timeFormat?: TimeFormat;
+  onReminder?: (messageId: string, time: number) => void;
+  hasReminder?: boolean;
+  replyCount?: number;
+  onViewThread?: (messageId: string) => void;
 }
 
 function relativeTime(dateStr: string): string {
@@ -131,6 +136,10 @@ export default function MessageBubble({
   currentDisplayName,
   currentUserId,
   timeFormat = "12h",
+  onReminder,
+  hasReminder,
+  replyCount = 0,
+  onViewThread,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -142,6 +151,7 @@ export default function MessageBubble({
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showReminderPicker, setShowReminderPicker] = useState(false);
   const { toast } = useToast();
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -392,6 +402,29 @@ export default function MessageBubble({
           {/* Reactions */}
           <ReactionBar reactions={message.reactions || []} onToggle={(emoji) => onReaction(message.id, emoji)} />
 
+          {/* Thread link */}
+          {replyCount > 0 && onViewThread && (
+            <button
+              onClick={() => onViewThread(message.id)}
+              className="text-[11px] text-accent hover:underline px-1 mt-0.5 flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              View thread ({replyCount} {replyCount === 1 ? "reply" : "replies"})
+            </button>
+          )}
+
+          {/* Reminder indicator */}
+          {hasReminder && (
+            <p className="text-[10px] text-accent px-1 mt-0.5 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+              Reminder set
+            </p>
+          )}
+
           {/* Read receipts */}
           {isOwn && message.readBy && message.readBy.length > 0 && (
             <div className={`flex gap-0.5 mt-0.5 ${isOwn ? "justify-end" : "justify-start"} px-1`}>
@@ -435,6 +468,20 @@ export default function MessageBubble({
                     <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                   </svg>
                 </button>
+              )}
+
+              {onReminder && (
+                <div className="relative">
+                  <button onClick={() => setShowReminderPicker(!showReminderPicker)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${hasReminder ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "52ms" }} title="Remind me">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                  </button>
+                  {showReminderPicker && (
+                    <ReminderPicker
+                      onSet={(time) => { onReminder(message.id, time); setShowReminderPicker(false); }}
+                      onClose={() => setShowReminderPicker(false)}
+                    />
+                  )}
+                </div>
               )}
 
               <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"}>
@@ -506,6 +553,15 @@ export default function MessageBubble({
                       </button>
                     </>
                   )}
+                  {onReminder && (
+                    <>
+                      <div className="h-px bg-border mx-3" />
+                      <button onClick={() => { setShowReminderPicker(true); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={hasReminder ? "text-accent" : "text-muted"}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        {hasReminder ? "Reminder set" : "Remind me"}
+                      </button>
+                    </>
+                  )}
                   <div className="h-px bg-border mx-3" />
                   <button onClick={() => { setShowReactionPicker(true); setShowActions(false); }} className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-foreground active:bg-border/50 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
@@ -540,6 +596,31 @@ export default function MessageBubble({
       </div>
 
       {lightboxSrc && <ImageLightbox src={lightboxSrc} alt={message.fileName || "Image"} onClose={() => setLightboxSrc(null)} />}
+      {showReminderPicker && onReminder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:hidden">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setShowReminderPicker(false)} />
+          <div className="relative bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-xs animate-fade-scale overflow-hidden z-10">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-xs font-semibold text-foreground font-heading">Remind me</p>
+            </div>
+            <div className="p-1.5">
+              {[
+                { label: "15 minutes", ms: 15 * 60 * 1000 },
+                { label: "1 hour", ms: 60 * 60 * 1000 },
+                { label: "3 hours", ms: 3 * 60 * 60 * 1000 },
+              ].map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => { onReminder(message.id, Date.now() + p.ms); setShowReminderPicker(false); }}
+                  className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-lg active:bg-background/60 transition-colors"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {showProfile && (
         <UserProfilePopover
           userId={message.userId}
