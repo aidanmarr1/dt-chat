@@ -13,6 +13,7 @@ interface UserProfilePopoverProps {
 export default function UserProfilePopover({ userId, currentUserId, onClose }: UserProfilePopoverProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -23,12 +24,16 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
 
   useEffect(() => {
     fetch(`/api/profile/${userId}`)
-      .then((res) => res.json())
-      .then((data) => {
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Failed to load profile");
+          return;
+        }
         setProfile(data.profile);
         setBioValue(data.profile?.bio || "");
       })
-      .catch(() => {})
+      .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
   }, [userId]);
 
@@ -83,6 +88,15 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
           {loading ? (
             <div className="p-8 flex items-center justify-center">
               <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="p-8 flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              </div>
+              <p className="text-sm text-muted">{error}</p>
             </div>
           ) : profile ? (
             <>

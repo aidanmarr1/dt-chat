@@ -33,6 +33,11 @@ export async function GET(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  // Hide profile from others for this specific user
+  if (user.email === "aidan.marr1@gmail.com" && currentUser.id !== user.id) {
+    return NextResponse.json({ error: "This profile is private" }, { status: 403 });
+  }
+
   const countResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(messages)
