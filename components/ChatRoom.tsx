@@ -793,21 +793,24 @@ export default function ChatRoom() {
   if (!user) {
     return (
       <div className="flex flex-col h-dvh">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border glass">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass">
           <div>
-            <div className="h-5 w-24 rounded-md animate-shimmer" />
-            <div className="h-3 w-16 rounded-md animate-shimmer mt-1.5" style={{ animationDelay: "0.1s" }} />
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-24 rounded-md animate-shimmer" />
+              <div className="h-4 w-16 rounded-full animate-shimmer" style={{ animationDelay: "0.05s" }} />
+            </div>
+            <div className="h-3 w-20 rounded-md animate-shimmer mt-1.5" style={{ animationDelay: "0.1s" }} />
           </div>
-          <div className="flex gap-2">
-            <div className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: "0.2s" }} />
-            <div className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: "0.25s" }} />
-            <div className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: "0.3s" }} />
+          <div className="flex gap-1.5 sm:gap-2">
+            {[0.15, 0.2, 0.25, 0.3, 0.35, 0.4].map((d, i) => (
+              <div key={i} className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: `${d}s` }} />
+            ))}
           </div>
         </div>
         <div className="flex-1 px-4 py-4 space-y-5">
           {[0.6, 0.4, 0.75, 0.5, 0.35, 0.55].map((w, i) => (
             <div key={i} className={`flex animate-fade-in ${i % 3 === 1 ? "justify-end" : "justify-start"}`} style={{ animationDelay: `${i * 0.1}s` }}>
-              {i % 3 !== 1 && <div className="w-7 h-7 rounded-full animate-shimmer mr-2.5 mt-auto shrink-0" />}
+              {i % 3 !== 1 && <div className="w-7 h-7 rounded-full animate-shimmer mr-2.5 mt-1 shrink-0" />}
               <div className="space-y-1.5" style={{ width: `${w * 55}%` }}>
                 {i % 3 !== 1 && <div className="h-3 w-16 rounded-md animate-shimmer" />}
                 <div className={`rounded-2xl animate-shimmer ${i % 3 === 1 ? "h-10" : "h-12"}`} />
