@@ -357,23 +357,25 @@ export default function ChatRoom() {
       setMessages((prev) =>
         prev.map((msg) => {
           if (msg.id !== messageId) return msg;
-          const reactions = [...(msg.reactions || [])];
+          const reactions = (msg.reactions || []).map((r) => ({ ...r }));
           const existing = reactions.find((r) => r.emoji === emoji);
           if (existing) {
             if (existing.reacted) {
-              existing.count--;
-              existing.reacted = false;
-              if (existing.count <= 0) {
+              const newCount = existing.count - 1;
+              if (newCount <= 0) {
                 return { ...msg, reactions: reactions.filter((r) => r.emoji !== emoji) };
               }
+              return { ...msg, reactions: reactions.map((r) =>
+                r.emoji === emoji ? { ...r, count: newCount, reacted: false } : r
+              )};
             } else {
-              existing.count++;
-              existing.reacted = true;
+              return { ...msg, reactions: reactions.map((r) =>
+                r.emoji === emoji ? { ...r, count: r.count + 1, reacted: true } : r
+              )};
             }
           } else {
-            reactions.push({ emoji, count: 1, reacted: true });
+            return { ...msg, reactions: [...reactions, { emoji, count: 1, reacted: true }] };
           }
-          return { ...msg, reactions };
         })
       );
     } catch {

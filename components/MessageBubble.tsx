@@ -260,7 +260,6 @@ export default function MessageBubble({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
-        onDoubleClick={(e) => { e.preventDefault(); onReaction(message.id, "\ud83d\udc4d"); }}
         style={{ userSelect: "text", WebkitUserSelect: "text" }}
       >
         {/* Avatar for others */}
