@@ -31,7 +31,7 @@ export default function GateForm() {
         setPassword("");
       } else {
         setSuccess(true);
-        setTimeout(() => router.push("/auth"), 600);
+        setTimeout(() => router.push("/auth"), 700);
       }
     } catch {
       setError("Something went wrong");
@@ -48,6 +48,8 @@ export default function GateForm() {
         <div className="absolute -bottom-32 -left-24 w-64 h-64 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/3 left-1/4 w-48 h-48 rounded-full bg-accent/5 blur-3xl animate-float-slow [animation-delay:5s]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
+        {/* Dot grid texture */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(var(--acc-rgb),0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
       </div>
 
       <div className="absolute top-4 right-4 z-10">
@@ -55,10 +57,12 @@ export default function GateForm() {
       </div>
 
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
-        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-8 transition-colors hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+        <div className={`bg-surface/60 backdrop-blur-xl border rounded-2xl shadow-2xl shadow-black/10 p-8 transition-all hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] ${
+          success ? "border-green-500/40" : "border-border/60"
+        }`}>
           {/* Lock icon */}
           <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float shadow-lg shadow-accent/10">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-spring-in shadow-lg shadow-accent/10">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -100,28 +104,36 @@ export default function GateForm() {
             <button
               type="submit"
               disabled={loading || !password || success}
-              className={`w-full mt-4 py-3 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn ${
+              className={`w-full mt-4 py-3 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn relative overflow-hidden ${
                 success
                   ? "bg-green-500 text-white shadow-green-500/20 scale-[1.02]"
                   : "bg-accent text-background hover:brightness-110 disabled:opacity-50 shadow-accent/20"
               }`}
             >
-              {success ? (
-                <span className="flex items-center justify-center gap-2 animate-fade-in">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  Access Granted
-                </span>
-              ) : loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                  Checking...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-1.5">
-                  Enter
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                </span>
+              {/* Shimmer sweep on hover */}
+              {!success && !loading && (
+                <div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity overflow-hidden rounded-xl">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer-sweep_1.5s_ease-in-out_infinite]" />
+                </div>
               )}
+              <span className="relative z-10">
+                {success ? (
+                  <span className="flex items-center justify-center gap-2 animate-fade-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-draw-check"><polyline points="20 6 9 17 4 12" /></svg>
+                    Access Granted
+                  </span>
+                ) : loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                    Checking...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-1.5">
+                    Enter
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                  </span>
+                )}
+              </span>
             </button>
 
             {/* Keyboard hint */}

@@ -42,7 +42,7 @@ export default function AuthForm() {
           setError(data.error || "Signup failed");
         } else {
           setSuccess(true);
-          setTimeout(() => router.push("/chat"), 600);
+          setTimeout(() => router.push("/chat"), 700);
         }
       } else {
         const res = await fetch("/api/auth/login", {
@@ -56,7 +56,7 @@ export default function AuthForm() {
           setError(data.error || "Login failed");
         } else {
           setSuccess(true);
-          setTimeout(() => router.push("/chat"), 600);
+          setTimeout(() => router.push("/chat"), 700);
         }
       }
     } catch {
@@ -89,6 +89,14 @@ export default function AuthForm() {
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
   const strengthColor = ["", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-green-400"][passwordStrength];
 
+  // Password requirements for checklist
+  const requirements = [
+    { label: "6+ characters", met: password.length >= 6 },
+    { label: "Uppercase & lowercase", met: /[A-Z]/.test(password) && /[a-z]/.test(password) },
+    { label: "A number", met: /\d/.test(password) },
+    { label: "A special character", met: /[^A-Za-z0-9]/.test(password) },
+  ];
+
   return (
     <div className="min-h-dvh flex items-center justify-center px-4 relative">
       {/* Animated background orbs */}
@@ -97,6 +105,8 @@ export default function AuthForm() {
         <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/4 blur-3xl animate-float-slow [animation-delay:5s]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
+        {/* Dot grid texture */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(var(--acc-rgb),0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
       </div>
 
       <div className="absolute top-4 right-4 z-10">
@@ -106,7 +116,7 @@ export default function AuthForm() {
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
         {/* Logo — above the card */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-lg shadow-accent/10 animate-glow-pulse">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-lg shadow-accent/10 animate-spring-in">
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 512 512">
               <defs>
                 <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -125,7 +135,9 @@ export default function AuthForm() {
         </div>
 
         {/* Glassmorphic card */}
-        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-colors hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+        <div className={`bg-surface/60 backdrop-blur-xl border rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-all hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] ${
+          success ? "border-green-500/40" : "border-border/60"
+        }`}>
           {/* Tab Toggle with sliding indicator */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
@@ -240,7 +252,7 @@ export default function AuthForm() {
                   )}
                 </button>
               </div>
-              {/* Password strength meter */}
+              {/* Password strength meter + requirements */}
               {tab === "signup" && password.length > 0 && (
                 <div className="mt-2 animate-fade-in">
                   <div className="flex gap-1">
@@ -248,9 +260,24 @@ export default function AuthForm() {
                       <div key={level} className={`h-1 flex-1 rounded-full transition-all duration-300 ${passwordStrength >= level ? strengthColor : "bg-border"}`} />
                     ))}
                   </div>
-                  <p className={`text-[10px] mt-1 ml-0.5 ${passwordStrength <= 1 ? "text-red-400" : passwordStrength === 2 ? "text-orange-400" : passwordStrength === 3 ? "text-yellow-400" : "text-green-400"}`}>
-                    {strengthLabel}
-                  </p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className={`text-[10px] ml-0.5 ${passwordStrength <= 1 ? "text-red-400" : passwordStrength === 2 ? "text-orange-400" : passwordStrength === 3 ? "text-yellow-400" : "text-green-400"}`}>
+                      {strengthLabel}
+                    </p>
+                  </div>
+                  {/* Requirements checklist */}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+                    {requirements.map((req) => (
+                      <div key={req.label} className="flex items-center gap-1.5">
+                        {req.met ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-green-400 shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                        ) : (
+                          <div className="w-2.5 h-2.5 rounded-full border border-border shrink-0" />
+                        )}
+                        <span className={`text-[10px] ${req.met ? "text-muted" : "text-muted/50"}`}>{req.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -301,28 +328,36 @@ export default function AuthForm() {
             <button
               type="submit"
               disabled={loading || success}
-              className={`w-full py-3 mt-1 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn ${
+              className={`w-full py-3 mt-1 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn relative overflow-hidden ${
                 success
                   ? "bg-green-500 text-white shadow-green-500/20 scale-[1.02]"
                   : "bg-accent text-background hover:brightness-110 disabled:opacity-50 shadow-accent/20"
               }`}
             >
-              {success ? (
-                <span className="flex items-center justify-center gap-2 animate-fade-in">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  {tab === "login" ? "Welcome!" : "Account Created!"}
-                </span>
-              ) : loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                  {tab === "login" ? "Logging in..." : "Creating account..."}
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-1.5">
-                  {tab === "login" ? "Log In" : "Create Account"}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                </span>
+              {/* Shimmer sweep on hover */}
+              {!success && !loading && (
+                <div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity overflow-hidden rounded-xl">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer-sweep_1.5s_ease-in-out_infinite]" />
+                </div>
               )}
+              <span className="relative z-10">
+                {success ? (
+                  <span className="flex items-center justify-center gap-2 animate-fade-in">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-draw-check"><polyline points="20 6 9 17 4 12" /></svg>
+                    {tab === "login" ? "Welcome!" : "Account Created!"}
+                  </span>
+                ) : loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                    {tab === "login" ? "Logging in..." : "Creating account..."}
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-1.5">
+                    {tab === "login" ? "Log In" : "Create Account"}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                  </span>
+                )}
+              </span>
             </button>
           </form>
 
@@ -330,9 +365,17 @@ export default function AuthForm() {
           <div className="border-t border-border/40 pt-4 mt-6">
             <p className="text-center text-xs text-muted">
               {tab === "login" ? (
-                <>New here? <button type="button" onClick={() => switchTab("signup")} className="text-accent hover:underline">Create an account</button></>
+                <>New here?{" "}
+                  <button type="button" onClick={() => switchTab("signup")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300">
+                    Create an account
+                  </button>
+                </>
               ) : (
-                <>Already have an account? <button type="button" onClick={() => switchTab("login")} className="text-accent hover:underline">Log in</button></>
+                <>Already have an account?{" "}
+                  <button type="button" onClick={() => switchTab("login")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300">
+                    Log in
+                  </button>
+                </>
               )}
             </p>
           </div>

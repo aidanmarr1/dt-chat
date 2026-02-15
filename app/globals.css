@@ -422,6 +422,36 @@ html[data-reduce-motion="true"] *::after {
   animation: poll-fill 0.5s ease-out both;
 }
 
+/* Spring bounce entrance */
+@keyframes spring-in {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { transform: scale(1.08); }
+  70% { transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-spring-in {
+  animation: spring-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* SVG checkmark draw animation */
+@keyframes draw-check {
+  0% { stroke-dashoffset: 30; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@utility animate-draw-check {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 0;
+  animation: draw-check 0.4s ease-out both;
+}
+
+/* Button shimmer sweep */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* Slow floating animation for background orbs */
 @keyframes float-slow {
   0%, 100% { transform: translate(0, 0) scale(1); }
