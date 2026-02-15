@@ -9,6 +9,7 @@ export default function GateForm() {
   const [error, setError] = useState("");
   const [shaking, setShaking] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: FormEvent) {
@@ -29,12 +30,13 @@ export default function GateForm() {
         setTimeout(() => setShaking(false), 500);
         setPassword("");
       } else {
-        router.push("/auth");
+        setSuccess(true);
+        setTimeout(() => router.push("/auth"), 600);
       }
     } catch {
       setError("Something went wrong");
     } finally {
-      setLoading(false);
+      if (!success) setLoading(false);
     }
   }
 
@@ -45,7 +47,6 @@ export default function GateForm() {
         <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-accent/8 blur-3xl animate-float-slow" />
         <div className="absolute -bottom-32 -left-24 w-64 h-64 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/3 left-1/4 w-48 h-48 rounded-full bg-accent/5 blur-3xl animate-float-slow [animation-delay:5s]" />
-        {/* Radial gradient overlay for depth */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
       </div>
 
@@ -54,7 +55,7 @@ export default function GateForm() {
       </div>
 
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
-        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-8 transition-colors hover:border-border">
+        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-8 transition-colors hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
           {/* Lock icon */}
           <div className="flex justify-center mb-5">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float shadow-lg shadow-accent/10">
@@ -82,8 +83,9 @@ export default function GateForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
                   autoFocus
+                  disabled={success}
                 />
               </div>
             </div>
@@ -97,16 +99,37 @@ export default function GateForm() {
 
             <button
               type="submit"
-              disabled={loading || !password}
-              className="w-full mt-4 py-3 bg-accent text-background font-semibold rounded-xl hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-accent/20"
+              disabled={loading || !password || success}
+              className={`w-full mt-4 py-3 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn ${
+                success
+                  ? "bg-green-500 text-white shadow-green-500/20 scale-[1.02]"
+                  : "bg-accent text-background hover:brightness-110 disabled:opacity-50 shadow-accent/20"
+              }`}
             >
-              {loading ? (
+              {success ? (
+                <span className="flex items-center justify-center gap-2 animate-fade-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  Access Granted
+                </span>
+              ) : loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
                   Checking...
                 </span>
-              ) : "Enter"}
+              ) : (
+                <span className="flex items-center justify-center gap-1.5">
+                  Enter
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </span>
+              )}
             </button>
+
+            {/* Keyboard hint */}
+            {!loading && !success && password && (
+              <p className="text-center text-[10px] text-muted/40 mt-2 animate-fade-in">
+                Press Enter ↵
+              </p>
+            )}
           </form>
 
           {/* Footer */}

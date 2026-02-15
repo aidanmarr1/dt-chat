@@ -14,6 +14,7 @@ export default function AuthForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -40,7 +41,8 @@ export default function AuthForm() {
         if (!res.ok) {
           setError(data.error || "Signup failed");
         } else {
-          router.push("/chat");
+          setSuccess(true);
+          setTimeout(() => router.push("/chat"), 600);
         }
       } else {
         const res = await fetch("/api/auth/login", {
@@ -53,13 +55,14 @@ export default function AuthForm() {
         if (!res.ok) {
           setError(data.error || "Login failed");
         } else {
-          router.push("/chat");
+          setSuccess(true);
+          setTimeout(() => router.push("/chat"), 600);
         }
       }
     } catch {
       setError("Something went wrong");
     } finally {
-      setLoading(false);
+      if (!success) setLoading(false);
     }
   }
 
@@ -93,7 +96,6 @@ export default function AuthForm() {
         <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-float-slow" />
         <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/4 blur-3xl animate-float-slow [animation-delay:5s]" />
-        {/* Radial gradient overlay for depth */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
       </div>
 
@@ -123,7 +125,7 @@ export default function AuthForm() {
         </div>
 
         {/* Glassmorphic card */}
-        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-colors hover:border-border">
+        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-colors hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
           {/* Tab Toggle with sliding indicator */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
@@ -133,19 +135,30 @@ export default function AuthForm() {
             <button
               type="button"
               onClick={() => switchTab("login")}
-              className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors duration-300 active:scale-95 ${
+              className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors duration-300 active:scale-95 flex items-center justify-center gap-1.5 ${
                 tab === "login" ? "text-background" : "text-muted hover:text-foreground"
               }`}
             >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
               Log In
             </button>
             <button
               type="button"
               onClick={() => switchTab("signup")}
-              className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors duration-300 active:scale-95 ${
+              className={`relative z-10 flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors duration-300 active:scale-95 flex items-center justify-center gap-1.5 ${
                 tab === "signup" ? "text-background" : "text-muted hover:text-foreground"
               }`}
             >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
               Sign Up
             </button>
           </div>
@@ -164,14 +177,15 @@ export default function AuthForm() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="How others will see you"
-                    className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all shadow-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
                     required
+                    disabled={success}
                   />
                 </div>
               </div>
             )}
 
-            <div>
+            <div className={tab === "signup" ? "animate-fade-in stagger-1" : ""}>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Email</label>
               <div className="relative group">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
@@ -183,13 +197,14 @@ export default function AuthForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
                   required
+                  disabled={success}
                 />
               </div>
             </div>
 
-            <div>
+            <div className={tab === "signup" ? "animate-fade-in stagger-2" : ""}>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Password</label>
               <div className="relative group">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
@@ -201,8 +216,9 @@ export default function AuthForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={tab === "signup" ? "At least 6 characters" : "Enter your password"}
-                  className="w-full pl-11 pr-11 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all shadow-sm"
+                  className="w-full pl-11 pr-11 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
                   required
+                  disabled={success}
                 />
                 <button
                   type="button"
@@ -240,7 +256,7 @@ export default function AuthForm() {
             </div>
 
             {tab === "signup" && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in stagger-3">
                 <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Confirm Password</label>
                 <div className="relative group">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
@@ -252,7 +268,7 @@ export default function AuthForm() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Type it again"
-                    className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] transition-all shadow-sm ${
+                    className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm ${
                       confirmPassword && confirmPassword !== password
                         ? "border-red-400/50"
                         : confirmPassword && confirmPassword === password
@@ -260,6 +276,7 @@ export default function AuthForm() {
                         : "border-border"
                     }`}
                     required
+                    disabled={success}
                   />
                   {confirmPassword && (
                     <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${confirmPassword === password ? "text-green-400" : "text-red-400"}`}>
@@ -283,15 +300,29 @@ export default function AuthForm() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 mt-1 bg-accent text-background font-semibold rounded-xl hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-accent/20"
+              disabled={loading || success}
+              className={`w-full py-3 mt-1 font-semibold rounded-xl transition-all active:scale-[0.98] disabled:cursor-not-allowed shadow-sm group/btn ${
+                success
+                  ? "bg-green-500 text-white shadow-green-500/20 scale-[1.02]"
+                  : "bg-accent text-background hover:brightness-110 disabled:opacity-50 shadow-accent/20"
+              }`}
             >
-              {loading ? (
+              {success ? (
+                <span className="flex items-center justify-center gap-2 animate-fade-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  {tab === "login" ? "Welcome!" : "Account Created!"}
+                </span>
+              ) : loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
                   {tab === "login" ? "Logging in..." : "Creating account..."}
                 </span>
-              ) : tab === "login" ? "Log In" : "Create Account"}
+              ) : (
+                <span className="flex items-center justify-center gap-1.5">
+                  {tab === "login" ? "Log In" : "Create Account"}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-200"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </span>
+              )}
             </button>
           </form>
 
