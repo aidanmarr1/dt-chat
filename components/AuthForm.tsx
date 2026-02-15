@@ -93,6 +93,8 @@ export default function AuthForm() {
         <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-float-slow" />
         <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/4 blur-3xl animate-float-slow [animation-delay:5s]" />
+        {/* Radial gradient overlay for depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
       </div>
 
       <div className="absolute top-4 right-4 z-10">
@@ -102,7 +104,7 @@ export default function AuthForm() {
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
         {/* Logo — above the card */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-lg shadow-accent/10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-lg shadow-accent/10 animate-glow-pulse">
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 512 512">
               <defs>
                 <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -115,13 +117,13 @@ export default function AuthForm() {
             </svg>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
-          <p className="text-sm text-muted mt-1 font-heading">
+          <p key={tab} className="text-sm text-muted mt-1 font-heading animate-fade-in">
             {tab === "login" ? "Welcome back" : "Create your account"}
           </p>
         </div>
 
         {/* Glassmorphic card */}
-        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8">
+        <div className="bg-surface/60 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-colors hover:border-border">
           {/* Tab Toggle with sliding indicator */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
@@ -152,8 +154,8 @@ export default function AuthForm() {
             {tab === "signup" && (
               <div className="animate-fade-in">
                 <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Display Name</label>
-                <div className="relative">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+                <div className="relative group">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
@@ -171,8 +173,8 @@ export default function AuthForm() {
 
             <div>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Email</label>
-              <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+              <div className="relative group">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
@@ -189,8 +191,8 @@ export default function AuthForm() {
 
             <div>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Password</label>
-              <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+              <div className="relative group">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -240,8 +242,8 @@ export default function AuthForm() {
             {tab === "signup" && (
               <div className="animate-fade-in">
                 <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Confirm Password</label>
-                <div className="relative">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+                <div className="relative group">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
