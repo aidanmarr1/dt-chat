@@ -8,7 +8,7 @@ import { useTheme } from "./ThemeProvider";
 import type { AccentColor, Density, ThemePreference } from "./ThemeProvider";
 import type { User } from "@/lib/types";
 
-type Tab = "account" | "avatar" | "appearance" | "notifications" | "privacy" | "shortcuts";
+type Tab = "profile" | "appearance" | "chat" | "notifications" | "privacy" | "shortcuts";
 type FontSize = "small" | "default" | "large";
 type BubbleStyle = "modern" | "minimal" | "classic";
 type TimeFormat = "12h" | "24h";
@@ -50,7 +50,7 @@ interface SettingsMenuProps {
 
 export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogout, soundEnabled, onSoundToggle, notificationsEnabled, onNotificationsToggle }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>("account");
+  const [tab, setTab] = useState<Tab>("profile");
   const [mounted, setMounted] = useState(false);
   const { theme, themePreference, setThemePreference, accentColor, setAccentColor, density, setDensity } = useTheme();
 
@@ -234,23 +234,12 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     {
-      id: "account",
-      label: "Account",
+      id: "profile",
+      label: "Profile",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-    },
-    {
-      id: "avatar",
-      label: "Avatar",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="10" r="3" />
-          <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
         </svg>
       ),
     },
@@ -268,6 +257,15 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
           <line x1="21" y1="12" x2="23" y2="12" />
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      ),
+    },
+    {
+      id: "chat",
+      label: "Chat",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       ),
     },
@@ -463,13 +461,13 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
         {/* === CONTENT === */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div key={tab} className="animate-tab-enter">
-          {/* Account */}
-          {tab === "account" && (
+          {/* Profile (merged Account + Avatar) */}
+          {tab === "profile" && (
             <div className="p-4 sm:p-6">
-              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Account</h3>
-              <p className="text-xs text-muted mb-5">Your profile information</p>
+              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Profile</h3>
+              <p className="text-xs text-muted mb-5">Your identity and how you appear</p>
 
-              {/* Redesigned profile card with accent gradient banner */}
+              {/* Profile card with accent gradient banner */}
               <div className="mb-5 rounded-xl bg-background border border-border overflow-hidden animate-settings-item" style={stagger(0)}>
                 <div className="h-20 relative" style={{ background: `linear-gradient(135deg, ${accentHex}55, ${accentHex}20, transparent)` }}>
                   <div className="absolute -bottom-6 left-4">
@@ -516,8 +514,23 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 </div>
               </div>
 
+              {/* Avatar section */}
+              <div className="mt-6 pt-5 border-t border-border animate-settings-item" style={stagger(4)}>
+                <SectionLabel icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="10" r="3" />
+                    <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+                  </svg>
+                }>Avatar</SectionLabel>
+                <AvatarPicker
+                  currentAvatarId={user.avatarId ?? null}
+                  onSelect={onAvatarChange}
+                />
+              </div>
+
               {/* Mobile logout */}
-              <div className="sm:hidden mt-8 pt-4 border-t border-border animate-settings-item" style={stagger(4)}>
+              <div className="sm:hidden mt-8 pt-4 border-t border-border animate-settings-item" style={stagger(5)}>
                 <button
                   onClick={() => { setOpen(false); onLogout(); }}
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-400 bg-red-500/5 border border-red-500/15 active:bg-red-500/10 transition-all"
@@ -533,36 +546,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
             </div>
           )}
 
-          {/* Avatar */}
-          {tab === "avatar" && (
-            <div className="p-4 sm:p-6">
-              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Avatar</h3>
-              <p className="text-xs text-muted mb-5">Choose how you appear in the chat</p>
-
-              <div className="flex items-center gap-3 mb-5 p-3 rounded-xl bg-background border border-border animate-settings-item" style={stagger(0)}>
-                <div className="ring-2 ring-accent/20 rounded-full">
-                  <Avatar displayName={user.displayName} userId={user.id} avatarId={user.avatarId} size="lg" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] text-muted">Current</p>
-                  <p className="text-sm font-medium text-foreground">{user.avatarId || "Initials"}</p>
-                </div>
-              </div>
-
-              <div className="animate-settings-item" style={stagger(1)}>
-                <AvatarPicker
-                  currentAvatarId={user.avatarId ?? null}
-                  onSelect={onAvatarChange}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Appearance */}
+          {/* Appearance — pure visual settings */}
           {tab === "appearance" && (
             <div className="p-4 sm:p-6">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Appearance</h3>
-              <p className="text-xs text-muted mb-5">Customize your experience</p>
+              <p className="text-xs text-muted mb-5">Customize how things look</p>
 
               <div className="space-y-5">
                 {/* Theme section — 3 cards */}
@@ -710,13 +698,13 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                   </div>
                 </div>
 
-                {/* Chat section */}
+                {/* Message display section */}
                 <div className="animate-settings-item" style={stagger(2)}>
                   <SectionLabel icon={
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                  }>Chat</SectionLabel>
+                  }>Messages</SectionLabel>
                   <div className="space-y-3">
                     {/* Bubble style */}
                     <div className="p-3.5 rounded-xl bg-background border border-border">
@@ -816,30 +804,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       </div>
                     </div>
 
-                    {/* Time format */}
-                    <div className="p-3.5 rounded-xl bg-background border border-border">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">Time format</p>
-                          <p className="text-[11px] text-muted">How timestamps are displayed</p>
-                        </div>
-                      </div>
-                      <SegmentedControl
-                        value={timeFormat}
-                        options={[
-                          { id: "12h", label: "12-hour" },
-                          { id: "24h", label: "24-hour" },
-                        ]}
-                        onChange={(id) => handleTimeFormatChange(id as TimeFormat)}
-                      />
-                    </div>
-
                     {/* Chat density */}
                     <div className="p-3.5 rounded-xl bg-background border border-border">
                       <div className="flex items-center gap-3 mb-3">
@@ -862,43 +826,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         ]}
                         onChange={(id) => setDensity(id as Density)}
                       />
-                    </div>
-
-                    {/* Enter to send */}
-                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="9 10 4 15 9 20" />
-                            <path d="M20 4v7a4 4 0 0 1-4 4H4" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">Enter to send</p>
-                          <p className="text-[11px] text-muted">{enterToSend ? "Enter sends, Shift+Enter for new line" : "Cmd+Enter sends, Enter for new line"}</p>
-                        </div>
-                      </div>
-                      <ToggleSwitch on={enterToSend} onToggle={handleEnterToSendToggle} />
-                    </div>
-
-                    {/* AI Writing Assistant */}
-                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
-                          <p className="text-[11px] text-muted">{aiCheck ? "Checks spelling & grammar before sending" : "Fix spelling & grammar before sending"}</p>
-                        </div>
-                      </div>
-                      <ToggleSwitch on={aiCheck} onToggle={() => {
-                        const next = !aiCheck;
-                        setAiCheck(next);
-                        localStorage.setItem("dt-ai-check", String(next));
-                      }} />
                     </div>
                   </div>
                 </div>
@@ -929,6 +856,77 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                     </div>
                     <ToggleSwitch on={reduceMotion} onToggle={handleReduceMotionToggle} />
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Chat — behavior & input settings */}
+          {tab === "chat" && (
+            <div className="p-4 sm:p-6">
+              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Chat</h3>
+              <p className="text-xs text-muted mb-5">How the chat behaves</p>
+
+              <div className="space-y-3">
+                {/* Enter to send */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 10 4 15 9 20" />
+                        <path d="M20 4v7a4 4 0 0 1-4 4H4" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">Enter to send</p>
+                      <p className="text-[11px] text-muted">{enterToSend ? "Enter sends, Shift+Enter for new line" : "Cmd+Enter sends, Enter for new line"}</p>
+                    </div>
+                  </div>
+                  <ToggleSwitch on={enterToSend} onToggle={handleEnterToSendToggle} />
+                </div>
+
+                {/* Time format */}
+                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(1)}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">Time format</p>
+                      <p className="text-[11px] text-muted">How timestamps are displayed</p>
+                    </div>
+                  </div>
+                  <SegmentedControl
+                    value={timeFormat}
+                    options={[
+                      { id: "12h", label: "12-hour" },
+                      { id: "24h", label: "24-hour" },
+                    ]}
+                    onChange={(id) => handleTimeFormatChange(id as TimeFormat)}
+                  />
+                </div>
+
+                {/* AI Writing Assistant */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(2)}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
+                      <p className="text-[11px] text-muted">{aiCheck ? "Checks spelling & grammar before sending" : "Fix spelling & grammar before sending"}</p>
+                    </div>
+                  </div>
+                  <ToggleSwitch on={aiCheck} onToggle={() => {
+                    const next = !aiCheck;
+                    setAiCheck(next);
+                    localStorage.setItem("dt-ai-check", String(next));
+                  }} />
                 </div>
               </div>
             </div>
@@ -1143,7 +1141,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
   return (
     <>
       <button
-        onClick={() => { setOpen(true); setTab("account"); }}
+        onClick={() => { setOpen(true); setTab("profile"); }}
         className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
         title="Settings"
       >
