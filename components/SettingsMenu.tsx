@@ -7,9 +7,9 @@ import Avatar from "./Avatar";
 import { useTheme } from "./ThemeProvider";
 import type { AccentColor, Density, ThemePreference } from "./ThemeProvider";
 import type { User } from "@/lib/types";
-import { fetchSettings, saveSetting, clearDbSettings } from "@/lib/settings-sync";
+import { fetchSettings, saveSetting } from "@/lib/settings-sync";
 
-type Tab = "profile" | "appearance" | "chat" | "notifications" | "privacy" | "shortcuts";
+type Tab = "profile" | "appearance" | "chat" | "notifications" | "shortcuts";
 type FontSize = "small" | "default" | "large";
 type BubbleStyle = "modern" | "minimal" | "classic";
 type TimeFormat = "12h" | "24h";
@@ -151,13 +151,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
   const [timeFormat, setTimeFormat] = useState<TimeFormat>("12h");
   const [reduceMotion, setReduceMotion] = useState(false);
 
-  // Privacy preferences
-  const [readReceipts, setReadReceipts] = useState(true);
-  const [showTyping, setShowTyping] = useState(true);
-  const [showOnline, setShowOnline] = useState(true);
-  const [aiCheck, setAiCheck] = useState(false);
-  const [clearConfirm, setClearConfirm] = useState(false);
-
   useEffect(() => setMounted(true), []);
 
   // Sync settings from DB (DB is authoritative for cross-device sync)
@@ -183,15 +176,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
       if (s["dt-reduce-motion"]) {
         setReduceMotion(s["dt-reduce-motion"] === "true");
       }
-      if (s["dt-read-receipts"]) {
-        setReadReceipts(s["dt-read-receipts"] !== "false");
-      }
-      if (s["dt-show-typing"]) {
-        setShowTyping(s["dt-show-typing"] !== "false");
-      }
-      if (s["dt-show-online"]) {
-        setShowOnline(s["dt-show-online"] !== "false");
-      }
     });
   }, []);
 
@@ -207,13 +191,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (tf === "24h") setTimeFormat("24h");
     const rm = localStorage.getItem("dt-reduce-motion");
     if (rm === "true") setReduceMotion(true);
-    const rr = localStorage.getItem("dt-read-receipts");
-    if (rr === "false") setReadReceipts(false);
-    const st = localStorage.getItem("dt-show-typing");
-    if (st === "false") setShowTyping(false);
-    const so = localStorage.getItem("dt-show-online");
-    if (so === "false") setShowOnline(false);
-    setAiCheck(true);
   }, []);
 
   // Sync bio when user prop changes
@@ -330,37 +307,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     }
   }
 
-  function handlePrivacyToggle(key: "dt-read-receipts" | "dt-show-typing" | "dt-show-online", value: boolean, setter: (v: boolean) => void) {
-    const next = !value;
-    setter(next);
-    localStorage.setItem(key, String(next));
-    saveSetting(key, String(next));
-  }
-
-  function handleClearLocalData() {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith("dt-"));
-    keys.forEach(k => localStorage.removeItem(k));
-    document.documentElement.removeAttribute("data-accent");
-    document.documentElement.removeAttribute("data-density");
-    document.documentElement.removeAttribute("data-font-size");
-    document.documentElement.removeAttribute("data-bubble-style");
-    document.documentElement.removeAttribute("data-reduce-motion");
-    setThemePreference("dark");
-    setAccentColor("gold");
-    setDensity("default");
-    setFontSize("default");
-    setBubbleStyle("modern");
-    setTimeFormat("12h");
-    setReduceMotion(false);
-    setReadReceipts(true);
-    setShowTyping(true);
-    setShowOnline(true);
-    setAiCheck(false);
-    setEnterToSend(true);
-    setClearConfirm(false);
-    clearDbSettings();
-  }
-
   function handleThemePreferenceChange(pref: ThemePreference) {
     setThemePreference(pref);
     saveSetting("dt-theme", pref);
@@ -427,15 +373,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-      ),
-    },
-    {
-      id: "privacy",
-      label: "Privacy",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
       ),
     },
@@ -1081,104 +1018,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
           )}
 
           {/* Privacy */}
-          {tab === "privacy" && (
-            <div className="p-4 sm:p-6">
-              <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Privacy</h3>
-              <p className="text-xs text-muted mb-5">Control what others can see</p>
-
-              <div className="space-y-3">
-                {/* Read receipts */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Read receipts</p>
-                      <p className="text-[11px] text-muted">{readReceipts ? "Others can see when you read messages" : "Read receipts hidden"}</p>
-                    </div>
-                  </div>
-                  <ToggleSwitch on={readReceipts} onToggle={() => handlePrivacyToggle("dt-read-receipts", readReceipts, setReadReceipts)} />
-                </div>
-
-                {/* Typing indicators */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(1)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Typing indicators</p>
-                      <p className="text-[11px] text-muted">{showTyping ? "Others can see when you're typing" : "Typing indicators hidden"}</p>
-                    </div>
-                  </div>
-                  <ToggleSwitch on={showTyping} onToggle={() => handlePrivacyToggle("dt-show-typing", showTyping, setShowTyping)} />
-                </div>
-
-                {/* Online status */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(2)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Online status</p>
-                      <p className="text-[11px] text-muted">{showOnline ? "Others can see when you're online" : "Online status hidden"}</p>
-                    </div>
-                  </div>
-                  <ToggleSwitch on={showOnline} onToggle={() => handlePrivacyToggle("dt-show-online", showOnline, setShowOnline)} />
-                </div>
-
-                {/* Clear local data */}
-                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(3)}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Clear local data</p>
-                      <p className="text-[11px] text-muted">Reset all preferences to defaults</p>
-                    </div>
-                  </div>
-                  {clearConfirm ? (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-red-400 flex-1">Are you sure? This cannot be undone.</p>
-                      <button
-                        onClick={handleClearLocalData}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
-                      >
-                        Yes, clear
-                      </button>
-                      <button
-                        onClick={() => setClearConfirm(false)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-foreground bg-surface border border-border transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setClearConfirm(true)}
-                      className="w-full px-3 py-2 rounded-lg text-xs font-medium text-red-400 bg-red-500/5 border border-red-500/15 hover:bg-red-500/10 transition-colors"
-                    >
-                      Clear all preferences
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Shortcuts */}
           {tab === "shortcuts" && (
