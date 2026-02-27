@@ -7,6 +7,7 @@ import Avatar from "./Avatar";
 import { useTheme } from "./ThemeProvider";
 import type { AccentColor, Density, ThemePreference } from "./ThemeProvider";
 import type { User } from "@/lib/types";
+import { fetchSettings, saveSetting, clearDbSettings } from "@/lib/settings-sync";
 
 type Tab = "profile" | "appearance" | "chat" | "notifications" | "privacy" | "shortcuts";
 type FontSize = "small" | "default" | "large";
@@ -159,62 +160,39 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
   useEffect(() => setMounted(true), []);
 
-  function saveSettingToDb(key: string, value: string | null) {
-    fetch("/api/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [key]: value }),
-    }).catch(() => {});
-  }
-
-  // Load preferences from DB for fresh browsers
+  // Sync settings from DB (DB is authoritative for cross-device sync)
   useEffect(() => {
-    fetch("/api/settings")
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (!data?.settings) return;
-        const s = data.settings as Record<string, string>;
-        if (!localStorage.getItem("dt-font-size") && s["dt-font-size"]) {
-          localStorage.setItem("dt-font-size", s["dt-font-size"]);
-          if (s["dt-font-size"] === "small" || s["dt-font-size"] === "large") {
-            setFontSize(s["dt-font-size"] as FontSize);
-            document.documentElement.setAttribute("data-font-size", s["dt-font-size"]);
-          }
-        }
-        if (!localStorage.getItem("dt-enter-to-send") && s["dt-enter-to-send"]) {
-          localStorage.setItem("dt-enter-to-send", s["dt-enter-to-send"]);
-          if (s["dt-enter-to-send"] === "false") setEnterToSend(false);
-        }
-        if (!localStorage.getItem("dt-bubble-style") && s["dt-bubble-style"]) {
-          localStorage.setItem("dt-bubble-style", s["dt-bubble-style"]);
-          if (s["dt-bubble-style"] === "minimal" || s["dt-bubble-style"] === "classic") {
-            setBubbleStyle(s["dt-bubble-style"] as BubbleStyle);
-            document.documentElement.setAttribute("data-bubble-style", s["dt-bubble-style"]);
-          }
-        }
-        if (!localStorage.getItem("dt-time-format") && s["dt-time-format"]) {
-          localStorage.setItem("dt-time-format", s["dt-time-format"]);
-          if (s["dt-time-format"] === "24h") setTimeFormat("24h");
-        }
-        if (!localStorage.getItem("dt-reduce-motion") && s["dt-reduce-motion"] === "true") {
-          localStorage.setItem("dt-reduce-motion", "true");
-          setReduceMotion(true);
-          document.documentElement.setAttribute("data-reduce-motion", "true");
-        }
-        if (!localStorage.getItem("dt-read-receipts") && s["dt-read-receipts"]) {
-          localStorage.setItem("dt-read-receipts", s["dt-read-receipts"]);
-          if (s["dt-read-receipts"] === "false") setReadReceipts(false);
-        }
-        if (!localStorage.getItem("dt-show-typing") && s["dt-show-typing"]) {
-          localStorage.setItem("dt-show-typing", s["dt-show-typing"]);
-          if (s["dt-show-typing"] === "false") setShowTyping(false);
-        }
-        if (!localStorage.getItem("dt-show-online") && s["dt-show-online"]) {
-          localStorage.setItem("dt-show-online", s["dt-show-online"]);
-          if (s["dt-show-online"] === "false") setShowOnline(false);
-        }
-      })
-      .catch(() => {});
+    fetchSettings().then(s => {
+      if (Object.keys(s).length === 0) return;
+      if (s["dt-font-size"]) {
+        const fs = s["dt-font-size"];
+        if (fs === "small" || fs === "large") setFontSize(fs);
+        else setFontSize("default");
+      }
+      if (s["dt-enter-to-send"]) {
+        setEnterToSend(s["dt-enter-to-send"] !== "false");
+      }
+      if (s["dt-bubble-style"]) {
+        const bs = s["dt-bubble-style"];
+        if (bs === "minimal" || bs === "classic") setBubbleStyle(bs);
+        else setBubbleStyle("modern");
+      }
+      if (s["dt-time-format"]) {
+        setTimeFormat(s["dt-time-format"] === "24h" ? "24h" : "12h");
+      }
+      if (s["dt-reduce-motion"]) {
+        setReduceMotion(s["dt-reduce-motion"] === "true");
+      }
+      if (s["dt-read-receipts"]) {
+        setReadReceipts(s["dt-read-receipts"] !== "false");
+      }
+      if (s["dt-show-typing"]) {
+        setShowTyping(s["dt-show-typing"] !== "false");
+      }
+      if (s["dt-show-online"]) {
+        setShowOnline(s["dt-show-online"] !== "false");
+      }
+    });
   }, []);
 
   // Load preferences
@@ -292,11 +270,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (size === "default") {
       localStorage.removeItem("dt-font-size");
       document.documentElement.removeAttribute("data-font-size");
-      saveSettingToDb("dt-font-size", null);
+      saveSetting("dt-font-size", "default");
     } else {
       localStorage.setItem("dt-font-size", size);
       document.documentElement.setAttribute("data-font-size", size);
-      saveSettingToDb("dt-font-size", size);
+      saveSetting("dt-font-size", size);
     }
   }
 
@@ -304,7 +282,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const next = !enterToSend;
     setEnterToSend(next);
     localStorage.setItem("dt-enter-to-send", String(next));
-    saveSettingToDb("dt-enter-to-send", String(next));
+    saveSetting("dt-enter-to-send", String(next));
   }
 
   function handleBubbleStyleChange(style: BubbleStyle) {
@@ -312,11 +290,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (style === "modern") {
       document.documentElement.removeAttribute("data-bubble-style");
       localStorage.removeItem("dt-bubble-style");
-      saveSettingToDb("dt-bubble-style", null);
+      saveSetting("dt-bubble-style", "modern");
     } else {
       document.documentElement.setAttribute("data-bubble-style", style);
       localStorage.setItem("dt-bubble-style", style);
-      saveSettingToDb("dt-bubble-style", style);
+      saveSetting("dt-bubble-style", style);
     }
   }
 
@@ -324,10 +302,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     setTimeFormat(tf);
     if (tf === "12h") {
       localStorage.removeItem("dt-time-format");
-      saveSettingToDb("dt-time-format", null);
+      saveSetting("dt-time-format", "12h");
     } else {
       localStorage.setItem("dt-time-format", tf);
-      saveSettingToDb("dt-time-format", tf);
+      saveSetting("dt-time-format", tf);
     }
   }
 
@@ -337,11 +315,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (next) {
       document.documentElement.setAttribute("data-reduce-motion", "true");
       localStorage.setItem("dt-reduce-motion", "true");
-      saveSettingToDb("dt-reduce-motion", "true");
+      saveSetting("dt-reduce-motion", "true");
     } else {
       document.documentElement.removeAttribute("data-reduce-motion");
       localStorage.removeItem("dt-reduce-motion");
-      saveSettingToDb("dt-reduce-motion", null);
+      saveSetting("dt-reduce-motion", "false");
     }
   }
 
@@ -349,7 +327,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const next = !value;
     setter(next);
     localStorage.setItem(key, String(next));
-    saveSettingToDb(key, String(next));
+    saveSetting(key, String(next));
   }
 
   function handleClearLocalData() {
@@ -373,21 +351,22 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     setAiCheck(false);
     setEnterToSend(true);
     setClearConfirm(false);
+    clearDbSettings();
   }
 
   function handleThemePreferenceChange(pref: ThemePreference) {
     setThemePreference(pref);
-    saveSettingToDb("dt-theme", pref);
+    saveSetting("dt-theme", pref);
   }
 
   function handleAccentColorChange(c: AccentColor) {
     setAccentColor(c);
-    saveSettingToDb("dt-accent", c === "gold" ? null : c);
+    saveSetting("dt-accent", c);
   }
 
   function handleDensityChange(d: Density) {
     setDensity(d);
-    saveSettingToDb("dt-density", d === "default" ? null : d);
+    saveSetting("dt-density", d);
   }
 
   function stagger(index: number): React.CSSProperties {

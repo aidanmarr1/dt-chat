@@ -22,6 +22,7 @@ import TodoPanel from "./TodoPanel";
 import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
 import type { Message, User, OnlineUser, Bookmark, Reminder } from "@/lib/types";
+import { fetchSettings, saveSetting } from "@/lib/settings-sync";
 
 function isSameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
@@ -120,67 +121,71 @@ export default function ChatRoom() {
       if (storedReminders) setReminders(JSON.parse(storedReminders));
     } catch { /* ignore */ }
 
-    // Load settings from DB for fresh browsers
-    fetch("/api/settings")
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (!data?.settings) return;
-        const s = data.settings as Record<string, string>;
-        if (!localStorage.getItem("dt-sound") && s["dt-sound"] === "false") {
-          localStorage.setItem("dt-sound", "false");
-          setSoundEnabled(false);
+    // Sync settings from DB (DB is authoritative for cross-device sync)
+    fetchSettings().then(s => {
+      if (Object.keys(s).length === 0) return;
+
+      if (s["dt-sound"]) {
+        localStorage.setItem("dt-sound", s["dt-sound"]);
+        setSoundEnabled(s["dt-sound"] !== "false");
+      }
+
+      if (s["dt-notifications"]) {
+        localStorage.setItem("dt-notifications", s["dt-notifications"]);
+        if (s["dt-notifications"] === "true" && typeof Notification !== "undefined" && Notification.permission === "granted") {
+          setNotificationsEnabled(true);
+        } else {
+          setNotificationsEnabled(false);
         }
-        if (!localStorage.getItem("dt-notifications") && s["dt-notifications"] === "true") {
-          localStorage.setItem("dt-notifications", "true");
-          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            setNotificationsEnabled(true);
-          }
+      }
+
+      if (s["dt-time-format"]) {
+        if (s["dt-time-format"] === "24h") {
+          localStorage.setItem("dt-time-format", "24h");
+          setTimeFormat("24h");
+        } else {
+          localStorage.removeItem("dt-time-format");
+          setTimeFormat("12h");
         }
-        if (!localStorage.getItem("dt-time-format") && s["dt-time-format"]) {
-          localStorage.setItem("dt-time-format", s["dt-time-format"]);
-          if (s["dt-time-format"] === "24h") setTimeFormat("24h");
-        }
-        if (!localStorage.getItem("dt-reduce-motion") && s["dt-reduce-motion"] === "true") {
+      }
+
+      if (s["dt-reduce-motion"]) {
+        if (s["dt-reduce-motion"] === "true") {
           localStorage.setItem("dt-reduce-motion", "true");
           setReduceMotion(true);
+        } else {
+          localStorage.removeItem("dt-reduce-motion");
+          setReduceMotion(false);
         }
-      })
-      .catch(() => {});
+      }
+    });
   }, []);
-
-  function saveSettingToDb(key: string, value: string | null) {
-    fetch("/api/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [key]: value }),
-    }).catch(() => {});
-  }
 
   function toggleSound() {
     const next = !soundEnabled;
     setSoundEnabled(next);
     localStorage.setItem("dt-sound", String(next));
-    saveSettingToDb("dt-sound", String(next));
+    saveSetting("dt-sound", String(next));
   }
 
   function toggleNotifications() {
     if (notificationsEnabled) {
       setNotificationsEnabled(false);
       localStorage.setItem("dt-notifications", "false");
-      saveSettingToDb("dt-notifications", "false");
+      saveSetting("dt-notifications", "false");
       return;
     }
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "granted") {
       setNotificationsEnabled(true);
       localStorage.setItem("dt-notifications", "true");
-      saveSettingToDb("dt-notifications", "true");
+      saveSetting("dt-notifications", "true");
     } else if (Notification.permission !== "denied") {
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") {
           setNotificationsEnabled(true);
           localStorage.setItem("dt-notifications", "true");
-          saveSettingToDb("dt-notifications", "true");
+          saveSetting("dt-notifications", "true");
         }
       });
     }

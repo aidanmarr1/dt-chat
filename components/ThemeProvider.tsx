@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { fetchSettings } from "@/lib/settings-sync";
 
 type Theme = "light" | "dark";
 export type ThemePreference = "light" | "dark" | "system";
@@ -73,44 +74,88 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  // Load settings from DB for fresh browsers (no localStorage yet)
+  // Sync settings from DB (DB is authoritative for cross-device sync)
   useEffect(() => {
-    fetch("/api/settings")
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (!data?.settings) return;
-        const s = data.settings as Record<string, string>;
+    fetchSettings().then(s => {
+      if (Object.keys(s).length === 0) return;
 
-        if (!localStorage.getItem("dt-theme") && s["dt-theme"]) {
-          const val = s["dt-theme"];
-          localStorage.setItem("dt-theme", val);
-          if (val === "system") {
-            setThemePreferenceState("system");
-            const resolved = getSystemTheme();
-            setThemeState(resolved);
-            document.documentElement.setAttribute("data-theme", resolved);
-          } else if (val === "light" || val === "dark") {
-            setThemePreferenceState(val);
-            setThemeState(val);
-            document.documentElement.setAttribute("data-theme", val);
-          }
+      // Theme
+      if (s["dt-theme"]) {
+        const val = s["dt-theme"];
+        localStorage.setItem("dt-theme", val);
+        if (val === "system") {
+          setThemePreferenceState("system");
+          const resolved = getSystemTheme();
+          setThemeState(resolved);
+          document.documentElement.setAttribute("data-theme", resolved);
+        } else if (val === "light" || val === "dark") {
+          setThemePreferenceState(val);
+          setThemeState(val);
+          document.documentElement.setAttribute("data-theme", val);
         }
+      }
 
-        if (!localStorage.getItem("dt-accent") && s["dt-accent"]) {
-          const ac = s["dt-accent"] as AccentColor;
+      // Accent
+      if (s["dt-accent"]) {
+        const ac = s["dt-accent"];
+        if (ac === "gold") {
+          localStorage.removeItem("dt-accent");
+          setAccentColorState("gold");
+          document.documentElement.removeAttribute("data-accent");
+        } else {
           localStorage.setItem("dt-accent", ac);
-          setAccentColorState(ac);
+          setAccentColorState(ac as AccentColor);
           document.documentElement.setAttribute("data-accent", ac);
         }
+      }
 
-        if (!localStorage.getItem("dt-density") && s["dt-density"]) {
-          const dn = s["dt-density"] as Density;
+      // Density
+      if (s["dt-density"]) {
+        const dn = s["dt-density"];
+        if (dn === "default") {
+          localStorage.removeItem("dt-density");
+          setDensityState("default");
+          document.documentElement.removeAttribute("data-density");
+        } else if (dn === "compact" || dn === "comfortable") {
           localStorage.setItem("dt-density", dn);
           setDensityState(dn);
           document.documentElement.setAttribute("data-density", dn);
         }
-      })
-      .catch(() => {});
+      }
+
+      // Font size (DOM attribute applied early so it's ready before SettingsMenu opens)
+      if (s["dt-font-size"]) {
+        if (s["dt-font-size"] === "small" || s["dt-font-size"] === "large") {
+          localStorage.setItem("dt-font-size", s["dt-font-size"]);
+          document.documentElement.setAttribute("data-font-size", s["dt-font-size"]);
+        } else {
+          localStorage.removeItem("dt-font-size");
+          document.documentElement.removeAttribute("data-font-size");
+        }
+      }
+
+      // Bubble style
+      if (s["dt-bubble-style"]) {
+        if (s["dt-bubble-style"] === "minimal" || s["dt-bubble-style"] === "classic") {
+          localStorage.setItem("dt-bubble-style", s["dt-bubble-style"]);
+          document.documentElement.setAttribute("data-bubble-style", s["dt-bubble-style"]);
+        } else {
+          localStorage.removeItem("dt-bubble-style");
+          document.documentElement.removeAttribute("data-bubble-style");
+        }
+      }
+
+      // Reduce motion
+      if (s["dt-reduce-motion"]) {
+        if (s["dt-reduce-motion"] === "true") {
+          localStorage.setItem("dt-reduce-motion", "true");
+          document.documentElement.setAttribute("data-reduce-motion", "true");
+        } else {
+          localStorage.removeItem("dt-reduce-motion");
+          document.documentElement.removeAttribute("data-reduce-motion");
+        }
+      }
+    });
   }, []);
 
   // Listen for OS theme changes when preference is "system"
