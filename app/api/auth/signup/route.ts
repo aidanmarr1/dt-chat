@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Block control characters, zero-width chars, and RTL overrides that enable spoofing
+  if (/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\u2060\ufeff]/.test(trimmedName)) {
+    return NextResponse.json(
+      { error: "Display name contains invalid characters" },
+      { status: 400 }
+    );
+  }
+
   if (password !== confirmPassword) {
     return NextResponse.json(
       { error: "Passwords do not match" },

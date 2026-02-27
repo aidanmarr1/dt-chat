@@ -19,11 +19,14 @@ function isUrlSafe(urlStr: string): boolean {
     const host = parsed.hostname.toLowerCase();
     // Block localhost and common metadata endpoints
     if (host === "localhost" || host === "metadata.google.internal") return false;
-    // Block IPv6 loopback
-    if (host === "[::1]" || host === "::1") return false;
-    // Block private/reserved IPv4 ranges
-    const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-    if (ipv4) {
+    // Block any IPv6 address (wrapped in brackets in URLs)
+    if (host.startsWith("[") || host.includes(":")) return false;
+    // Block private/reserved IPv4 ranges (including decimal/octal/hex representations)
+    // First reject anything that looks like a numeric-only hostname (catches 2130706433, 0x7f000001, etc.)
+    if (/^[\d.x]+$/i.test(host) || /^0[0-7]/.test(host)) {
+      // Only allow standard dotted-decimal with 4 octets
+      const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      if (!ipv4) return false; // Not standard dotted-decimal = block
       const [, a, b] = ipv4.map(Number);
       if (a === 10) return false;                      // 10.0.0.0/8
       if (a === 127) return false;                     // 127.0.0.0/8
@@ -358,6 +361,18 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { content, fileName, fileType, fileSize, filePath, replyToId } = body;
+
+  // Validate filePath is a genuine Vercel Blob URL (not an arbitrary attacker URL)
+  if (filePath && typeof filePath === "string") {
+    try {
+      const fileUrl = new URL(filePath);
+      if (!fileUrl.hostname.endsWith(".vercel-storage.com") && !fileUrl.hostname.endsWith(".blob.vercel-storage.com")) {
+        return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+  }
 
   // Must have content or file
   const hasContent = content && typeof content === "string" && content.trim();
