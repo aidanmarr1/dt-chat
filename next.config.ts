@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
           // Prevent MIME sniffing
           { key: "X-Content-Type-Options", value: "nosniff" },
+          // Enforce HTTPS
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // Prevent referrer leakage
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },
       {

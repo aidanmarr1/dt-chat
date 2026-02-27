@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
     if (expiresIn === null) {
       // "Don't clear" — no expiry
       statusExpiresAt = null;
-    } else if (typeof expiresIn === "number") {
+    } else if (typeof expiresIn === "number" && expiresIn > 0) {
       statusExpiresAt = new Date(Date.now() + expiresIn * 60 * 1000);
     } else {
       // Default: 4 hours for backward compat

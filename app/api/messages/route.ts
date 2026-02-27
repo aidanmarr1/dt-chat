@@ -54,8 +54,18 @@ async function fetchOpenGraph(url: string): Promise<{
     const res = await fetch(url, {
       signal: controller.signal,
       headers: { "User-Agent": "bot" },
+      redirect: "manual",
     });
     clearTimeout(timeout);
+
+    // If redirected, validate the target URL before following
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location");
+      if (!location || !isUrlSafe(new URL(location, url).href)) return null;
+      // Don't follow further — just abort to prevent redirect chains
+      return null;
+    }
+
     if (!res.ok) return null;
 
     const contentType = res.headers.get("content-type") || "";

@@ -23,6 +23,13 @@ function checkGateRateLimit(ip: string): boolean {
   const now = Date.now();
   const entry = gateAttempts.get(ip);
   if (!entry || now > entry.resetAt) {
+    if (entry) gateAttempts.delete(ip);
+    // Prune expired entries if map grows too large
+    if (gateAttempts.size > 10_000) {
+      for (const [key, val] of gateAttempts) {
+        if (now > val.resetAt) gateAttempts.delete(key);
+      }
+    }
     gateAttempts.set(ip, { count: 1, resetAt: now + GATE_WINDOW_MS });
     return true;
   }

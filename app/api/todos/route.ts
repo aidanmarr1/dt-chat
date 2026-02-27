@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { todos, users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureTodoTable } from "@/lib/init-tables";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -72,13 +72,14 @@ export async function POST(req: NextRequest) {
   const id = crypto.randomUUID();
   const now = new Date();
 
-  // Get max position
+  // Get max position efficiently
   const maxRow = await db
     .select({ pos: todos.position })
     .from(todos)
-    .orderBy(asc(todos.position))
-    .all();
-  const position = maxRow.length > 0 ? Math.max(...maxRow.map((r) => r.pos)) + 1 : 0;
+    .orderBy(desc(todos.position))
+    .limit(1)
+    .get();
+  const position = maxRow ? maxRow.pos + 1 : 0;
 
   await db.insert(todos).values({
     id,

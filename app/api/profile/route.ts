@@ -12,6 +12,12 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json();
+
+  // Guard against oversized payloads
+  if (JSON.stringify(body).length > 10_000) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+  }
+
   const { avatarId, bio } = body;
 
   const updates: Record<string, unknown> = {};

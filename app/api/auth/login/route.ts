@@ -14,6 +14,13 @@ function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const entry = loginAttempts.get(ip);
   if (!entry || now > entry.resetAt) {
+    if (entry) loginAttempts.delete(ip);
+    // Prune expired entries if map grows too large
+    if (loginAttempts.size > 10_000) {
+      for (const [key, val] of loginAttempts) {
+        if (now > val.resetAt) loginAttempts.delete(key);
+      }
+    }
     loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
     return true;
   }
