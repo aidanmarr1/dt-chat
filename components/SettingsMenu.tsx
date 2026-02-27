@@ -95,7 +95,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const so = localStorage.getItem("dt-show-online");
     if (so === "false") setShowOnline(false);
     setAiCheck(true);
-    localStorage.setItem("dt-ai-check", "true");
   }, []);
 
   // Sync bio when user prop changes
