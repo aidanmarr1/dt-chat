@@ -128,9 +128,14 @@ export default function AuthForm() {
             </svg>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
-          <p key={tab} className="text-sm text-muted mt-1 font-heading animate-fade-in">
-            {tab === "login" ? "Welcome back" : "Create your account"}
-          </p>
+          <div className="relative h-5 mt-1">
+            <p className={`text-sm text-muted font-heading transition-all duration-300 absolute inset-x-0 ${tab === "login" ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
+              Welcome back
+            </p>
+            <p className={`text-sm text-muted font-heading transition-all duration-300 absolute inset-x-0 ${tab === "signup" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1 pointer-events-none"}`}>
+              Create your account
+            </p>
+          </div>
         </div>
 
         {/* Glassmorphic card */}
@@ -175,28 +180,32 @@ export default function AuthForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            {tab === "signup" && (
-              <div className="animate-fade-in">
-                <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Display Name</label>
-                <div className="relative group">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="How others will see you"
-                    className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
-                    required
-                    disabled={success}
-                  />
+            {/* Display Name — smoothly expands/collapses */}
+            <div className={`collapsible ${tab === "signup" ? "open" : ""}`}>
+              <div className="collapsible-inner">
+                <div className="pb-3">
+                  <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Display Name</label>
+                  <div className="relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="How others will see you"
+                      className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
+                      required={tab === "signup"}
+                      disabled={success}
+                      tabIndex={tab === "signup" ? 0 : -1}
+                    />
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className={tab === "signup" ? "animate-fade-in stagger-1" : ""}>
+            <div>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Email</label>
               <div className="relative group">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
@@ -215,7 +224,7 @@ export default function AuthForm() {
               </div>
             </div>
 
-            <div className={tab === "signup" ? "animate-fade-in stagger-2" : ""}>
+            <div>
               <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Password</label>
               <div className="relative group">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
@@ -281,41 +290,45 @@ export default function AuthForm() {
               )}
             </div>
 
-            {tab === "signup" && (
-              <div className="animate-fade-in stagger-3">
-                <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Confirm Password</label>
-                <div className="relative group">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Type it again"
-                    className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm ${
-                      confirmPassword && confirmPassword !== password
-                        ? "border-red-400/50"
-                        : confirmPassword && confirmPassword === password
-                        ? "border-green-400/50"
-                        : "border-border"
-                    }`}
-                    required
-                    disabled={success}
-                  />
-                  {confirmPassword && (
-                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${confirmPassword === password ? "text-green-400" : "text-red-400"}`}>
-                      {confirmPassword === password ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                      )}
-                    </span>
-                  )}
+            {/* Confirm Password — smoothly expands/collapses */}
+            <div className={`collapsible ${tab === "signup" ? "open" : ""}`}>
+              <div className="collapsible-inner">
+                <div className="pb-0">
+                  <label className="block text-xs font-medium text-muted mb-1.5 ml-1">Confirm Password</label>
+                  <div className="relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors pointer-events-none">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Type it again"
+                      className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm ${
+                        confirmPassword && confirmPassword !== password
+                          ? "border-red-400/50"
+                          : confirmPassword && confirmPassword === password
+                          ? "border-green-400/50"
+                          : "border-border"
+                      }`}
+                      required={tab === "signup"}
+                      disabled={success}
+                      tabIndex={tab === "signup" ? 0 : -1}
+                    />
+                    {confirmPassword && (
+                      <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${confirmPassword === password ? "text-green-400" : "text-red-400"}`}>
+                        {confirmPassword === password ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {error && (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-red-400/10 border border-red-400/20 rounded-xl animate-shake">
@@ -360,22 +373,19 @@ export default function AuthForm() {
             </button>
           </form>
 
-          {/* Bottom hint */}
-          <div className="border-t border-border/40 pt-4 mt-6">
-            <p className="text-center text-xs text-muted">
-              {tab === "login" ? (
-                <>New here?{" "}
-                  <button type="button" onClick={() => switchTab("signup")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300">
-                    Create an account
-                  </button>
-                </>
-              ) : (
-                <>Already have an account?{" "}
-                  <button type="button" onClick={() => switchTab("login")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300">
-                    Log in
-                  </button>
-                </>
-              )}
+          {/* Bottom hint — crossfade */}
+          <div className="border-t border-border/40 pt-4 mt-6 relative overflow-hidden">
+            <p className={`text-center text-xs text-muted transition-all duration-300 ${tab === "login" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 absolute inset-x-0 pointer-events-none"}`}>
+              New here?{" "}
+              <button type="button" onClick={() => switchTab("signup")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300" tabIndex={tab === "login" ? 0 : -1}>
+                Create an account
+              </button>
+            </p>
+            <p className={`text-center text-xs text-muted transition-all duration-300 ${tab === "signup" ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 absolute inset-x-0 pointer-events-none"}`}>
+              Already have an account?{" "}
+              <button type="button" onClick={() => switchTab("login")} className="relative text-accent after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-accent hover:after:w-full after:transition-all after:duration-300" tabIndex={tab === "signup" ? 0 : -1}>
+                Log in
+              </button>
             </p>
           </div>
         </div>
