@@ -338,23 +338,25 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const activeIndex = options.findIndex((o) => o.id === value);
     const count = options.length;
     return (
-      <div className="relative flex rounded-lg bg-background border border-border p-0.5">
+      <div className="relative flex rounded-lg bg-background border border-border p-0.5 overflow-hidden">
         <div
-          className="absolute top-0.5 bottom-0.5 rounded-md bg-accent/15 shadow-sm transition-all duration-300 ease-out"
+          className="absolute top-[2px] bottom-[2px] rounded-md bg-accent/15 shadow-sm"
           style={{
-            width: `calc(${100 / count}% - ${count > 1 ? 2 : 0}px)`,
-            left: `calc(${(activeIndex * 100) / count}% + 2px)`,
+            width: `${100 / count}%`,
+            transform: `translateX(${activeIndex * 100}%)`,
+            transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
         {options.map((opt) => (
           <button
             key={opt.id}
             onClick={() => onChange(opt.id)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 ${
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-xs font-medium ${
               value === opt.id
                 ? "text-accent"
                 : "text-muted hover:text-foreground"
             }`}
+            style={{ transition: "color 0.2s ease" }}
           >
             {opt.label}
           </button>
