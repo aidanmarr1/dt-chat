@@ -142,11 +142,14 @@ export default function AuthForm() {
         <div className={`bg-surface/60 backdrop-blur-xl border rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-all hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] ${
           success ? "border-green-500/40" : "border-border/60"
         }`}>
-          {/* Tab Toggle with sliding indicator */}
+          {/* Tab Toggle with sliding indicator (same animation as settings SegmentedControl) */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
-              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-sm transition-all duration-300 ease-out"
-              style={{ left: tab === "login" ? "4px" : "calc(50% + 0px)" }}
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-sm left-1"
+              style={{
+                transform: tab === "login" ? "translateX(0%)" : "translateX(calc(100% + 8px))",
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
             />
             <button
               type="button"
