@@ -15,6 +15,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const trimmedEmail = String(email).trim();
+  const trimmedName = String(displayName).trim();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    return NextResponse.json(
+      { error: "Invalid email format" },
+      { status: 400 }
+    );
+  }
+
+  if (trimmedName.length === 0 || trimmedName.length > 50) {
+    return NextResponse.json(
+      { error: "Display name must be 1-50 characters" },
+      { status: 400 }
+    );
+  }
+
   if (password !== confirmPassword) {
     return NextResponse.json(
       { error: "Passwords do not match" },
@@ -32,7 +49,7 @@ export async function POST(req: NextRequest) {
   const existing = await db
     .select()
     .from(users)
-    .where(eq(users.email, email.toLowerCase()))
+    .where(eq(users.email, trimmedEmail.toLowerCase()))
     .get();
 
   if (existing) {
@@ -47,8 +64,8 @@ export async function POST(req: NextRequest) {
 
   await db.insert(users).values({
     id: userId,
-    email: email.toLowerCase(),
-    displayName,
+    email: trimmedEmail.toLowerCase(),
+    displayName: trimmedName,
     password: hashedPassword,
     createdAt: new Date(),
   });
@@ -56,7 +73,7 @@ export async function POST(req: NextRequest) {
   const token = await signToken(userId);
 
   const res = NextResponse.json({
-    user: { id: userId, email: email.toLowerCase(), displayName, avatarId: null },
+    user: { id: userId, email: trimmedEmail.toLowerCase(), displayName: trimmedName, avatarId: null },
   });
 
   res.cookies.set("auth-token", token, {

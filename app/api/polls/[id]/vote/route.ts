@@ -30,6 +30,12 @@ export async function POST(
     return NextResponse.json({ error: "Poll not found" }, { status: 404 });
   }
 
+  // Validate optionId exists in the poll's options
+  const pollOptions = JSON.parse(poll.options as string) as { id: string }[];
+  if (!pollOptions.some((o) => o.id === optionId)) {
+    return NextResponse.json({ error: "Invalid option ID" }, { status: 400 });
+  }
+
   // Check if user already voted for this option (toggle off)
   const existingVote = await db
     .select()

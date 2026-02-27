@@ -16,8 +16,8 @@ export async function POST(
   const { id: messageId } = await params;
   const { emoji } = await req.json();
 
-  if (!emoji || typeof emoji !== "string") {
-    return NextResponse.json({ error: "Emoji required" }, { status: 400 });
+  if (!emoji || typeof emoji !== "string" || emoji.length > 32) {
+    return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });
   }
 
   // Check if user already reacted with this emoji

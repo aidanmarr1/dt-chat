@@ -22,6 +22,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (todo.createdBy !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const body = await req.json();
 
   // Toggle completed
@@ -62,6 +66,14 @@ export async function DELETE(
 
   await ensureTodoTable();
   const { id } = await params;
+
+  const todo = await db.select().from(todos).where(eq(todos.id, id)).get();
+  if (!todo) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (todo.createdBy !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   await db.delete(todos).where(eq(todos.id, id));
   return NextResponse.json({ ok: true });

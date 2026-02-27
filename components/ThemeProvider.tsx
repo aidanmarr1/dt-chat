@@ -64,7 +64,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     }
 
     const ac = localStorage.getItem("dt-accent") as AccentColor | null;
-    if (ac && ["blue", "green", "purple", "red", "pink", "teal"].includes(ac)) {
+    if (ac && ["gold", "blue", "green", "purple", "red", "pink", "teal"].includes(ac)) {
       setAccentColorState(ac);
     }
 

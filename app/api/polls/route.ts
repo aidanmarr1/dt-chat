@@ -14,12 +14,16 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { question, options } = body;
 
-  if (!question || typeof question !== "string" || !Array.isArray(options) || options.length < 2 || options.length > 4) {
+  if (!question || typeof question !== "string" || !Array.isArray(options) || options.length < 2 || options.length > 10) {
     return NextResponse.json({ error: "Invalid poll data" }, { status: 400 });
   }
 
-  if (!options.every((o: unknown) => typeof o === "string" && o.trim().length > 0)) {
-    return NextResponse.json({ error: "All options must be non-empty strings" }, { status: 400 });
+  if (question.trim().length > 500) {
+    return NextResponse.json({ error: "Question must be 500 characters or less" }, { status: 400 });
+  }
+
+  if (!options.every((o: unknown) => typeof o === "string" && o.trim().length > 0 && o.trim().length <= 200)) {
+    return NextResponse.json({ error: "Each option must be 1-200 characters" }, { status: 400 });
   }
 
   // Ensure tables exist

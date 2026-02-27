@@ -4,7 +4,7 @@ import crypto from "crypto";
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
 
-  const expected = Buffer.from("dt");
+  const expected = Buffer.from(process.env.GATE_PASSWORD ?? "dt");
   const received = Buffer.from(String(password ?? ""));
 
   const isValid =

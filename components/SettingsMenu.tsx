@@ -239,6 +239,13 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Clean up bio debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (bioTimeoutRef.current) clearTimeout(bioTimeoutRef.current);
+    };
+  }, []);
+
   // Auto-save bio with debounce
   function handleBioChange(value: string) {
     if (value.length > 200) return;

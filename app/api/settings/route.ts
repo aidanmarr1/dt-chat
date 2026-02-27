@@ -48,6 +48,11 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
+  // Guard against oversized payloads
+  if (JSON.stringify(body).length > 10_000) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
   // Read existing settings
   const row = await db
     .select({ settings: users.settings })

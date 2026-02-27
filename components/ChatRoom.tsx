@@ -381,9 +381,11 @@ export default function ChatRoom() {
             : new Date(data.message.createdAt).toISOString(),
       };
 
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => {
+        lastSeenCountRef.current = prev.length + 1;
+        return [...prev, newMsg];
+      });
       latestMessageIdRef.current = newMsg.id;
-      lastSeenCountRef.current = messages.length + 1;
       setTimeout(() => scrollToBottom(), 50);
     } catch {
       toast("Failed to send message", "error");
@@ -620,9 +622,11 @@ export default function ChatRoom() {
             ? data.message.createdAt
             : new Date(data.message.createdAt).toISOString(),
       };
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => {
+        lastSeenCountRef.current = prev.length + 1;
+        return [...prev, newMsg];
+      });
       latestMessageIdRef.current = newMsg.id;
-      lastSeenCountRef.current = messages.length + 1;
       setTimeout(() => scrollToBottom(), 50);
     } catch {
       toast("Failed to create poll", "error");

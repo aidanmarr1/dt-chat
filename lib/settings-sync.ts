@@ -12,9 +12,13 @@ export function fetchSettings(): Promise<Record<string, string>> {
   if (fetchPromise) return fetchPromise;
 
   fetchPromise = fetch("/api/settings")
-    .then(res => res.ok ? res.json() : null)
+    .then(res => {
+      if (!res.ok) return null;
+      return res.json();
+    })
     .then(data => {
-      const settings = (data?.settings ?? {}) as Record<string, string>;
+      if (!data) return {} as Record<string, string>;
+      const settings = (data.settings ?? {}) as Record<string, string>;
 
       // Bootstrap: if DB is empty, push existing localStorage settings to DB
       if (typeof window !== "undefined" && Object.keys(settings).length === 0) {
@@ -34,7 +38,10 @@ export function fetchSettings(): Promise<Record<string, string>> {
 
       return settings;
     })
-    .catch(() => ({} as Record<string, string>));
+    .catch(() => {
+      fetchPromise = null;
+      return {} as Record<string, string>;
+    });
 
   return fetchPromise;
 }
