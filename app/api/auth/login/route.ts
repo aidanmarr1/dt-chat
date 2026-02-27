@@ -4,29 +4,9 @@ import { users } from "@/lib/schema";
 import { signToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { createRateLimiter } from "@/lib/rate-limit";
 
-// Simple in-memory rate limiter for login attempts
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 10;
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    if (entry) loginAttempts.delete(ip);
-    // Prune expired entries if map grows too large
-    if (loginAttempts.size > 10_000) {
-      for (const [key, val] of loginAttempts) {
-        if (now > val.resetAt) loginAttempts.delete(key);
-      }
-    }
-    loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= MAX_ATTEMPTS;
-}
+const checkRateLimit = createRateLimiter({ maxAttempts: 10, windowMs: 15 * 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";

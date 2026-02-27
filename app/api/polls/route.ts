@@ -4,11 +4,18 @@ import { messages, users, polls } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { ensurePollTables } from "@/lib/init-tables";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkPollRateLimit = createRateLimiter({ maxAttempts: 10, windowMs: 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!checkPollRateLimit(user.id)) {
+    return NextResponse.json({ error: "Too many polls. Please slow down." }, { status: 429 });
   }
 
   const body = await req.json();

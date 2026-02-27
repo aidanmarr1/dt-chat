@@ -15,25 +15,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "lastReadMessageId required" }, { status: 400 });
   }
 
-  // Upsert: insert or update on conflict
-  const existing = await db
-    .select()
-    .from(readReceipts)
-    .where(eq(readReceipts.userId, user.id))
-    .get();
+  if (lastReadMessageId.length > 36) {
+    return NextResponse.json({ error: "Invalid message ID" }, { status: 400 });
+  }
 
-  if (existing) {
-    await db
-      .update(readReceipts)
-      .set({ lastReadMessageId, readAt: new Date() })
-      .where(eq(readReceipts.userId, user.id));
-  } else {
-    await db.insert(readReceipts).values({
+  // Atomic upsert using INSERT OR REPLACE to prevent race conditions
+  await db
+    .insert(readReceipts)
+    .values({
       userId: user.id,
       lastReadMessageId,
       readAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: readReceipts.userId,
+      set: { lastReadMessageId, readAt: new Date() },
     });
-  }
 
   return NextResponse.json({ ok: true });
 }

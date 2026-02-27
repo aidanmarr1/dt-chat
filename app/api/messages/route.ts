@@ -4,6 +4,9 @@ import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVote
 import { getCurrentUser } from "@/lib/auth";
 import { ensurePollTables, ensureStatusColumn } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkMessageRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 function extractUrls(text: string): string[] {
   const urlRegex = /https?:\/\/[^\s<]+/g;
@@ -85,10 +88,23 @@ async function fetchOpenGraph(url: string): Promise<{
 
     const title = getMetaContent("og:title") || first8k.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
     const description = getMetaContent("og:description") || getMetaContent("description");
-    const imageUrl = getMetaContent("og:image");
+    const rawImageUrl = getMetaContent("og:image");
     const siteName = getMetaContent("og:site_name");
 
     if (!title && !description) return null;
+
+    // Validate OG image URL - only allow https URLs that pass safety checks
+    let imageUrl: string | undefined;
+    if (rawImageUrl) {
+      try {
+        const imgUrl = new URL(rawImageUrl, url);
+        if (imgUrl.protocol === "https:" && isUrlSafe(imgUrl.href)) {
+          imageUrl = imgUrl.href;
+        }
+      } catch {
+        // Invalid image URL, skip it
+      }
+    }
 
     return { title, description, imageUrl, siteName };
   } catch {
@@ -369,6 +385,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  if (!checkMessageRateLimit(user.id)) {
+    return NextResponse.json({ error: "Too many messages. Please slow down." }, { status: 429 });
+  }
+
   const body = await req.json();
   const { content, fileName, fileType, fileSize, filePath, replyToId } = body;
 
@@ -381,6 +401,25 @@ export async function POST(req: NextRequest) {
       }
     } catch {
       return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
+    }
+  }
+
+  // Validate fileName and fileType length
+  if (fileName && typeof fileName === "string" && fileName.length > 255) {
+    return NextResponse.json({ error: "File name too long" }, { status: 400 });
+  }
+  if (fileType && typeof fileType === "string" && fileType.length > 100) {
+    return NextResponse.json({ error: "File type too long" }, { status: 400 });
+  }
+
+  // Validate replyToId references a real message
+  if (replyToId) {
+    if (typeof replyToId !== "string" || replyToId.length > 36) {
+      return NextResponse.json({ error: "Invalid reply ID" }, { status: 400 });
+    }
+    const replyMsg = await db.select({ id: messages.id }).from(messages).where(eq(messages.id, replyToId)).get();
+    if (!replyMsg) {
+      return NextResponse.json({ error: "Reply target not found" }, { status: 404 });
     }
   }
 

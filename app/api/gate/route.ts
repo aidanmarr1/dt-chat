@@ -14,28 +14,9 @@ export function verifyGateCookie(value: string | undefined): boolean {
   return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(expected));
 }
 
-// Simple in-memory rate limiter for gate attempts
-const gateAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_GATE_ATTEMPTS = 10;
-const GATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+import { createRateLimiter } from "@/lib/rate-limit";
 
-function checkGateRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = gateAttempts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    if (entry) gateAttempts.delete(ip);
-    // Prune expired entries if map grows too large
-    if (gateAttempts.size > 10_000) {
-      for (const [key, val] of gateAttempts) {
-        if (now > val.resetAt) gateAttempts.delete(key);
-      }
-    }
-    gateAttempts.set(ip, { count: 1, resetAt: now + GATE_WINDOW_MS });
-    return true;
-  }
-  entry.count++;
-  return entry.count <= MAX_GATE_ATTEMPTS;
-}
+const checkGateRateLimit = createRateLimiter({ maxAttempts: 10, windowMs: 15 * 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -48,7 +29,11 @@ export async function POST(req: NextRequest) {
 
   const { password } = await req.json();
 
-  const expected = Buffer.from(process.env.GATE_PASSWORD ?? "dt");
+  const gatePassword = process.env.GATE_PASSWORD;
+  if (!gatePassword) {
+    return NextResponse.json({ error: "Gate not configured" }, { status: 503 });
+  }
+  const expected = Buffer.from(gatePassword);
   const received = Buffer.from(String(password ?? ""));
 
   const isValid =

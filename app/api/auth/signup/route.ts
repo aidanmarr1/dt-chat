@@ -4,8 +4,18 @@ import { users } from "@/lib/schema";
 import { signToken } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkRateLimit = createRateLimiter({ maxAttempts: 5, windowMs: 15 * 60 * 1000 });
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Too many signup attempts. Please try again later." },
+      { status: 429 }
+    );
+  }
   const { email, displayName, password, confirmPassword } = await req.json();
 
   if (!email || !displayName || !password || !confirmPassword) {
@@ -50,6 +60,13 @@ export async function POST(req: NextRequest) {
   if (password.length < 6) {
     return NextResponse.json(
       { error: "Password must be at least 6 characters" },
+      { status: 400 }
+    );
+  }
+
+  if (password.length > 128) {
+    return NextResponse.json(
+      { error: "Password must be 128 characters or less" },
       { status: 400 }
     );
   }

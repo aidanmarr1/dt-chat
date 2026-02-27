@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { put } from "@vercel/blob";
 import { MAX_FILE_SIZE, isAllowedType } from "@/lib/upload";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkUploadRateLimit = createRateLimiter({ maxAttempts: 20, windowMs: 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!checkUploadRateLimit(user.id)) {
+    return NextResponse.json({ error: "Too many uploads. Please slow down." }, { status: 429 });
   }
 
   const formData = await req.formData();

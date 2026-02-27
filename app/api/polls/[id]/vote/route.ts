@@ -36,37 +36,39 @@ export async function POST(
     return NextResponse.json({ error: "Invalid option ID" }, { status: 400 });
   }
 
-  // Check if user already voted for this option (toggle off)
-  const existingVote = await db
-    .select()
-    .from(pollVotes)
-    .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, user.id), eq(pollVotes.optionId, optionId)))
-    .get();
-
-  if (existingVote) {
-    // Remove the vote (toggle off)
-    await db.delete(pollVotes).where(eq(pollVotes.id, existingVote.id));
-  } else {
-    // Remove any existing vote on this poll (single vote per user)
-    const anyExisting = await db
+  // Use a transaction to prevent race conditions (double-voting)
+  await db.transaction(async (tx) => {
+    const existingVote = await tx
       .select()
       .from(pollVotes)
-      .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, user.id)))
+      .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, user.id), eq(pollVotes.optionId, optionId)))
       .get();
 
-    if (anyExisting) {
-      await db.delete(pollVotes).where(eq(pollVotes.id, anyExisting.id));
-    }
+    if (existingVote) {
+      // Remove the vote (toggle off)
+      await tx.delete(pollVotes).where(eq(pollVotes.id, existingVote.id));
+    } else {
+      // Remove any existing vote on this poll (single vote per user)
+      const anyExisting = await tx
+        .select()
+        .from(pollVotes)
+        .where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.userId, user.id)))
+        .get();
 
-    // Add new vote
-    await db.insert(pollVotes).values({
-      id: crypto.randomUUID(),
-      pollId,
-      optionId,
-      userId: user.id,
-      createdAt: new Date(),
-    });
-  }
+      if (anyExisting) {
+        await tx.delete(pollVotes).where(eq(pollVotes.id, anyExisting.id));
+      }
+
+      // Add new vote
+      await tx.insert(pollVotes).values({
+        id: crypto.randomUUID(),
+        pollId,
+        optionId,
+        userId: user.id,
+        createdAt: new Date(),
+      });
+    }
+  });
 
   return NextResponse.json({ success: true });
 }

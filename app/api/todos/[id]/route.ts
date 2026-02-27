@@ -22,13 +22,9 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (todo.createdBy !== user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const body = await req.json();
 
-  // Toggle completed
+  // Toggle completed — any authenticated user can do this (shared todo list)
   if (body.completed !== undefined) {
     const completed = !!body.completed;
     await db
@@ -42,7 +38,10 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   }
 
-  // Edit text
+  // Edit text — only creator can edit
+  if (todo.createdBy !== user.id) {
+    return NextResponse.json({ error: "Only the creator can edit this todo" }, { status: 403 });
+  }
   if (body.text !== undefined) {
     const text = String(body.text).trim();
     if (!text || text.length > 500) {

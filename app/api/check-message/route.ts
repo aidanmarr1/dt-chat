@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkSpellcheckRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!checkSpellcheckRateLimit(user.id)) {
+    return NextResponse.json({ ok: true }); // Silently skip if rate limited
   }
 
   const { message } = await req.json();
