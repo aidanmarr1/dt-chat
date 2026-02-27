@@ -23,7 +23,8 @@ export async function GET() {
     .from(messages)
     .innerJoin(users, eq(messages.userId, users.id))
     .where(and(isNotNull(messages.filePath), isNull(messages.deletedAt)))
-    .orderBy(desc(messages.createdAt));
+    .orderBy(desc(messages.createdAt))
+    .limit(200);
 
   const media = rows.map((r) => ({
     id: r.id,

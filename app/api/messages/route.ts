@@ -12,12 +12,39 @@ function extractUrls(text: string): string[] {
   return matches.filter((url) => !url.includes("tenor.com/") && !url.includes("media.tenor.com/"));
 }
 
+function isUrlSafe(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    // Block localhost and common metadata endpoints
+    if (host === "localhost" || host === "metadata.google.internal") return false;
+    // Block IPv6 loopback
+    if (host === "[::1]" || host === "::1") return false;
+    // Block private/reserved IPv4 ranges
+    const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4) {
+      const [, a, b] = ipv4.map(Number);
+      if (a === 10) return false;                      // 10.0.0.0/8
+      if (a === 127) return false;                     // 127.0.0.0/8
+      if (a === 169 && b === 254) return false;        // 169.254.0.0/16 (link-local / cloud metadata)
+      if (a === 172 && b >= 16 && b <= 31) return false; // 172.16.0.0/12
+      if (a === 192 && b === 168) return false;        // 192.168.0.0/16
+      if (a === 0) return false;                       // 0.0.0.0/8
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function fetchOpenGraph(url: string): Promise<{
   title?: string;
   description?: string;
   imageUrl?: string;
   siteName?: string;
 } | null> {
+  if (!isUrlSafe(url)) return null;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);

@@ -48,7 +48,8 @@ export async function GET(
     profile: {
       id: user.id,
       displayName: user.displayName,
-      email: user.email,
+      // Only expose email to the user themselves
+      email: currentUser.id === user.id ? user.email : undefined,
       avatarId: user.avatarId ?? null,
       bio: user.bio ?? null,
       status: user.status ?? null,

@@ -25,7 +25,8 @@ export async function GET() {
       position: todos.position,
     })
     .from(todos)
-    .orderBy(asc(todos.position), asc(todos.createdAt));
+    .orderBy(asc(todos.position), asc(todos.createdAt))
+    .limit(200);
 
   // Get display names
   const userIds = [...new Set([...rows.map((r) => r.createdBy), ...rows.filter((r) => r.completedBy).map((r) => r.completedBy!)])];
