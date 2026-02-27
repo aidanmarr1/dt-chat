@@ -385,7 +385,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (!checkMessageRateLimit(user.id)) {
+  if (!(await checkMessageRateLimit(user.id))) {
     return NextResponse.json({ error: "Too many messages. Please slow down." }, { status: 429 });
   }
 

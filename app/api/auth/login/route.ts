@@ -10,7 +10,7 @@ const checkRateLimit = createRateLimiter({ maxAttempts: 10, windowMs: 15 * 60 * 
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit(ip))) {
     return NextResponse.json(
       { error: "Too many login attempts. Please try again later." },
       { status: 429 }

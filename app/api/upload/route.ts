@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (!checkUploadRateLimit(user.id)) {
+  if (!(await checkUploadRateLimit(user.id))) {
     return NextResponse.json({ error: "Too many uploads. Please slow down." }, { status: 429 });
   }
 

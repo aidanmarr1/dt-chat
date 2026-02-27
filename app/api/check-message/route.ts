@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (!checkSpellcheckRateLimit(user.id)) {
+  if (!(await checkSpellcheckRateLimit(user.id))) {
     return NextResponse.json({ ok: true }); // Silently skip if rate limited
   }
 

@@ -20,7 +20,7 @@ const checkGateRateLimit = createRateLimiter({ maxAttempts: 10, windowMs: 15 * 6
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!checkGateRateLimit(ip)) {
+  if (!(await checkGateRateLimit(ip))) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
       { status: 429 }

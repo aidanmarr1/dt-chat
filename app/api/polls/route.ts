@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (!checkPollRateLimit(user.id)) {
+  if (!(await checkPollRateLimit(user.id))) {
     return NextResponse.json({ error: "Too many polls. Please slow down." }, { status: 429 });
   }
 
