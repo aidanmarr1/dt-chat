@@ -24,7 +24,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (bio !== undefined) {
-    if (bio !== null && typeof bio === "string" && bio.length > 200) {
+    if (bio !== null && typeof bio !== "string") {
+      return NextResponse.json({ error: "Bio must be a string" }, { status: 400 });
+    }
+    if (typeof bio === "string" && bio.length > 200) {
       return NextResponse.json({ error: "Bio must be 200 characters or less" }, { status: 400 });
     }
     updates.bio = bio ?? null;

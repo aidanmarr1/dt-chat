@@ -14,8 +14,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { question, options } = body;
 
-  if (!question || !Array.isArray(options) || options.length < 2 || options.length > 4) {
+  if (!question || typeof question !== "string" || !Array.isArray(options) || options.length < 2 || options.length > 4) {
     return NextResponse.json({ error: "Invalid poll data" }, { status: 400 });
+  }
+
+  if (!options.every((o: unknown) => typeof o === "string" && o.trim().length > 0)) {
+    return NextResponse.json({ error: "All options must be non-empty strings" }, { status: 400 });
   }
 
   // Ensure tables exist

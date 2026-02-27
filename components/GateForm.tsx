@@ -35,8 +35,7 @@ export default function GateForm() {
       }
     } catch {
       setError("Something went wrong");
-    } finally {
-      if (!success) setLoading(false);
+      setLoading(false);
     }
   }
 

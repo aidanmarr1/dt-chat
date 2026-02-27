@@ -61,8 +61,7 @@ export default function AuthForm() {
       }
     } catch {
       setError("Something went wrong");
-    } finally {
-      if (!success) setLoading(false);
+      setLoading(false);
     }
   }
 

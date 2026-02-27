@@ -72,12 +72,12 @@ export async function POST(req: NextRequest) {
   const now = new Date();
 
   // Get max position
-  const maxPos = await db
+  const maxRow = await db
     .select({ pos: todos.position })
     .from(todos)
     .orderBy(asc(todos.position))
     .all();
-  const position = maxPos.length > 0 ? Math.max(...maxPos.map((r) => r.pos)) + 1 : 0;
+  const position = maxRow.length > 0 ? Math.max(...maxRow.map((r) => r.pos)) + 1 : 0;
 
   await db.insert(todos).values({
     id,

@@ -39,8 +39,3 @@ export const quickReactions = [
   "👍", "✅", "❌", "⚠️", "🔍", "💡", "⚙️", "🛠️",
 ];
 
-export function searchEmojis(query: string): string[] {
-  if (!query.trim()) return [];
-  const all = emojiCategories.flatMap((c) => c.emojis);
-  return all;
-}

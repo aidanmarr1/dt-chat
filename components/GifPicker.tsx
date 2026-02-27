@@ -19,19 +19,17 @@ interface GifPickerProps {
 
 export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerProps) {
   const [search, setSearch] = useState("");
-  const category = "All";
   const [gifs, setGifs] = useState<Gif[]>([]);
   const [loading, setLoading] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const fetchGifs = useCallback(async (query: string, cat: string) => {
+  const fetchGifs = useCallback(async (query: string) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (query) params.set("q", query);
-      if (cat && cat !== "All") params.set("category", cat);
       const qs = params.toString();
       const url = qs ? `/api/gifs?${qs}` : "/api/gifs";
       const res = await fetch(url);
@@ -47,19 +45,19 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
 
   // Load GIFs on mount
   useEffect(() => {
-    fetchGifs("", "All");
+    fetchGifs("");
   }, [fetchGifs]);
 
   // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchGifs(search, category);
+      fetchGifs(search);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, category, fetchGifs]);
+  }, [search, fetchGifs]);
 
   // Auto-focus search on desktop
   useEffect(() => {

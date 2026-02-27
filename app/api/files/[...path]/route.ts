@@ -15,7 +15,15 @@ export async function GET(
 
   // If the stored path is a full URL (Vercel Blob), redirect to it
   if (fileName.startsWith("http")) {
-    return NextResponse.redirect(fileName);
+    try {
+      const url = new URL(fileName);
+      if (!url.hostname.endsWith(".vercel-storage.com") && !url.hostname.endsWith(".blob.vercel-storage.com")) {
+        return NextResponse.json({ error: "Invalid file URL" }, { status: 400 });
+      }
+      return NextResponse.redirect(fileName);
+    } catch {
+      return NextResponse.json({ error: "Invalid file URL" }, { status: 400 });
+    }
   }
 
   // Local filesystem files are not supported in production

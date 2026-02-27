@@ -57,7 +57,10 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
   useEffect(() => {
     inputRef.current?.focus();
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, []);
 
   useEffect(() => {

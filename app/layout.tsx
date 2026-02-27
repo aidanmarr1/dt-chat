@@ -6,7 +6,7 @@ import { SHIELD_SCRIPT } from "@/lib/shield";
 import "./globals.css";
 
 const dmSans = DM_Sans({
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });

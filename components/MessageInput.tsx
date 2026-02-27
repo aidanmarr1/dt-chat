@@ -99,6 +99,13 @@ export default function MessageInput({
     }
   }, [value]);
 
+  // Clean up Object URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (filePreview?.previewUrl) URL.revokeObjectURL(filePreview.previewUrl);
+    };
+  }, [filePreview]);
+
   const handleTyping = useCallback(() => {
     if (!onTyping) return;
     const now = Date.now();
@@ -550,7 +557,10 @@ export default function MessageInput({
             ref={fileInputRef}
             type="file"
             className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files)}
+            onChange={(e) => {
+              handleFileSelect(e.target.files);
+              e.target.value = "";
+            }}
             accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz,audio/*"
           />
 

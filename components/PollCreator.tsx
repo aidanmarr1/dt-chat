@@ -36,7 +36,11 @@ export default function PollCreator({ onClose, onCreate }: PollCreatorProps) {
     if (!trimmedQ || trimmedOpts.length < 2) return;
 
     setSubmitting(true);
-    onCreate(trimmedQ, trimmedOpts);
+    try {
+      onCreate(trimmedQ, trimmedOpts);
+    } catch {
+      setSubmitting(false);
+    }
   }
 
   const canSubmit = question.trim() && options.filter((o) => o.trim()).length >= 2;
