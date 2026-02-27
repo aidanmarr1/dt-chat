@@ -145,9 +145,10 @@ export default function AuthForm() {
           {/* Tab Toggle with sliding indicator (same animation as settings SegmentedControl) */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
-              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-sm left-1"
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-sm"
               style={{
-                transform: tab === "login" ? "translateX(0%)" : "translateX(calc(100% + 8px))",
+                left: "4px",
+                transform: tab === "login" ? "translateX(0)" : "translateX(100%)",
                 transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
