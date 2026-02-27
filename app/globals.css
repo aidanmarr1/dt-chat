@@ -325,9 +325,11 @@ textarea:focus-visible {
   }
 }
 
-/* Smooth theme color transitions */
-body, body * {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+/* Smooth theme color transitions — @layer base so Tailwind utilities can override */
+@layer base {
+  body, body * {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
 }
 
 /* === Chat bubble styles === */
