@@ -390,7 +390,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { content, fileName, fileType, fileSize, filePath, replyToId } = body;
+  const { content, fileName, fileType, filePath, replyToId } = body;
+
+  // Validate fileSize is a number (or coerce to null)
+  const fileSize = typeof body.fileSize === "number" ? body.fileSize : null;
 
   // Validate filePath is a genuine Vercel Blob URL (not an arbitrary attacker URL)
   if (filePath && typeof filePath === "string") {

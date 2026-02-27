@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { reactions } from "@/lib/schema";
+import { messages, reactions } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
@@ -14,6 +14,13 @@ export async function POST(
   }
 
   const { id: messageId } = await params;
+
+  // Verify the message exists before inserting a reaction
+  const msg = await db.select({ id: messages.id }).from(messages).where(eq(messages.id, messageId)).get();
+  if (!msg) {
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
+  }
+
   const { emoji } = await req.json();
 
   if (!emoji || typeof emoji !== "string" || emoji.length > 32) {

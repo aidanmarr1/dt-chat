@@ -1,4 +1,4 @@
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 const IMAGE_TYPES = [
   "image/jpeg", "image/png", "image/gif", "image/webp",
@@ -28,8 +28,13 @@ const AUDIO_TYPES = [
   "audio/mpeg",
   "audio/wav",
 ];
+const VIDEO_TYPES = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+];
 
-const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...ARCHIVE_TYPES, ...AUDIO_TYPES];
+const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...ARCHIVE_TYPES, ...AUDIO_TYPES, ...VIDEO_TYPES];
 
 export function isAllowedType(mimeType: string): boolean {
   return ALLOWED_TYPES.includes(mimeType);
