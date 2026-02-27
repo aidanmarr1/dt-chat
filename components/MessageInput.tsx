@@ -230,9 +230,8 @@ export default function MessageInput({
       }
     }
 
-    // AI message check — auto-correct and send
-    const aiCheckEnabled = typeof window !== "undefined" && localStorage.getItem("dt-ai-check") === "true";
-    if (aiCheckEnabled && trimmed && !filePreview) {
+    // AI message check — auto-correct and send (always enabled)
+    if (trimmed && !filePreview) {
       setAiChecking(true);
       try {
         const res = await fetch("/api/check-message", {

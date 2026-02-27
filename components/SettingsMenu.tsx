@@ -94,8 +94,8 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (st === "false") setShowTyping(false);
     const so = localStorage.getItem("dt-show-online");
     if (so === "false") setShowOnline(false);
-    const ac = localStorage.getItem("dt-ai-check");
-    if (ac === "true") setAiCheck(true);
+    setAiCheck(true);
+    localStorage.setItem("dt-ai-check", "true");
   }, []);
 
   // Sync bio when user prop changes
@@ -910,23 +910,24 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 </div>
 
                 {/* AI Writing Assistant */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(2)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                      </svg>
+                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(2)}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
+                        <p className="text-[11px] text-muted">Checks spelling & grammar before sending</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
-                      <p className="text-[11px] text-muted">{aiCheck ? "Checks spelling & grammar before sending" : "Fix spelling & grammar before sending"}</p>
+                    <div className="opacity-50 cursor-not-allowed pointer-events-none">
+                      <ToggleSwitch on={true} onToggle={() => {}} />
                     </div>
                   </div>
-                  <ToggleSwitch on={aiCheck} onToggle={() => {
-                    const next = !aiCheck;
-                    setAiCheck(next);
-                    localStorage.setItem("dt-ai-check", String(next));
-                  }} />
+                  <p className="text-[10px] text-muted/70 mt-2 ml-12 italic">Due to platform restrictions, this option is currently unable to be disabled. This is being worked on and will be able to be turned off in the near future.</p>
                 </div>
               </div>
             </div>
