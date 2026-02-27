@@ -37,6 +37,89 @@ const SHORTCUTS: { keys: string[]; description: string }[] = [
   { keys: ["Long press"], description: "Open message actions (mobile)" },
 ];
 
+function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`relative w-12 h-7 rounded-full focus:outline-none shrink-0 ${
+        on
+          ? "shadow-[0_0_8px_rgba(var(--acc-rgb),0.3)]"
+          : "shadow-inner"
+      }`}
+      style={{
+        backgroundColor: on ? "var(--accent)" : "color-mix(in srgb, var(--bg) 70%, var(--bdr))",
+        transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+      }}
+    >
+      <span
+        className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] rounded-full flex items-center justify-center ${
+          on
+            ? "bg-white shadow-md"
+            : "bg-muted/60 shadow-sm"
+        }`}
+        style={{
+          transform: on ? "translateX(20px)" : "translateX(0)",
+          transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease",
+        }}
+      >
+        {on ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        )}
+      </span>
+    </button>
+  );
+}
+
+function SegmentedControl({ value, options, onChange }: { value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
+  const activeIndex = options.findIndex((o) => o.id === value);
+  const count = options.length;
+  return (
+    <div className="relative flex rounded-lg bg-background border border-border p-0.5 overflow-hidden">
+      <div
+        className="absolute top-[2px] bottom-[2px] rounded-md bg-accent/15 shadow-sm"
+        style={{
+          width: `${100 / count}%`,
+          transform: `translateX(${activeIndex * 100}%)`,
+          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          onClick={() => onChange(opt.id)}
+          className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-xs font-medium ${
+            value === opt.id
+              ? "text-accent"
+              : "text-muted hover:text-foreground"
+          }`}
+          style={{ transition: "color 0.2s ease" }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-medium text-muted uppercase tracking-wider mb-2 px-0.5 flex items-center gap-1.5 group/label">
+      {icon && (
+        <span className="inline-flex text-muted group-hover/label:text-accent group-hover/label:scale-110 transition-all duration-200">
+          {icon}
+        </span>
+      )}
+      {children}
+    </p>
+  );
+}
+
 interface SettingsMenuProps {
   user: User;
   onAvatarChange: (avatarId: string | null) => void;
@@ -301,82 +384,6 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     },
   ];
 
-  function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-    return (
-      <button
-        onClick={onToggle}
-        className={`relative w-12 h-7 rounded-full transition-all duration-200 focus:outline-none shrink-0 ${
-          on
-            ? "shadow-[0_0_8px_rgba(var(--acc-rgb),0.3)]"
-            : "shadow-inner"
-        }`}
-        style={{ backgroundColor: on ? "var(--accent)" : "color-mix(in srgb, var(--bg) 70%, var(--bdr))" }}
-      >
-        <span
-          className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] rounded-full transition-all duration-200 flex items-center justify-center ${
-            on
-              ? "bg-white shadow-md"
-              : "bg-muted/60 shadow-sm"
-          }`}
-          style={{ transform: on ? "translateX(20px)" : "translateX(0)" }}
-        >
-          {on ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          )}
-        </span>
-      </button>
-    );
-  }
-
-  function SegmentedControl({ value, options, onChange }: { value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
-    const activeIndex = options.findIndex((o) => o.id === value);
-    const count = options.length;
-    return (
-      <div className="relative flex rounded-lg bg-background border border-border p-0.5 overflow-hidden">
-        <div
-          className="absolute top-[2px] bottom-[2px] rounded-md bg-accent/15 shadow-sm"
-          style={{
-            width: `${100 / count}%`,
-            transform: `translateX(${activeIndex * 100}%)`,
-            transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        />
-        {options.map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => onChange(opt.id)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-xs font-medium ${
-              value === opt.id
-                ? "text-accent"
-                : "text-muted hover:text-foreground"
-            }`}
-            style={{ transition: "color 0.2s ease" }}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
-    return (
-      <p className="text-[11px] font-medium text-muted uppercase tracking-wider mb-2 px-0.5 flex items-center gap-1.5 group/label">
-        {icon && (
-          <span className="inline-flex text-muted group-hover/label:text-accent group-hover/label:scale-110 transition-all duration-200">
-            {icon}
-          </span>
-        )}
-        {children}
-      </p>
-    );
-  }
 
   const modal = open && mounted ? (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
