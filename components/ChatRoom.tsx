@@ -119,29 +119,68 @@ export default function ChatRoom() {
       const storedReminders = localStorage.getItem("dt-reminders");
       if (storedReminders) setReminders(JSON.parse(storedReminders));
     } catch { /* ignore */ }
+
+    // Load settings from DB for fresh browsers
+    fetch("/api/settings")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data?.settings) return;
+        const s = data.settings as Record<string, string>;
+        if (!localStorage.getItem("dt-sound") && s["dt-sound"] === "false") {
+          localStorage.setItem("dt-sound", "false");
+          setSoundEnabled(false);
+        }
+        if (!localStorage.getItem("dt-notifications") && s["dt-notifications"] === "true") {
+          localStorage.setItem("dt-notifications", "true");
+          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            setNotificationsEnabled(true);
+          }
+        }
+        if (!localStorage.getItem("dt-time-format") && s["dt-time-format"]) {
+          localStorage.setItem("dt-time-format", s["dt-time-format"]);
+          if (s["dt-time-format"] === "24h") setTimeFormat("24h");
+        }
+        if (!localStorage.getItem("dt-reduce-motion") && s["dt-reduce-motion"] === "true") {
+          localStorage.setItem("dt-reduce-motion", "true");
+          setReduceMotion(true);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  function saveSettingToDb(key: string, value: string | null) {
+    fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: value }),
+    }).catch(() => {});
+  }
 
   function toggleSound() {
     const next = !soundEnabled;
     setSoundEnabled(next);
     localStorage.setItem("dt-sound", String(next));
+    saveSettingToDb("dt-sound", String(next));
   }
 
   function toggleNotifications() {
     if (notificationsEnabled) {
       setNotificationsEnabled(false);
       localStorage.setItem("dt-notifications", "false");
+      saveSettingToDb("dt-notifications", "false");
       return;
     }
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "granted") {
       setNotificationsEnabled(true);
       localStorage.setItem("dt-notifications", "true");
+      saveSettingToDb("dt-notifications", "true");
     } else if (Notification.permission !== "denied") {
       Notification.requestPermission().then((perm) => {
         if (perm === "granted") {
           setNotificationsEnabled(true);
           localStorage.setItem("dt-notifications", "true");
+          saveSettingToDb("dt-notifications", "true");
         }
       });
     }

@@ -13,6 +13,7 @@ export const users = sqliteTable("users", {
   status: text("status"),
   statusSetAt: integer("status_set_at", { mode: "timestamp" }),
   statusExpiresAt: integer("status_expires_at", { mode: "timestamp" }),
+  settings: text("settings"),
 });
 
 export const messages = sqliteTable("messages", {

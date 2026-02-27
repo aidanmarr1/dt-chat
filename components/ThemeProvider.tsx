@@ -73,6 +73,46 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     }
   }, []);
 
+  // Load settings from DB for fresh browsers (no localStorage yet)
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data?.settings) return;
+        const s = data.settings as Record<string, string>;
+
+        if (!localStorage.getItem("dt-theme") && s["dt-theme"]) {
+          const val = s["dt-theme"];
+          localStorage.setItem("dt-theme", val);
+          if (val === "system") {
+            setThemePreferenceState("system");
+            const resolved = getSystemTheme();
+            setThemeState(resolved);
+            document.documentElement.setAttribute("data-theme", resolved);
+          } else if (val === "light" || val === "dark") {
+            setThemePreferenceState(val);
+            setThemeState(val);
+            document.documentElement.setAttribute("data-theme", val);
+          }
+        }
+
+        if (!localStorage.getItem("dt-accent") && s["dt-accent"]) {
+          const ac = s["dt-accent"] as AccentColor;
+          localStorage.setItem("dt-accent", ac);
+          setAccentColorState(ac);
+          document.documentElement.setAttribute("data-accent", ac);
+        }
+
+        if (!localStorage.getItem("dt-density") && s["dt-density"]) {
+          const dn = s["dt-density"] as Density;
+          localStorage.setItem("dt-density", dn);
+          setDensityState(dn);
+          document.documentElement.setAttribute("data-density", dn);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Listen for OS theme changes when preference is "system"
   useEffect(() => {
     if (themePreference !== "system") return;

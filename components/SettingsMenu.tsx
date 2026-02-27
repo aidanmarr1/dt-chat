@@ -159,6 +159,64 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
   useEffect(() => setMounted(true), []);
 
+  function saveSettingToDb(key: string, value: string | null) {
+    fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [key]: value }),
+    }).catch(() => {});
+  }
+
+  // Load preferences from DB for fresh browsers
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data?.settings) return;
+        const s = data.settings as Record<string, string>;
+        if (!localStorage.getItem("dt-font-size") && s["dt-font-size"]) {
+          localStorage.setItem("dt-font-size", s["dt-font-size"]);
+          if (s["dt-font-size"] === "small" || s["dt-font-size"] === "large") {
+            setFontSize(s["dt-font-size"] as FontSize);
+            document.documentElement.setAttribute("data-font-size", s["dt-font-size"]);
+          }
+        }
+        if (!localStorage.getItem("dt-enter-to-send") && s["dt-enter-to-send"]) {
+          localStorage.setItem("dt-enter-to-send", s["dt-enter-to-send"]);
+          if (s["dt-enter-to-send"] === "false") setEnterToSend(false);
+        }
+        if (!localStorage.getItem("dt-bubble-style") && s["dt-bubble-style"]) {
+          localStorage.setItem("dt-bubble-style", s["dt-bubble-style"]);
+          if (s["dt-bubble-style"] === "minimal" || s["dt-bubble-style"] === "classic") {
+            setBubbleStyle(s["dt-bubble-style"] as BubbleStyle);
+            document.documentElement.setAttribute("data-bubble-style", s["dt-bubble-style"]);
+          }
+        }
+        if (!localStorage.getItem("dt-time-format") && s["dt-time-format"]) {
+          localStorage.setItem("dt-time-format", s["dt-time-format"]);
+          if (s["dt-time-format"] === "24h") setTimeFormat("24h");
+        }
+        if (!localStorage.getItem("dt-reduce-motion") && s["dt-reduce-motion"] === "true") {
+          localStorage.setItem("dt-reduce-motion", "true");
+          setReduceMotion(true);
+          document.documentElement.setAttribute("data-reduce-motion", "true");
+        }
+        if (!localStorage.getItem("dt-read-receipts") && s["dt-read-receipts"]) {
+          localStorage.setItem("dt-read-receipts", s["dt-read-receipts"]);
+          if (s["dt-read-receipts"] === "false") setReadReceipts(false);
+        }
+        if (!localStorage.getItem("dt-show-typing") && s["dt-show-typing"]) {
+          localStorage.setItem("dt-show-typing", s["dt-show-typing"]);
+          if (s["dt-show-typing"] === "false") setShowTyping(false);
+        }
+        if (!localStorage.getItem("dt-show-online") && s["dt-show-online"]) {
+          localStorage.setItem("dt-show-online", s["dt-show-online"]);
+          if (s["dt-show-online"] === "false") setShowOnline(false);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Load preferences
   useEffect(() => {
     const fs = localStorage.getItem("dt-font-size") as FontSize | null;
@@ -234,9 +292,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (size === "default") {
       localStorage.removeItem("dt-font-size");
       document.documentElement.removeAttribute("data-font-size");
+      saveSettingToDb("dt-font-size", null);
     } else {
       localStorage.setItem("dt-font-size", size);
       document.documentElement.setAttribute("data-font-size", size);
+      saveSettingToDb("dt-font-size", size);
     }
   }
 
@@ -244,6 +304,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const next = !enterToSend;
     setEnterToSend(next);
     localStorage.setItem("dt-enter-to-send", String(next));
+    saveSettingToDb("dt-enter-to-send", String(next));
   }
 
   function handleBubbleStyleChange(style: BubbleStyle) {
@@ -251,9 +312,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (style === "modern") {
       document.documentElement.removeAttribute("data-bubble-style");
       localStorage.removeItem("dt-bubble-style");
+      saveSettingToDb("dt-bubble-style", null);
     } else {
       document.documentElement.setAttribute("data-bubble-style", style);
       localStorage.setItem("dt-bubble-style", style);
+      saveSettingToDb("dt-bubble-style", style);
     }
   }
 
@@ -261,8 +324,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     setTimeFormat(tf);
     if (tf === "12h") {
       localStorage.removeItem("dt-time-format");
+      saveSettingToDb("dt-time-format", null);
     } else {
       localStorage.setItem("dt-time-format", tf);
+      saveSettingToDb("dt-time-format", tf);
     }
   }
 
@@ -272,9 +337,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     if (next) {
       document.documentElement.setAttribute("data-reduce-motion", "true");
       localStorage.setItem("dt-reduce-motion", "true");
+      saveSettingToDb("dt-reduce-motion", "true");
     } else {
       document.documentElement.removeAttribute("data-reduce-motion");
       localStorage.removeItem("dt-reduce-motion");
+      saveSettingToDb("dt-reduce-motion", null);
     }
   }
 
@@ -282,6 +349,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     const next = !value;
     setter(next);
     localStorage.setItem(key, String(next));
+    saveSettingToDb(key, String(next));
   }
 
   function handleClearLocalData() {
@@ -305,6 +373,21 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     setAiCheck(false);
     setEnterToSend(true);
     setClearConfirm(false);
+  }
+
+  function handleThemePreferenceChange(pref: ThemePreference) {
+    setThemePreference(pref);
+    saveSettingToDb("dt-theme", pref);
+  }
+
+  function handleAccentColorChange(c: AccentColor) {
+    setAccentColor(c);
+    saveSettingToDb("dt-accent", c === "gold" ? null : c);
+  }
+
+  function handleDensityChange(d: Density) {
+    setDensity(d);
+    saveSettingToDb("dt-density", d === "default" ? null : d);
   }
 
   function stagger(index: number): React.CSSProperties {
@@ -580,7 +663,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                   <div className="grid grid-cols-3 gap-2.5">
                     {/* Dark theme card */}
                     <button
-                      onClick={() => setThemePreference("dark")}
+                      onClick={() => handleThemePreferenceChange("dark")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "dark"
                           ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
@@ -608,7 +691,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
                     {/* Light theme card */}
                     <button
-                      onClick={() => setThemePreference("light")}
+                      onClick={() => handleThemePreferenceChange("light")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "light"
                           ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
@@ -636,7 +719,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
                     {/* System theme card */}
                     <button
-                      onClick={() => setThemePreference("system")}
+                      onClick={() => handleThemePreferenceChange("system")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "system"
                           ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
@@ -678,7 +761,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       {ACCENT_COLORS.map((c) => (
                         <div key={c.id} className="flex flex-col items-center gap-1">
                           <button
-                            onClick={() => setAccentColor(c.id)}
+                            onClick={() => handleAccentColorChange(c.id)}
                             className={`w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95 ${
                               accentColor === c.id
                                 ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110"
@@ -841,7 +924,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                           { id: "default", label: "Default" },
                           { id: "comfortable", label: "Comfortable" },
                         ]}
-                        onChange={(id) => setDensity(id as Density)}
+                        onChange={(id) => handleDensityChange(id as Density)}
                       />
                     </div>
                   </div>

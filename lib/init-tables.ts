@@ -51,6 +51,18 @@ export async function ensureStatusColumn() {
   statusInitialized = true;
 }
 
+let settingsInitialized = false;
+
+export async function ensureSettingsColumn() {
+  if (settingsInitialized) return;
+  try {
+    await client.execute(`ALTER TABLE users ADD COLUMN settings TEXT`);
+  } catch {
+    // Column already exists
+  }
+  settingsInitialized = true;
+}
+
 let todoInitialized = false;
 
 export async function ensureTodoTable() {
