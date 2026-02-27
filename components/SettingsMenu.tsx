@@ -335,15 +335,24 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
   }
 
   function SegmentedControl({ value, options, onChange }: { value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
+    const activeIndex = options.findIndex((o) => o.id === value);
+    const count = options.length;
     return (
-      <div className="flex rounded-lg bg-background border border-border p-0.5 gap-0.5">
+      <div className="relative flex rounded-lg bg-background border border-border p-0.5">
+        <div
+          className="absolute top-0.5 bottom-0.5 rounded-md bg-accent/15 shadow-sm transition-all duration-300 ease-out"
+          style={{
+            width: `calc(${100 / count}% - ${count > 1 ? 2 : 0}px)`,
+            left: `calc(${(activeIndex * 100) / count}% + 2px)`,
+          }}
+        />
         {options.map((opt) => (
           <button
             key={opt.id}
             onClick={() => onChange(opt.id)}
-            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 ${
               value === opt.id
-                ? "bg-accent/15 text-accent shadow-sm"
+                ? "text-accent"
                 : "text-muted hover:text-foreground"
             }`}
           >

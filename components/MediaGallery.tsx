@@ -81,16 +81,23 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border">
+        <div className="relative flex border-b border-border">
+          <div
+            className="absolute bottom-0 h-[2px] bg-accent rounded-full transition-all duration-300 ease-out"
+            style={{
+              width: "50%",
+              left: tab === "images" ? "0%" : "50%",
+            }}
+          />
           <button
             onClick={() => setTab("images")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${tab === "images" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors duration-200 ${tab === "images" ? "text-accent" : "text-muted hover:text-foreground"}`}
           >
             Images ({images.length})
           </button>
           <button
             onClick={() => setTab("files")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${tab === "files" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors duration-200 ${tab === "files" ? "text-accent" : "text-muted hover:text-foreground"}`}
           >
             Files ({files.length})
           </button>
