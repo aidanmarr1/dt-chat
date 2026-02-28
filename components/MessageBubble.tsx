@@ -425,7 +425,7 @@ export default function MessageBubble({
 
   return (
     <>
-      <div className="relative overflow-hidden -mx-2 px-2">
+      <div className="relative overflow-x-clip -mx-2 px-2">
         {/* Double-tap heart animation */}
         {showHeartPop && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
