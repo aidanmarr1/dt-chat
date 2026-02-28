@@ -1,4 +1,4 @@
-export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 const IMAGE_TYPES = [
   "image/jpeg", "image/png", "image/gif", "image/webp",
@@ -14,13 +14,6 @@ const DOC_TYPES = [
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ];
-const ARCHIVE_TYPES = [
-  "application/zip",
-  "application/x-rar-compressed",
-  "application/x-7z-compressed",
-  "application/x-tar",
-  "application/gzip",
-];
 const AUDIO_TYPES = [
   "audio/webm",
   "audio/ogg",
@@ -34,7 +27,7 @@ const VIDEO_TYPES = [
   "video/webm",
 ];
 
-const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...ARCHIVE_TYPES, ...AUDIO_TYPES, ...VIDEO_TYPES];
+const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOC_TYPES, ...AUDIO_TYPES, ...VIDEO_TYPES];
 
 export function isAllowedType(mimeType: string): boolean {
   return ALLOWED_TYPES.includes(mimeType);

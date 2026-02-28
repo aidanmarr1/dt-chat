@@ -3,11 +3,18 @@ import { db } from "@/lib/db";
 import { readReceipts } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkReadReceiptRateLimit = createRateLimiter({ maxAttempts: 60, windowMs: 60 * 1000 });
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkReadReceiptRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const { lastReadMessageId } = await req.json();

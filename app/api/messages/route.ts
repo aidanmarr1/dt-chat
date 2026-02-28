@@ -399,7 +399,11 @@ export async function POST(req: NextRequest) {
   if (filePath && typeof filePath === "string") {
     try {
       const fileUrl = new URL(filePath);
-      if (!fileUrl.hostname.endsWith(".vercel-storage.com") && !fileUrl.hostname.endsWith(".blob.vercel-storage.com")) {
+      const host = fileUrl.hostname.toLowerCase();
+      if (
+        host !== "blob.vercel-storage.com" &&
+        !host.match(/^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/)
+      ) {
         return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
       }
     } catch {

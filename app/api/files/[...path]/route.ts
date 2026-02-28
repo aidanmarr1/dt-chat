@@ -17,7 +17,11 @@ export async function GET(
   if (fileName.startsWith("http")) {
     try {
       const url = new URL(fileName);
-      if (!url.hostname.endsWith(".vercel-storage.com") && !url.hostname.endsWith(".blob.vercel-storage.com")) {
+      const host = url.hostname.toLowerCase();
+      if (
+        host !== "blob.vercel-storage.com" &&
+        !host.match(/^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/)
+      ) {
         return NextResponse.json({ error: "Invalid file URL" }, { status: 400 });
       }
       return NextResponse.redirect(fileName);

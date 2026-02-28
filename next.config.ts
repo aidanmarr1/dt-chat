@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           // Prevent referrer leakage
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Restrict browser features
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          // Legacy XSS protection for older browsers
+          { key: "X-XSS-Protection", value: "1; mode=block" },
         ],
       },
       {

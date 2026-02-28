@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { messages, reactions } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkReactionRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 export async function POST(
   req: NextRequest,
@@ -11,6 +14,10 @@ export async function POST(
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkReactionRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many reactions. Please slow down." }, { status: 429 });
   }
 
   const { id: messageId } = await params;
@@ -24,6 +31,11 @@ export async function POST(
   const { emoji } = await req.json();
 
   if (!emoji || typeof emoji !== "string" || emoji.length > 32) {
+    return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });
+  }
+
+  // Reject strings that contain non-emoji characters (allow emoji, variation selectors, ZWJ)
+  if (!/^[\p{Emoji_Presentation}\p{Emoji}\uFE0F\u200D]+$/u.test(emoji)) {
     return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });
   }
 

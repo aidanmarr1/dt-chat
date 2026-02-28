@@ -4,11 +4,18 @@ import { users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureStatusColumn } from "@/lib/init-tables";
 import { eq } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkStatusRateLimit = createRateLimiter({ maxAttempts: 20, windowMs: 60 * 1000 });
 
 export async function PATCH(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkStatusRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   await ensureStatusColumn();
