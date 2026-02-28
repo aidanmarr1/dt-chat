@@ -86,6 +86,7 @@ export default function MessageInput({
   const [aiChecking, setAiChecking] = useState(false);
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
   const gifToggleRef = useRef<HTMLButtonElement>(null);
@@ -489,22 +490,30 @@ export default function MessageInput({
     onCancelReply?.();
   }
 
+  const hasFormatting = /(\*\*.+?\*\*|\*[^*]+?\*|`.+?`|~~.+?~~)/.test(value);
+
   function renderPreview(text: string) {
-    const parts = text.split(/(`.+?`|~~.+?~~|\*\*.+?\*\*|\*.+?\*)/g);
+    // Keep ALL characters (including markers) so widths match the textarea exactly.
+    // Style the markers as muted/dim, and the inner content as formatted.
+    const parts = text.split(/(`.+?`|~~.+?~~|\*\*.+?\*\*|\*[^*]+?\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith("`") && part.endsWith("`") && part.length > 1) {
-        return <code key={i} className="px-1.5 py-0.5 rounded text-[13px] font-mono bg-background border border-border">{part.slice(1, -1)}</code>;
+        const inner = part.slice(1, -1);
+        return <span key={i}><span className="opacity-30">`</span><span className="font-mono">{inner}</span><span className="opacity-30">`</span></span>;
       }
       if (part.startsWith("~~") && part.endsWith("~~") && part.length > 4) {
-        return <del key={i} className="opacity-60">{part.slice(2, -2)}</del>;
+        const inner = part.slice(2, -2);
+        return <span key={i}><span className="opacity-30">~~</span><span className="line-through opacity-60">{inner}</span><span className="opacity-30">~~</span></span>;
       }
       if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-        return <strong key={i}>{part.slice(2, -2)}</strong>;
+        const inner = part.slice(2, -2);
+        return <span key={i}><span className="opacity-30">**</span><span className="font-bold">{inner}</span><span className="opacity-30">**</span></span>;
       }
       if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**") && part.length > 2) {
-        return <em key={i}>{part.slice(1, -1)}</em>;
+        const inner = part.slice(1, -1);
+        return <span key={i}><span className="opacity-30">*</span><span className="italic">{inner}</span><span className="opacity-30">*</span></span>;
       }
-      return part;
+      return <span key={i}>{part}</span>;
     });
   }
 
@@ -781,30 +790,39 @@ export default function MessageInput({
                 </button>
               </div>
             )}
-            {/* Live formatting preview */}
-            {value && /(\*\*.+?\*\*|\*.+?\*|`.+?`|~~.+?~~)/.test(value) && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 px-4 py-2 bg-surface/95 backdrop-blur-sm border border-border rounded-xl shadow-sm text-sm text-foreground whitespace-pre-wrap break-words animate-fade-in z-10">
-                <p className="text-[10px] text-muted mb-1 font-medium">Preview</p>
-                <p>{renderPreview(value)}</p>
+            {/* Rich text input: formatted overlay behind transparent textarea */}
+            <div className="relative">
+              {/* Formatted overlay — renders behind the textarea */}
+              <div
+                ref={overlayRef}
+                aria-hidden="true"
+                className="absolute inset-0 px-4 py-2.5 rounded-xl text-base sm:text-sm whitespace-pre-wrap break-words overflow-hidden pointer-events-none"
+              >
+                {value ? renderPreview(value) : null}
               </div>
-            )}
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => {
-                if (e.target.value.length <= 2000) {
-                  setValue(e.target.value);
-                }
-                handleInput();
-              }}
-              onKeyDown={handleKeyDown}
-              onBeforeInput={handleBeforeInput}
-              onPaste={handlePaste}
-              placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)"}
-              rows={1}
-              style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
-              className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] resize-none text-base sm:text-sm"
-            />
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={(e) => {
+                  if (e.target.value.length <= 2000) {
+                    setValue(e.target.value);
+                  }
+                  handleInput();
+                }}
+                onKeyDown={handleKeyDown}
+                onBeforeInput={handleBeforeInput}
+                onPaste={handlePaste}
+                onScroll={() => {
+                  if (overlayRef.current && textareaRef.current) {
+                    overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+                  }
+                }}
+                placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)"}
+                rows={1}
+                style={{ transition: "height 0.12s ease-out, border-color 0.15s", color: hasFormatting ? "transparent" : undefined, caretColor: "var(--fg)" }}
+                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] resize-none text-base sm:text-sm relative z-[1]"
+              />
+            </div>
             {value.length > 1000 && (
               <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
                 value.length > 1950 ? "text-red-400 font-medium"
