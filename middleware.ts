@@ -6,8 +6,21 @@ import { NextRequest, NextResponse } from "next/server";
  * from route files, but the Web Crypto API is available.
  */
 
+const GATE_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 async function verifyGateCookie(value: string | undefined, secret: string): Promise<boolean> {
   if (!value) return false;
+
+  // Parse timestamped cookie: "<hmac_hex>.<issuedAt>"
+  const dotIndex = value.lastIndexOf(".");
+  if (dotIndex === -1) return false;
+
+  const sig = value.slice(0, dotIndex);
+  const issuedAt = Number(value.slice(dotIndex + 1));
+  if (!issuedAt || isNaN(issuedAt)) return false;
+
+  // Reject expired gate cookies
+  if (Date.now() - issuedAt > GATE_COOKIE_MAX_AGE_MS) return false;
 
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -17,16 +30,16 @@ async function verifyGateCookie(value: string | undefined, secret: string): Prom
     false,
     ["sign"]
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode("gate-passed"));
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(`gate-passed:${issuedAt}`));
   const expected = Array.from(new Uint8Array(signature))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
   // Constant-time comparison
-  if (value.length !== expected.length) return false;
+  if (sig.length !== expected.length) return false;
   let mismatch = 0;
-  for (let i = 0; i < value.length; i++) {
-    mismatch |= value.charCodeAt(i) ^ expected.charCodeAt(i);
+  for (let i = 0; i < sig.length; i++) {
+    mismatch |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
   }
   return mismatch === 0;
 }

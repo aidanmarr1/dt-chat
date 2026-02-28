@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
-function signGateCookie(): string {
+const GATE_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function signGateCookie(issuedAt: number): string {
   const secret = process.env.JWT_SECRET!;
-  const sig = crypto.createHmac("sha256", secret).update("gate-passed").digest("hex");
-  return sig;
+  return crypto.createHmac("sha256", secret).update(`gate-passed:${issuedAt}`).digest("hex") + "." + issuedAt;
 }
 
 export function verifyGateCookie(value: string | undefined): boolean {
   if (!value) return false;
-  const expected = signGateCookie();
-  if (value.length !== expected.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(expected));
+  const dotIndex = value.lastIndexOf(".");
+  if (dotIndex === -1) return false;
+
+  const sig = value.slice(0, dotIndex);
+  const issuedAt = Number(value.slice(dotIndex + 1));
+  if (!issuedAt || isNaN(issuedAt)) return false;
+
+  // Reject expired gate cookies
+  if (Date.now() - issuedAt > GATE_COOKIE_MAX_AGE_MS) return false;
+
+  const secret = process.env.JWT_SECRET!;
+  const expected = crypto.createHmac("sha256", secret).update(`gate-passed:${issuedAt}`).digest("hex");
+
+  if (sig.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
 }
 
 import { createRateLimiter } from "@/lib/rate-limit";
@@ -45,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ success: true });
-  res.cookies.set("gate-passed", signGateCookie(), {
+  res.cookies.set("gate-passed", signGateCookie(Date.now()), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

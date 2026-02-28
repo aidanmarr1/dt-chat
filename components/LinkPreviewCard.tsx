@@ -16,9 +16,11 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
     }
   })();
 
+  const safeUrl = preview.url.startsWith("https://") || preview.url.startsWith("http://") ? preview.url : "#";
+
   return (
     <a
-      href={preview.url}
+      href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
       className={`block mt-2 rounded-lg border overflow-hidden transition-all hover:opacity-80 ${
@@ -28,11 +30,12 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
       }`}
     >
       <div className="flex gap-3 p-2.5">
-        {preview.imageUrl && (
+        {preview.imageUrl && preview.imageUrl.startsWith("https://") && (
           <img
             src={preview.imageUrl}
             alt=""
             className="w-16 h-16 rounded-md object-cover shrink-0"
+            referrerPolicy="no-referrer"
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         )}

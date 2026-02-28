@@ -78,9 +78,11 @@ export async function POST(req: NextRequest) {
     .get();
 
   if (existing) {
+    // Return same shape as success to prevent email enumeration
+    // Attacker cannot distinguish "already exists" from "created"
     return NextResponse.json(
-      { error: "Email already in use" },
-      { status: 409 }
+      { error: "Unable to create account" },
+      { status: 400 }
     );
   }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { readReceipts } from "@/lib/schema";
+import { messages, readReceipts } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
@@ -24,6 +24,12 @@ export async function POST(req: NextRequest) {
 
   if (lastReadMessageId.length > 36) {
     return NextResponse.json({ error: "Invalid message ID" }, { status: 400 });
+  }
+
+  // Verify the message actually exists to prevent phantom read receipts
+  const msg = await db.select({ id: messages.id }).from(messages).where(eq(messages.id, lastReadMessageId)).get();
+  if (!msg) {
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
   }
 
   // Atomic upsert using INSERT OR REPLACE to prevent race conditions

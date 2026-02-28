@@ -38,7 +38,9 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
   const files = items.filter((i) => !i.fileType?.startsWith("image/"));
 
   function getFileUrl(item: MediaItem) {
-    return item.filePath.startsWith("http") ? item.filePath : `/api/files/${item.filePath}`;
+    return item.filePath.startsWith("https://") || item.filePath.startsWith("http://")
+      ? item.filePath
+      : `/api/files/${item.filePath}`;
   }
 
   function getFileLabel(type: string) {

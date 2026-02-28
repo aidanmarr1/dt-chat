@@ -37,8 +37,14 @@ export async function POST(
     }
 
     // Validate optionId exists in the poll's options
-    const pollOptions = JSON.parse(poll.options as string) as { id: string }[];
-    if (!pollOptions.some((o) => o.id === optionId)) {
+    let pollOptions: { id: string }[];
+    try {
+      pollOptions = JSON.parse(poll.options as string);
+    } catch {
+      invalidOption = true;
+      return;
+    }
+    if (!Array.isArray(pollOptions) || !pollOptions.some((o) => o.id === optionId)) {
       invalidOption = true;
       return;
     }

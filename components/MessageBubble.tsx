@@ -216,7 +216,7 @@ export default function MessageBubble({
   const isAudio = message.fileType?.startsWith("audio/");
   const hasFile = !!message.filePath;
   const fileUrl = hasFile
-    ? message.filePath!.startsWith("http")
+    ? message.filePath!.startsWith("https://") || message.filePath!.startsWith("http://")
       ? message.filePath!
       : `/api/files/${message.filePath}`
     : null;
