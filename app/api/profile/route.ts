@@ -4,11 +4,18 @@ import { users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { AVATAR_PRESETS } from "@/lib/avatars";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkProfileRateLimit = createRateLimiter({ maxAttempts: 20, windowMs: 60 * 1000 });
 
 export async function PATCH(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkProfileRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const body = await req.json();
@@ -35,6 +42,10 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof bio === "string" && bio.length > 200) {
       return NextResponse.json({ error: "Bio must be 200 characters or less" }, { status: 400 });
+    }
+    // Block control characters, zero-width chars, and RTL overrides
+    if (typeof bio === "string" && /[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\u2060\ufeff]/.test(bio)) {
+      return NextResponse.json({ error: "Bio contains invalid characters" }, { status: 400 });
     }
     updates.bio = bio ?? null;
   }

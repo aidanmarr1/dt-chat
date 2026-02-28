@@ -78,8 +78,8 @@ export default function AuthForm() {
   const passwordStrength = (() => {
     if (!password || tab !== "signup") return 0;
     let s = 0;
-    if (password.length >= 6) s++;
-    if (password.length >= 10) s++;
+    if (password.length >= 8) s++;
+    if (password.length >= 12) s++;
     if (/[A-Z]/.test(password) && /[a-z]/.test(password)) s++;
     if (/\d/.test(password)) s++;
     if (/[^A-Za-z0-9]/.test(password)) s++;
@@ -90,7 +90,7 @@ export default function AuthForm() {
 
   // Password requirements for checklist
   const requirements = [
-    { label: "6+ characters", met: password.length >= 6 },
+    { label: "8+ characters", met: password.length >= 8 },
     { label: "Uppercase & lowercase", met: /[A-Z]/.test(password) && /[a-z]/.test(password) },
     { label: "A number", met: /\d/.test(password) },
     { label: "A special character", met: /[^A-Za-z0-9]/.test(password) },

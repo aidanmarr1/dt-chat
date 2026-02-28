@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { messages } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkPinRateLimit = createRateLimiter({ maxAttempts: 20, windowMs: 60 * 1000 });
 
 export async function POST(
   req: NextRequest,
@@ -11,6 +14,10 @@ export async function POST(
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkPinRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const { id: messageId } = await params;

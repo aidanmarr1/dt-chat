@@ -27,6 +27,10 @@ export async function PATCH(req: NextRequest) {
     if (typeof status !== "string" || status.length > 100) {
       return NextResponse.json({ error: "Status must be 100 characters or less" }, { status: 400 });
     }
+    // Block control characters, zero-width chars, and RTL overrides
+    if (/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\u2060\ufeff]/.test(status)) {
+      return NextResponse.json({ error: "Status contains invalid characters" }, { status: 400 });
+    }
   }
 
   let statusExpiresAt: Date | null = null;

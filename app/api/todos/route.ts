@@ -4,6 +4,9 @@ import { todos, users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureTodoTable } from "@/lib/init-tables";
 import { eq, asc, desc } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkTodoRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -60,6 +63,10 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { text } = body;
+
+  if (!(await checkTodoRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
   if (!text || typeof text !== "string" || !text.trim()) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });

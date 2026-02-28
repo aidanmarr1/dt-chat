@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { users, messages } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, sql } from "drizzle-orm";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkProfileViewRateLimit = createRateLimiter({ maxAttempts: 60, windowMs: 60 * 1000 });
 
 export async function GET(
   _req: NextRequest,
@@ -11,6 +14,10 @@ export async function GET(
   const currentUser = await getCurrentUser();
   if (!currentUser) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkProfileViewRateLimit(currentUser.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const { id } = await params;
