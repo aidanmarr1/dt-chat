@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, KeyboardEvent, DragEvent, FormEvent, ClipboardEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
 import EmojiPicker from "./EmojiPicker";
 import GifPicker from "./GifPicker";
 import { useToast } from "./Toast";
@@ -54,6 +54,64 @@ interface MessageInputProps {
   onCreatePoll?: () => void;
 }
 
+// Convert contentEditable HTML to markdown for sending
+function htmlToMarkdown(html: string): string {
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+
+  function walk(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent || "";
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    const childText = Array.from(el.childNodes).map(walk).join("");
+
+    if (tag === "b" || tag === "strong") return `**${childText}**`;
+    if (tag === "i" || tag === "em") return `*${childText}*`;
+    if (tag === "strike" || tag === "s" || tag === "del") return `~~${childText}~~`;
+    if (tag === "code") return `\`${childText}\``;
+    if (tag === "br") return "\n";
+    if (tag === "div" || tag === "p") {
+      // Block elements get newlines (but not the first one)
+      return "\n" + childText;
+    }
+    return childText;
+  }
+
+  const result = Array.from(temp.childNodes).map(walk).join("");
+  // Clean up: collapse multiple newlines, trim leading newline from first div
+  return result.replace(/^\n/, "").replace(/\n{3,}/g, "\n\n");
+}
+
+// Get plain text content from contentEditable
+function getPlainText(el: HTMLElement): string {
+  return el.innerText || el.textContent || "";
+}
+
+// Get cursor offset in plain text terms
+function getCursorOffset(el: HTMLElement): number {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return 0;
+  const range = sel.getRangeAt(0);
+  const preRange = document.createRange();
+  preRange.selectNodeContents(el);
+  preRange.setEnd(range.startContainer, range.startOffset);
+  return preRange.toString().length;
+}
+
+// Get the text content before the cursor for mention/slash detection
+function getTextBeforeCursor(el: HTMLElement): string {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return "";
+  const range = sel.getRangeAt(0);
+  const preRange = document.createRange();
+  preRange.selectNodeContents(el);
+  preRange.setEnd(range.startContainer, range.startOffset);
+  return preRange.toString();
+}
+
 export default function MessageInput({
   onSend,
   onTyping,
@@ -63,12 +121,7 @@ export default function MessageInput({
   onlineUsers = [],
   onCreatePoll,
 }: MessageInputProps) {
-  const [value, setValue] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("dt-draft") ?? "";
-    }
-    return "";
-  });
+  const [value, setValue] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
 
@@ -85,8 +138,7 @@ export default function MessageInput({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [aiChecking, setAiChecking] = useState(false);
   const { toast } = useToast();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiToggleRef = useRef<HTMLButtonElement>(null);
   const gifToggleRef = useRef<HTMLButtonElement>(null);
@@ -104,19 +156,20 @@ export default function MessageInput({
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  // Auto-focus textarea on mount + resize to fit restored draft
+  // Auto-focus and restore draft on mount
   useEffect(() => {
-    const el = textareaRef.current;
+    const el = editorRef.current;
     if (el) {
-      el.focus();
-      if (el.value) {
-        el.style.height = "auto";
-        el.style.height = Math.min(el.scrollHeight, 120) + "px";
+      const draft = localStorage.getItem("dt-draft");
+      if (draft) {
+        el.textContent = draft;
+        setValue(draft);
       }
+      el.focus();
     }
   }, []);
 
-  // Persist draft to localStorage
+  // Persist draft to localStorage (plain text only)
   useEffect(() => {
     if (value) {
       localStorage.setItem("dt-draft", value);
@@ -141,7 +194,7 @@ export default function MessageInput({
     }
   }, [onTyping]);
 
-  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     // Slash command keyboard nav
     if (slashQuery !== null && filteredSlashCommands.length > 0) {
       if (e.key === "ArrowDown") {
@@ -190,6 +243,26 @@ export default function MessageInput({
       }
     }
 
+    // Formatting shortcuts
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === "b") {
+        e.preventDefault();
+        document.execCommand("bold");
+        return;
+      }
+      if (e.key === "i") {
+        e.preventDefault();
+        document.execCommand("italic");
+        return;
+      }
+      if (e.key === "u") {
+        // We use strikethrough instead of underline
+        e.preventDefault();
+        document.execCommand("strikeThrough");
+        return;
+      }
+    }
+
     if (enterToSend) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -208,7 +281,7 @@ export default function MessageInput({
         if (filePreview.previewUrl) URL.revokeObjectURL(filePreview.previewUrl);
         setFilePreview(null);
       } else {
-        (e.target as HTMLTextAreaElement).blur();
+        (e.target as HTMLElement).blur();
       }
     }
   }
@@ -216,14 +289,14 @@ export default function MessageInput({
   // Block emoji input from keyboard / IME (only allow emojis from the picker)
   const emojiRegex = /\p{Extended_Pictographic}/u;
 
-  function handleBeforeInput(e: FormEvent<HTMLTextAreaElement>) {
+  function handleBeforeInput(e: React.FormEvent<HTMLDivElement>) {
     const inputEvent = e.nativeEvent as InputEvent;
     if (inputEvent.data && emojiRegex.test(inputEvent.data)) {
       e.preventDefault();
     }
   }
 
-  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+  function handlePaste(e: React.ClipboardEvent<HTMLDivElement>) {
     // Check for pasted images first
     const files = e.clipboardData.files;
     if (files.length > 0 && files[0].type.startsWith("image/")) {
@@ -232,23 +305,38 @@ export default function MessageInput({
       return;
     }
 
-    const text = e.clipboardData.getData("text");
+    // Always paste as plain text (strip HTML from external sources)
+    e.preventDefault();
+    let text = e.clipboardData.getData("text/plain");
     if (emojiRegex.test(text)) {
-      e.preventDefault();
-      const stripped = text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, "");
-      if (stripped) {
-        document.execCommand("insertText", false, stripped);
-      }
+      text = text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, "");
+    }
+    if (text) {
+      document.execCommand("insertText", false, text);
+    }
+  }
+
+  function clearEditor() {
+    const el = editorRef.current;
+    if (el) {
+      el.innerHTML = "";
+      setValue("");
+      el.focus();
     }
   }
 
   async function handleSend() {
-    const trimmed = value.trim();
-    if ((!trimmed && !filePreview) || disabled || uploading || aiChecking) return;
+    const el = editorRef.current;
+    if (!el) return;
+    const plainText = getPlainText(el).trim();
+    if ((!plainText && !filePreview) || disabled || uploading || aiChecking) return;
+
+    // Convert HTML to markdown for sending
+    const markdown = htmlToMarkdown(el.innerHTML).trim();
 
     // Intercept slash commands typed directly (e.g. user types "/shrug" and hits Enter)
-    if (trimmed.startsWith("/") && !trimmed.includes(" ")) {
-      const cmdName = trimmed.slice(1).toLowerCase();
+    if (plainText.startsWith("/") && !plainText.includes(" ")) {
+      const cmdName = plainText.slice(1).toLowerCase();
       const cmd = SLASH_COMMANDS.find((c) => c.name === cmdName);
       if (cmd) {
         executeCommand(cmd);
@@ -257,20 +345,19 @@ export default function MessageInput({
     }
 
     // AI message check — auto-correct and send (always enabled)
-    if (trimmed && !filePreview) {
+    if (markdown && !filePreview) {
       setAiChecking(true);
       try {
         const res = await fetch("/api/check-message", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: trimmed }),
+          body: JSON.stringify({ message: markdown }),
         });
         if (res.ok) {
           const data = await res.json();
           if (!data.ok && data.corrected) {
-            // Auto-send the corrected version
             onSend(data.corrected, undefined, replyingTo?.id);
-            setValue("");
+            clearEditor();
             localStorage.removeItem("dt-draft");
             setFilePreview(null);
             onCancelReply?.();
@@ -278,10 +365,6 @@ export default function MessageInput({
             toast("Message auto-corrected", "success");
             setJustSent(true);
             setTimeout(() => setJustSent(false), 350);
-            if (textareaRef.current) {
-              textareaRef.current.style.height = "auto";
-              textareaRef.current.focus();
-            }
             return;
           }
         }
@@ -326,38 +409,45 @@ export default function MessageInput({
       setUploadProgress(0);
     }
 
-    onSend(trimmed, fileData, replyingTo?.id);
-    setValue("");
+    onSend(markdown, fileData, replyingTo?.id);
+    clearEditor();
     localStorage.removeItem("dt-draft");
     setFilePreview(null);
     onCancelReply?.();
     setJustSent(true);
     setTimeout(() => setJustSent(false), 350);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.focus();
-    }
   }
 
   function handleInput() {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    const el = editorRef.current;
+    if (!el) return;
+    const text = getPlainText(el);
+    // Enforce max length
+    if (text.length > 2000) {
+      // Truncate by restoring previous content
+      el.textContent = text.slice(0, 2000);
+      // Move cursor to end
+      const sel = window.getSelection();
+      if (sel) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
     }
+    setValue(getPlainText(el));
     handleTyping();
     checkMention();
     checkSlashCommand();
   }
 
   function checkSlashCommand() {
-    const el = textareaRef.current;
+    const el = editorRef.current;
     if (!el) { setSlashQuery(null); return; }
-    const text = el.value;
-    // Only trigger when the entire input starts with /
+    const text = getPlainText(el);
     if (text.startsWith("/")) {
       const query = text.slice(1);
-      // Don't show if there are spaces (command already typed, user is writing more)
       if (!query.includes(" ")) {
         setSlashQuery(query);
         setSlashIndex(0);
@@ -375,7 +465,7 @@ export default function MessageInput({
 
   function executeCommand(cmd: typeof SLASH_COMMANDS[0]) {
     setSlashQuery(null);
-    setValue("");
+    clearEditor();
     if (cmd.type === "text" && cmd.value) {
       onSend(cmd.value, undefined, replyingTo?.id);
       onCancelReply?.();
@@ -386,17 +476,12 @@ export default function MessageInput({
     } else if (cmd.action === "poll" && onCreatePoll) {
       onCreatePoll();
     }
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.focus();
-    }
   }
 
   function checkMention() {
-    const el = textareaRef.current;
+    const el = editorRef.current;
     if (!el) { setMentionQuery(null); return; }
-    const cursor = el.selectionStart;
-    const textBefore = el.value.slice(0, cursor);
+    const textBefore = getTextBeforeCursor(el);
     const match = textBefore.match(/@(\w*)$/);
     if (match) {
       setMentionQuery(match[1]);
@@ -419,21 +504,23 @@ export default function MessageInput({
     : [];
 
   function selectMention(user: OnlineUser) {
-    const el = textareaRef.current;
+    const el = editorRef.current;
     if (!el) return;
-    const cursor = el.selectionStart;
-    const textBefore = el.value.slice(0, cursor);
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    const textBefore = getTextBeforeCursor(el);
     const match = textBefore.match(/@(\w*)$/);
     if (match) {
-      const start = cursor - match[0].length;
-      const newVal = el.value.slice(0, start) + `@${user.displayName} ` + el.value.slice(cursor);
-      setValue(newVal);
+      // Delete the @query by selecting backwards
+      const range = sel.getRangeAt(0);
+      for (let i = 0; i < match[0].length; i++) {
+        sel.modify("extend", "backward", "character");
+      }
+      // Replace with mention text
+      document.execCommand("insertText", false, `@${user.displayName} `);
       setMentionQuery(null);
-      setTimeout(() => {
-        const newCursor = start + user.displayName.length + 2;
-        el.selectionStart = el.selectionEnd = newCursor;
-        el.focus();
-      }, 0);
+      setValue(getPlainText(el));
     }
   }
 
@@ -470,18 +557,11 @@ export default function MessageInput({
   }
 
   function insertEmoji(emoji: string) {
-    const el = textareaRef.current;
+    const el = editorRef.current;
     if (el) {
-      const start = el.selectionStart;
-      const end = el.selectionEnd;
-      const newVal = value.slice(0, start) + emoji + value.slice(end);
-      setValue(newVal);
-      setTimeout(() => {
-        el.selectionStart = el.selectionEnd = start + emoji.length;
-        el.focus();
-      }, 0);
-    } else {
-      setValue(value + emoji);
+      el.focus();
+      document.execCommand("insertText", false, emoji);
+      setValue(getPlainText(el));
     }
   }
 
@@ -490,60 +570,42 @@ export default function MessageInput({
     onCancelReply?.();
   }
 
-  const hasFormatting = /(\*\*.+?\*\*|\*[^*]+?\*|`.+?`|~~.+?~~)/.test(value);
-
-  function renderPreview(text: string) {
-    // Keep ALL characters (including markers) so widths match the textarea exactly.
-    // Style the markers as muted/dim, and the inner content as formatted.
-    const parts = text.split(/(`.+?`|~~.+?~~|\*\*.+?\*\*|\*[^*]+?\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("`") && part.endsWith("`") && part.length > 1) {
-        const inner = part.slice(1, -1);
-        return <span key={i}><span className="opacity-30">`</span><span className="font-mono">{inner}</span><span className="opacity-30">`</span></span>;
-      }
-      if (part.startsWith("~~") && part.endsWith("~~") && part.length > 4) {
-        const inner = part.slice(2, -2);
-        return <span key={i}><span className="opacity-30">~~</span><span className="line-through opacity-60">{inner}</span><span className="opacity-30">~~</span></span>;
-      }
-      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-        const inner = part.slice(2, -2);
-        return <span key={i}><span className="opacity-30">**</span><span className="font-bold">{inner}</span><span className="opacity-30">**</span></span>;
-      }
-      if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**") && part.length > 2) {
-        const inner = part.slice(1, -1);
-        return <span key={i}><span className="opacity-30">*</span><span className="italic">{inner}</span><span className="opacity-30">*</span></span>;
-      }
-      return <span key={i}>{part}</span>;
-    });
-  }
-
-  function wrapSelection(before: string, after: string) {
-    const el = textareaRef.current;
+  function applyFormat(command: string) {
+    const el = editorRef.current;
     if (!el) return;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selected = value.slice(start, end);
-    // If already wrapped, unwrap
-    const textBefore = value.slice(Math.max(0, start - before.length), start);
-    const textAfter = value.slice(end, end + after.length);
-    if (textBefore === before && textAfter === after) {
-      const newVal = value.slice(0, start - before.length) + selected + value.slice(end + after.length);
-      setValue(newVal);
-      setTimeout(() => { el.selectionStart = start - before.length; el.selectionEnd = end - before.length; el.focus(); }, 0);
-      return;
-    }
-    const newVal = value.slice(0, start) + before + selected + after + value.slice(end);
-    setValue(newVal);
-    setTimeout(() => {
-      if (selected) {
-        el.selectionStart = start + before.length;
-        el.selectionEnd = end + before.length;
-      } else {
-        el.selectionStart = el.selectionEnd = start + before.length;
+    el.focus();
+    if (command === "code") {
+      // execCommand doesn't have a native "code" — we wrap in <code> manually
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const selectedText = range.toString();
+        if (selectedText) {
+          // Check if already wrapped in code
+          const parent = range.commonAncestorContainer.parentElement;
+          if (parent && parent.tagName === "CODE") {
+            // Unwrap: replace code element with text
+            const textNode = document.createTextNode(parent.textContent || "");
+            parent.parentNode?.replaceChild(textNode, parent);
+            // Select the text node
+            const newRange = document.createRange();
+            newRange.selectNodeContents(textNode);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          } else {
+            const code = document.createElement("code");
+            code.style.cssText = "padding: 1px 4px; border-radius: 4px; font-family: monospace; font-size: 13px; background: var(--bdr); border: 1px solid var(--bdr);";
+            range.surroundContents(code);
+          }
+        }
       }
-      el.focus();
-    }, 0);
+    } else {
+      document.execCommand(command);
+    }
+    setValue(getPlainText(el));
   }
+
+  const placeholder = replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)";
 
   return (
     <div
@@ -734,7 +796,7 @@ export default function MessageInput({
             </button>
           )}
 
-          {/* Textarea */}
+          {/* Rich text editor */}
           <div className="flex-1 relative">
             {/* Slash command dropdown */}
             {slashQuery !== null && filteredSlashCommands.length > 0 && (
@@ -776,51 +838,36 @@ export default function MessageInput({
             {/* Formatting toolbar */}
             {value.length > 0 && (
               <div className="absolute -top-7 left-0 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-sm border border-border rounded-lg px-1 py-0.5 shadow-sm animate-fade-in z-10">
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("**", "**"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Bold">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Bold (Cmd+B)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
                 </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("*", "*"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Italic">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Italic (Cmd+I)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
                 </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("`", "`"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all font-mono text-[10px] font-bold" title="Code">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all font-mono text-[10px] font-bold" title="Code">
                   {"</>"}
                 </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("~~", "~~"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Strikethrough">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Strikethrough">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
                 </button>
               </div>
             )}
-            {/* Rich text input: formatted overlay behind transparent textarea */}
+            {/* contentEditable rich text input */}
             <div className="relative">
-              {/* Formatted overlay — renders behind the textarea */}
               <div
-                ref={overlayRef}
-                aria-hidden="true"
-                className="absolute inset-0 px-4 py-2.5 rounded-xl text-base sm:text-sm whitespace-pre-wrap break-words overflow-hidden pointer-events-none"
-              >
-                {value ? renderPreview(value) : null}
-              </div>
-              <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => {
-                  if (e.target.value.length <= 2000) {
-                    setValue(e.target.value);
-                  }
-                  handleInput();
-                }}
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                role="textbox"
+                aria-multiline="true"
+                aria-placeholder={placeholder}
+                onInput={handleInput}
                 onKeyDown={handleKeyDown}
                 onBeforeInput={handleBeforeInput}
                 onPaste={handlePaste}
-                onScroll={() => {
-                  if (overlayRef.current && textareaRef.current) {
-                    overlayRef.current.scrollTop = textareaRef.current.scrollTop;
-                  }
-                }}
-                placeholder={replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)"}
-                rows={1}
-                style={{ transition: "height 0.12s ease-out, border-color 0.15s", color: hasFormatting ? "transparent" : undefined, caretColor: "var(--fg)" }}
-                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] resize-none text-base sm:text-sm relative z-[1]"
+                data-placeholder={placeholder}
+                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                style={{ transition: "border-color 0.15s", wordBreak: "break-word" }}
               />
             </div>
             {value.length > 1000 && (
