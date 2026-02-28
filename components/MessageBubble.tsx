@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Avatar from "./Avatar";
 import ReactionBar from "./ReactionBar";
 import ReactionPicker from "./ReactionPicker";
@@ -12,7 +12,28 @@ import PollCard from "./PollCard";
 import ReminderPicker from "./ReminderPicker";
 import { useToast } from "./Toast";
 import { formatFileSize } from "@/lib/file-utils";
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import python from "highlight.js/lib/languages/python";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
+import json from "highlight.js/lib/languages/json";
+import bash from "highlight.js/lib/languages/bash";
 import type { Message } from "@/lib/types";
+
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("js", javascript);
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("ts", typescript);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("py", python);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("html", xml);
+hljs.registerLanguage("xml", xml);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("sh", bash);
 
 type TimeFormat = "12h" | "24h";
 
@@ -68,40 +89,122 @@ function isGifOnlyMessage(text: string): boolean {
   return isTenorUrl(trimmed) && !trimmed.includes(" ");
 }
 
-function renderContent(text: string, isOwn: boolean, currentUserId?: string, currentDisplayName?: string) {
+function CodeBlock({ code, language }: { code: string; language?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  let highlighted: string;
+  let detectedLang = language || "";
+  try {
+    if (language && hljs.getLanguage(language)) {
+      const result = hljs.highlight(code, { language });
+      highlighted = result.value;
+      detectedLang = language;
+    } else {
+      const result = hljs.highlightAuto(code);
+      highlighted = result.value;
+      detectedLang = result.language || "";
+    }
+  } catch {
+    highlighted = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className="relative group/code my-1.5 rounded-lg overflow-hidden border border-border bg-[#1a1a1a]">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-border/30 text-[10px] text-muted">
+        <span className="uppercase tracking-wider font-medium">{detectedLang || "code"}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-muted hover:text-foreground transition-colors"
+        >
+          {copied ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              Copied
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+              Copy
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="px-3 py-2.5 overflow-x-auto text-[13px] leading-relaxed font-mono">
+        <code className="hljs" dangerouslySetInnerHTML={{ __html: highlighted }} />
+      </pre>
+    </div>
+  );
+}
+
+function renderInline(text: string, isOwn: boolean, keyPrefix: string) {
   const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|~~[^~]+~~|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
   return parts.map((part, i) => {
+    const key = `${keyPrefix}-${i}`;
     if (part.match(/^(https?:\/\/|www\.)/)) {
-      // Render Tenor GIF URLs as inline images
       if (isTenorUrl(part)) {
-        return (
-          <img key={i} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" />
-        );
+        return <img key={key} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" />;
       }
       const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
       return (
-        <a key={i} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
+        <a key={key} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
           {displayText}
         </a>
       );
     }
     if (part.startsWith("`") && part.endsWith("`") && part.length > 1) {
-      return <code key={i} className={`px-1.5 py-0.5 rounded text-[13px] font-mono border ${isOwn ? "bg-background/20 border-background/20" : "bg-background border-border"}`}>{part.slice(1, -1)}</code>;
+      return <code key={key} className={`px-1.5 py-0.5 rounded text-[13px] font-mono border ${isOwn ? "bg-background/20 border-background/20" : "bg-background border-border"}`}>{part.slice(1, -1)}</code>;
     }
     if (part.startsWith("~~") && part.endsWith("~~") && part.length > 4) {
-      return <del key={i} className="opacity-60">{part.slice(2, -2)}</del>;
+      return <del key={key} className="opacity-60">{part.slice(2, -2)}</del>;
     }
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>;
+      return <strong key={key}>{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**") && part.length > 2) {
-      return <em key={i}>{part.slice(1, -1)}</em>;
+      return <em key={key}>{part.slice(1, -1)}</em>;
     }
     if (part.match(/^@\w+/)) {
-      return <span key={i} className="font-semibold text-accent">{part}</span>;
+      return <span key={key} className="font-semibold text-accent">{part}</span>;
     }
     return part;
   });
+}
+
+function renderContent(text: string, isOwn: boolean, currentUserId?: string, currentDisplayName?: string) {
+  // Split on fenced code blocks first
+  const fencedRegex = /```(\w*)\n([\s\S]*?)```/g;
+  const segments: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = fencedRegex.exec(text)) !== null) {
+    // Text before the code block
+    if (match.index > lastIndex) {
+      const before = text.slice(lastIndex, match.index);
+      segments.push(<span key={`t-${lastIndex}`}>{renderInline(before, isOwn, `t-${lastIndex}`)}</span>);
+    }
+    // The code block
+    segments.push(<CodeBlock key={`cb-${match.index}`} code={match[2].replace(/\n$/, "")} language={match[1] || undefined} />);
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Remaining text after last code block
+  if (lastIndex < text.length) {
+    const remaining = text.slice(lastIndex);
+    segments.push(<span key={`t-${lastIndex}`}>{renderInline(remaining, isOwn, `t-${lastIndex}`)}</span>);
+  }
+
+  if (segments.length === 0) {
+    return renderInline(text, isOwn, "inline");
+  }
+
+  return segments;
 }
 
 function FileTypeIcon({ type }: { type: string }) {
@@ -161,11 +264,13 @@ export default function MessageBubble({
   const [showProfile, setShowProfile] = useState(false);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
   const [swipeX, setSwipeX] = useState(0);
+  const [showHeartPop, setShowHeartPop] = useState(false);
   const { toast } = useToast();
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const swipeTriggeredRef = useRef(false);
+  const lastTapRef = useRef<number>(0);
 
   useEffect(() => {
     if (editing && editRef.current) {
@@ -204,6 +309,18 @@ export default function MessageBubble({
     if (longPressRef.current) clearTimeout(longPressRef.current);
     if (swipeTriggeredRef.current) {
       onReply(message);
+    } else if (touchStartRef.current && Math.abs(swipeX) < 10) {
+      // Double-tap detection (mobile only)
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        // Double-tap detected — toggle heart reaction
+        onReaction(message.id, "❤️");
+        setShowHeartPop(true);
+        setTimeout(() => setShowHeartPop(false), 600);
+        lastTapRef.current = 0;
+      } else {
+        lastTapRef.current = now;
+      }
     }
     setSwipeX(0);
     touchStartRef.current = null;
@@ -309,6 +426,12 @@ export default function MessageBubble({
   return (
     <>
       <div className="relative overflow-hidden -mx-2 px-2">
+        {/* Double-tap heart animation */}
+        {showHeartPop && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <span className="text-4xl animate-heart-pop">❤️</span>
+          </div>
+        )}
         {/* Swipe-to-reply indicator */}
         {swipeX !== 0 && (
           <div className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "right-3" : "left-3"} flex items-center justify-center w-8 h-8 rounded-full transition-all ${Math.abs(swipeX) >= 60 ? "bg-accent text-background scale-110" : "bg-surface border border-border text-muted scale-100"}`}>
@@ -361,7 +484,7 @@ export default function MessageBubble({
           {/* Reply quote */}
           {message.replyToId && message.replyDisplayName && (
             <div
-              className="px-3 py-1.5 mb-1 rounded-lg bg-background border-l-2 border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
+              className="flex items-start gap-2 px-3 py-1.5 mb-1 rounded-lg bg-background border-l-2 border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
               onClick={() => {
                 if (onViewThread) {
                   onViewThread(message.replyToId!);
@@ -375,10 +498,17 @@ export default function MessageBubble({
                 }
               }}
             >
-              <span className="font-medium text-foreground">{message.replyDisplayName}</span>
-              <p className="text-muted truncate">
-                {message.replyContent ? (message.replyContent.length > 80 ? message.replyContent.slice(0, 80) + "..." : message.replyContent) : ""}
-              </p>
+              {message.replyAvatarId !== undefined && (
+                <div className="shrink-0 mt-0.5">
+                  <Avatar displayName={message.replyDisplayName} userId="" avatarId={message.replyAvatarId} size="xs" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <span className="font-medium text-foreground">{message.replyDisplayName}</span>
+                <p className="text-muted line-clamp-2">
+                  {message.replyContent ? (message.replyContent.length > 150 ? message.replyContent.slice(0, 150) + "..." : message.replyContent) : ""}
+                </p>
+              </div>
             </div>
           )}
 
@@ -519,7 +649,7 @@ export default function MessageBubble({
           {/* Timestamp */}
           <p
             className={`text-[10px] text-muted px-1 cursor-pointer hover:text-foreground flex items-center ${isOwn ? "justify-end" : "justify-start"} gap-1 ${isGrouped ? "mt-0.5 h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-150 overflow-hidden" : "mt-1"}`}
-            title={new Date(message.createdAt).toLocaleString()}
+            title={new Date(message.createdAt).toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " at " + new Date(message.createdAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: timeFormat !== "24h" })}
             onClick={() => setShowAbsoluteTime((v) => !v)}
           >
             {showAbsoluteTime

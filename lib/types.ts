@@ -37,6 +37,7 @@ export interface MessageReaction {
   emoji: string;
   count: number;
   reacted: boolean;
+  reactedByNames?: string[];
 }
 
 export interface Message {
@@ -53,6 +54,7 @@ export interface Message {
   replyToId?: string | null;
   replyContent?: string | null;
   replyDisplayName?: string | null;
+  replyAvatarId?: string | null;
   reactions?: MessageReaction[];
   editedAt?: string | null;
   isDeleted?: boolean;

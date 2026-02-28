@@ -619,21 +619,28 @@ export default function MessageInput({
       {/* Reply preview */}
       {replyingTo && (
         <div className="flex items-center gap-2 px-4 pt-3 pb-1 animate-slide-up">
-          <div className="flex-1 px-3 py-1.5 rounded-lg bg-surface border-l-2 border-accent text-xs">
-            <span className="font-medium text-foreground flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                <polyline points="9 17 4 12 9 7" />
-                <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-              </svg>
-              Replying to {replyingTo.displayName}
-            </span>
-            <p className="text-muted truncate">
-              {replyingTo.content
-                ? replyingTo.content.length > 60
-                  ? replyingTo.content.slice(0, 60) + "..."
-                  : replyingTo.content
-                : replyingTo.fileName || ""}
-            </p>
+          <div className="flex-1 flex items-start gap-2 px-3 py-1.5 rounded-lg bg-surface border-l-2 border-accent text-xs">
+            {replyingTo.avatarId !== undefined && (
+              <div className="shrink-0 mt-0.5">
+                <Avatar displayName={replyingTo.displayName} userId={replyingTo.userId} avatarId={replyingTo.avatarId} size="sm" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <span className="font-medium text-foreground flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                  <polyline points="9 17 4 12 9 7" />
+                  <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                </svg>
+                Replying to {replyingTo.displayName}
+              </span>
+              <p className="text-muted line-clamp-2">
+                {replyingTo.content
+                  ? replyingTo.content.length > 150
+                    ? replyingTo.content.slice(0, 150) + "..."
+                    : replyingTo.content
+                  : replyingTo.fileName || ""}
+              </p>
+            </div>
           </div>
           <button
             onClick={onCancelReply}

@@ -415,7 +415,7 @@ export default function ChatRoom() {
       lastSeenCountRef.current = messages.length;
       // Clear unread separator after a delay so user sees it briefly
       if (unreadSeparatorIdRef.current) {
-        setTimeout(() => { unreadSeparatorIdRef.current = null; }, 3000);
+        setTimeout(() => { unreadSeparatorIdRef.current = null; }, 5000);
       }
     }
   }, [isAtBottom, messages.length]);
@@ -463,27 +463,29 @@ export default function ChatRoom() {
         body: JSON.stringify({ emoji }),
       });
 
+      const myName = user?.displayName || "You";
       setMessages((prev) =>
         prev.map((msg) => {
           if (msg.id !== messageId) return msg;
-          const reactions = (msg.reactions || []).map((r) => ({ ...r }));
+          const reactions = (msg.reactions || []).map((r) => ({ ...r, reactedByNames: [...(r.reactedByNames || [])] }));
           const existing = reactions.find((r) => r.emoji === emoji);
           if (existing) {
             if (existing.reacted) {
               const newCount = existing.count - 1;
+              const newNames = existing.reactedByNames.filter((n) => n !== myName);
               if (newCount <= 0) {
                 return { ...msg, reactions: reactions.filter((r) => r.emoji !== emoji) };
               }
               return { ...msg, reactions: reactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: newCount, reacted: false } : r
+                r.emoji === emoji ? { ...r, count: newCount, reacted: false, reactedByNames: newNames } : r
               )};
             } else {
               return { ...msg, reactions: reactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.count + 1, reacted: true } : r
+                r.emoji === emoji ? { ...r, count: r.count + 1, reacted: true, reactedByNames: [...r.reactedByNames, myName] } : r
               )};
             }
           } else {
-            return { ...msg, reactions: [...reactions, { emoji, count: 1, reacted: true }] };
+            return { ...msg, reactions: [...reactions, { emoji, count: 1, reacted: true, reactedByNames: [myName] }] };
           }
         })
       );
@@ -884,11 +886,14 @@ export default function ChatRoom() {
 
       // Unread separator
       if (unreadSeparatorIdRef.current === msg.id) {
+        const newCount = messages.length - i;
         elements.push(
           <div key="unread-sep" className="flex items-center gap-3 my-4 animate-fade-in">
-            <div className="flex-1 h-px bg-accent/40" />
-            <span className="text-[11px] font-medium text-accent px-2">New messages</span>
-            <div className="flex-1 h-px bg-accent/40" />
+            <div className="flex-1 h-[1.5px] bg-accent/50" />
+            <span className="text-[11px] font-semibold text-background bg-accent px-3 py-0.5 rounded-full shadow-sm">
+              {newCount > 0 ? `${newCount} new message${newCount === 1 ? "" : "s"}` : "New messages"}
+            </span>
+            <div className="flex-1 h-[1.5px] bg-accent/50" />
           </div>
         );
       }

@@ -96,12 +96,14 @@ export default function BookmarksPanel({
         {/* Bookmark list */}
         <div className="flex-1 overflow-y-auto">
           {bookmarks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-              <p className="text-sm">No bookmarks yet</p>
-              <p className="text-xs text-muted/60">Bookmark messages to save them here</p>
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-muted px-6">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-foreground animate-fade-in stagger-1">No bookmarks yet</p>
+              <p className="text-xs text-muted/60 text-center animate-fade-in stagger-2">Save important messages by clicking the bookmark icon on any message</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center py-10 gap-2 text-muted">

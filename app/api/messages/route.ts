@@ -150,7 +150,7 @@ export async function GET() {
 
   // Get reply info for messages that have replyToId
   const replyIds = rows.filter((r) => r.replyToId).map((r) => r.replyToId!);
-  const replyMap = new Map<string, { content: string; displayName: string }>();
+  const replyMap = new Map<string, { content: string; displayName: string; avatarId: string | null }>();
 
   if (replyIds.length > 0) {
     for (const replyId of replyIds) {
@@ -158,6 +158,7 @@ export async function GET() {
         .select({
           content: messages.content,
           displayName: users.displayName,
+          avatarId: users.avatarId,
         })
         .from(messages)
         .innerJoin(users, eq(messages.userId, users.id))
@@ -181,10 +182,18 @@ export async function GET() {
         )
       : [];
 
+  // Resolve display names for reaction users
+  const reactionUserIds = [...new Set(allReactions.map((r) => r.userId))];
+  const reactionUserNameMap = new Map<string, string>();
+  for (const uid of reactionUserIds) {
+    const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, uid)).get();
+    if (u) reactionUserNameMap.set(uid, u.displayName);
+  }
+
   // Group reactions by messageId + emoji
   const reactionMap = new Map<
     string,
-    { emoji: string; count: number; reacted: boolean }[]
+    { emoji: string; count: number; reacted: boolean; reactedByNames: string[] }[]
   >();
 
   for (const r of allReactions) {
@@ -192,11 +201,13 @@ export async function GET() {
     if (!reactionMap.has(key)) reactionMap.set(key, []);
     const arr = reactionMap.get(key)!;
     const existing = arr.find((a) => a.emoji === r.emoji);
+    const name = reactionUserNameMap.get(r.userId) || "Unknown";
     if (existing) {
       existing.count++;
+      existing.reactedByNames.push(name);
       if (r.userId === user.id) existing.reacted = true;
     } else {
-      arr.push({ emoji: r.emoji, count: 1, reacted: r.userId === user.id });
+      arr.push({ emoji: r.emoji, count: 1, reacted: r.userId === user.id, reactedByNames: [name] });
     }
   }
 
@@ -341,6 +352,7 @@ export async function GET() {
       editedAt: row.editedAt ?? null,
       replyContent: reply?.content ?? null,
       replyDisplayName: reply?.displayName ?? null,
+      replyAvatarId: reply?.avatarId ?? null,
       reactions: reactionMap.get(row.id) ?? [],
       readBy: readByMap.get(row.id) ?? [],
       linkPreviews: linkPreviewMap.get(row.id) ?? [],

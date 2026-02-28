@@ -142,13 +142,16 @@ export default function RemindersPanel({
 
         <div className="flex-1 overflow-y-auto">
           {sortedReminders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
-              <p className="text-sm">No reminders set</p>
-              <p className="text-xs text-muted/60">Set a reminder on any message</p>
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-muted px-6">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-foreground animate-fade-in stagger-1">No reminders set</p>
+              <p className="text-xs text-muted/60 text-center animate-fade-in stagger-2">Set a reminder on any message to get notified later</p>
+              <p className="text-[10px] text-muted/40 animate-fade-in stagger-3">Use the clock icon on any message</p>
             </div>
           ) : (
             <div>

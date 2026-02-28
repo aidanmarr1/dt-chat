@@ -261,8 +261,15 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
           {/* Empty state — before searching */}
           {!loading && !searched && !hasQuery && (
             <div className="flex flex-col items-center py-10 px-4">
-              <p className="text-xs text-muted">Type to search through messages</p>
-              <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-3 animate-gentle-float">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1 animate-fade-in stagger-1">Search messages</p>
+              <p className="text-xs text-muted animate-fade-in stagger-2">Type to search through all messages</p>
+              <div className="flex items-center gap-1.5 mt-3 animate-fade-in stagger-3">
                 <kbd className="text-[10px] text-muted border border-border rounded px-1.5 py-0.5 font-mono">↑</kbd>
                 <kbd className="text-[10px] text-muted border border-border rounded px-1.5 py-0.5 font-mono">↓</kbd>
                 <span className="text-[10px] text-muted mx-0.5">to navigate</span>
