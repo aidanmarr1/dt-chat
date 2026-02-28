@@ -259,6 +259,7 @@ export default function MessageBubble({
         } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => { setHovered(false); setShowActions(false); }}
+        onDoubleClick={() => { if (canEdit) startEdit(); }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
@@ -451,14 +452,44 @@ export default function MessageBubble({
 
           {/* Timestamp */}
           <p
-            className={`text-[10px] text-muted px-1 cursor-pointer hover:text-foreground ${isOwn ? "text-right" : "text-left"} ${isGrouped ? "mt-0.5 h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-150 overflow-hidden" : "mt-1"}`}
+            className={`text-[10px] text-muted px-1 cursor-pointer hover:text-foreground flex items-center ${isOwn ? "justify-end" : "justify-start"} gap-1 ${isGrouped ? "mt-0.5 h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-150 overflow-hidden" : "mt-1"}`}
             title={new Date(message.createdAt).toLocaleString()}
             onClick={() => setShowAbsoluteTime((v) => !v)}
           >
             {showAbsoluteTime
               ? new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: timeFormat !== "24h" })
               : relativeTime(message.createdAt)}
+            {isOwn && (
+              <span className={`inline-flex ${message.readBy && message.readBy.length > 0 ? "text-accent" : "text-muted"}`} title={message.readBy && message.readBy.length > 0 ? "Seen" : "Sent"}>
+                {message.readBy && message.readBy.length > 0 ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="1 8 6 13 14 3" />
+                    <polyline points="8 8 13 13 21 3" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </span>
+            )}
           </p>
+
+          {/* Quick reactions row — desktop only */}
+          {hovered && !showReactionPicker && !showActions && !editing && (
+            <div className={`absolute ${isOwn ? "-left-1 -translate-x-full" : "-right-1 translate-x-full"} -top-8 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-md border border-border rounded-full shadow-lg px-1 py-0.5 animate-fade-scale z-10`}>
+              {["👍", "❤️", "😂", "😮", "😢"].map((emoji, i) => (
+                <button
+                  key={emoji}
+                  onClick={() => onReaction(message.id, emoji)}
+                  className="w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-border hover:scale-125 active:scale-90 transition-all"
+                  style={{ animationDelay: `${i * 20}ms` }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Action buttons — desktop: inline beside message */}
           {(hovered || showReactionPicker) && !showActions && !editing && (

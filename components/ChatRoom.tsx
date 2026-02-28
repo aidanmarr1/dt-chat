@@ -19,6 +19,8 @@ import RemindersPanel from "./RemindersPanel";
 import StatusPicker from "./StatusPicker";
 import ThreadPanel from "./ThreadPanel";
 import TodoPanel from "./TodoPanel";
+import ConfirmDialog from "./ConfirmDialog";
+import KeyboardShortcuts from "./KeyboardShortcuts";
 import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
 import type { Message, User, OnlineUser, Bookmark, Reminder } from "@/lib/types";
@@ -77,6 +79,13 @@ export default function ChatRoom() {
   const [showTodos, setShowTodos] = useState(false);
   const [todoCount, setTodoCount] = useState(0);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [wasOffline, setWasOffline] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState<{ src: string; alt: string }[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
+  const unreadSeparatorIdRef = useRef<string | null>(null);
   const todoCountFetched = useRef(false);
   const newMessageIdsRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,7 +99,7 @@ export default function ChatRoom() {
   // Track online/offline status
   useEffect(() => {
     function goOffline() { setIsOffline(true); }
-    function goOnline() { setIsOffline(false); setFailedPolls(0); }
+    function goOnline() { setIsOffline(false); setFailedPolls(0); setWasOffline(true); }
     window.addEventListener("offline", goOffline);
     window.addEventListener("online", goOnline);
     return () => {
@@ -98,6 +107,14 @@ export default function ChatRoom() {
       window.removeEventListener("online", goOnline);
     };
   }, []);
+
+  // Reconnection success toast
+  useEffect(() => {
+    if (wasOffline && !isOffline && failedPolls < 3) {
+      toast("Back online!", "success");
+      setWasOffline(false);
+    }
+  }, [wasOffline, isOffline, failedPolls, toast]);
 
   // Load sound + notification preferences
   useEffect(() => {
@@ -225,6 +242,10 @@ export default function ChatRoom() {
         e.preventDefault();
         setShowBookmarks((prev) => !prev);
       }
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -285,8 +306,14 @@ export default function ChatRoom() {
         const data = await res.json();
 
         // Successful poll — clear failed state
-        setFailedPolls(0);
-        setIsOffline(false);
+        setFailedPolls((prev) => {
+          if (prev >= 3) setWasOffline(true);
+          return 0;
+        });
+        setIsOffline((prev) => {
+          if (prev) setWasOffline(true);
+          return false;
+        });
 
         const newMessages: Message[] = data.messages.map(
           (m: { createdAt: string | Date } & Omit<Message, "createdAt">) => ({
@@ -315,6 +342,10 @@ export default function ChatRoom() {
               for (const nm of newMessages) {
                 if (!existingIds.has(nm.id)) {
                   newMessageIdsRef.current.add(nm.id);
+                  // Set unread separator to first new message when user is scrolled up
+                  if (!isNearBottom() && !unreadSeparatorIdRef.current) {
+                    unreadSeparatorIdRef.current = nm.id;
+                  }
                 }
               }
             }
@@ -370,6 +401,10 @@ export default function ChatRoom() {
       setShowNewMessages(false);
       setUnreadCount(0);
       lastSeenCountRef.current = messages.length;
+      // Clear unread separator after a delay so user sees it briefly
+      if (unreadSeparatorIdRef.current) {
+        setTimeout(() => { unreadSeparatorIdRef.current = null; }, 3000);
+      }
     }
   }, [isAtBottom, messages.length]);
 
@@ -467,7 +502,15 @@ export default function ChatRoom() {
     }
   }
 
-  async function handleDelete(messageId: string) {
+  function handleDelete(messageId: string) {
+    setDeleteConfirmId(messageId);
+  }
+
+  async function confirmDelete() {
+    const messageId = deleteConfirmId;
+    if (!messageId) return;
+    setDeleteConfirmId(null);
+
     // Optimistically mark as deleted
     setMessages((prev) =>
       prev.map((msg) =>
@@ -827,6 +870,17 @@ export default function ChatRoom() {
       const prev = i > 0 ? messages[i - 1] : null;
       const isGrouped = prev ? isGroupable(prev, msg) && isSameDay(prev.createdAt, msg.createdAt) : false;
 
+      // Unread separator
+      if (unreadSeparatorIdRef.current === msg.id) {
+        elements.push(
+          <div key="unread-sep" className="flex items-center gap-3 my-4 animate-fade-in">
+            <div className="flex-1 h-px bg-accent/40" />
+            <span className="text-[11px] font-medium text-accent px-2">New messages</span>
+            <div className="flex-1 h-px bg-accent/40" />
+          </div>
+        );
+      }
+
       const isNew = newMessageIdsRef.current.has(msg.id);
 
       elements.push(
@@ -1157,7 +1211,7 @@ export default function ChatRoom() {
       </div>
 
       {/* Typing indicator */}
-      <TypingIndicator users={typingUsers} />
+      <TypingIndicator users={typingUsers} onlineUsers={onlineUsers} />
 
       {/* Input */}
       <MessageInput
@@ -1168,6 +1222,23 @@ export default function ChatRoom() {
         onlineUsers={onlineUsers}
         onCreatePoll={() => setShowPollCreator(true)}
       />
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <ConfirmDialog
+          title="Delete message"
+          message="Are you sure you want to delete this message? This can't be undone."
+          confirmLabel="Delete"
+          destructive
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteConfirmId(null)}
+        />
+      )}
+
+      {/* Keyboard shortcuts overlay */}
+      {showShortcuts && (
+        <KeyboardShortcuts onClose={() => setShowShortcuts(false)} />
+      )}
     </div>
   );
 }
