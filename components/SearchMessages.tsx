@@ -17,10 +17,17 @@ interface SearchMessagesProps {
   onScrollTo: (messageId: string) => void;
 }
 
-function highlightMatch(text: string, query: string) {
+function contextSnippet(text: string, query: string, contextChars = 40) {
   if (!query.trim()) return text;
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text.length > contextChars * 2 ? text.slice(0, contextChars * 2) + "..." : text;
+
+  const start = Math.max(0, idx - contextChars);
+  const end = Math.min(text.length, idx + query.length + contextChars);
+  const snippet = (start > 0 ? "..." : "") + text.slice(start, end) + (end < text.length ? "..." : "");
+
+  const parts = snippet.split(new RegExp(`(${escaped})`, "gi"));
   return parts.map((part, i) =>
     part.toLowerCase() === query.toLowerCase() ? (
       <mark key={i} className="bg-accent/25 text-foreground rounded-sm px-0.5">{part}</mark>
@@ -44,12 +51,25 @@ function relativeDate(dateStr: string): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function getDateGroup(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return "This week";
+  return date.toLocaleDateString([], { month: "long", year: "numeric" });
+}
+
 export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [activeResultId, setActiveResultId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,7 +119,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
 
   function handleResultClick(id: string) {
     onScrollTo(id);
-    onClose();
+    setActiveResultId(id);
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent) {
@@ -172,40 +192,56 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
           )}
 
           {/* Results list */}
-          {!loading && results.length > 0 && (
-            <>
-              <div className="px-4 pt-2.5 pb-1.5 animate-fade-in">
-                <span className="text-[11px] font-medium text-muted">
-                  {results.length} result{results.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              {results.map((r, i) => (
-                <button
-                  key={r.id}
-                  onClick={() => handleResultClick(r.id)}
-                  className={`w-full text-left px-4 py-2.5 transition-colors flex items-start gap-3 animate-fade-in ${
-                    selectedIndex === i
-                      ? "bg-accent/10"
-                      : "hover:bg-background active:bg-border/30"
-                  }`}
-                  style={{ animationDelay: `${i * 50}ms` }}
-                >
-                  <div className="shrink-0 mt-0.5">
-                    <Avatar displayName={r.displayName} userId={r.userId} avatarId={r.avatarId} size="sm" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-xs font-semibold text-foreground truncate">{r.displayName}</span>
-                      <span className="text-[10px] text-muted shrink-0">{relativeDate(r.createdAt)}</span>
+          {!loading && results.length > 0 && (() => {
+            let lastGroup = "";
+            return (
+              <>
+                <div className="px-4 pt-2.5 pb-1.5 animate-fade-in">
+                  <span className="text-[11px] font-medium text-muted">
+                    {results.length} result{results.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {results.map((r, i) => {
+                  const group = getDateGroup(r.createdAt);
+                  const showGroupHeader = group !== lastGroup;
+                  lastGroup = group;
+                  return (
+                    <div key={r.id}>
+                      {showGroupHeader && (
+                        <div className="px-4 pt-3 pb-1">
+                          <span className="text-[10px] font-semibold text-muted/70 uppercase tracking-wider">{group}</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleResultClick(r.id)}
+                        className={`w-full text-left px-4 py-2.5 transition-colors flex items-start gap-3 animate-fade-in ${
+                          activeResultId === r.id
+                            ? "bg-accent/15 border-l-2 border-accent"
+                            : selectedIndex === i
+                            ? "bg-accent/10"
+                            : "hover:bg-background active:bg-border/30"
+                        }`}
+                        style={{ animationDelay: `${i * 50}ms` }}
+                      >
+                        <div className="shrink-0 mt-0.5">
+                          <Avatar displayName={r.displayName} userId={r.userId} avatarId={r.avatarId} size="sm" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-xs font-semibold text-foreground truncate">{r.displayName}</span>
+                            <span className="text-[10px] text-muted shrink-0">{relativeDate(r.createdAt)}</span>
+                          </div>
+                          <p className="text-[13px] text-muted mt-0.5 leading-snug line-clamp-2">
+                            {contextSnippet(r.content, query.trim())}
+                          </p>
+                        </div>
+                      </button>
                     </div>
-                    <p className="text-[13px] text-muted truncate mt-0.5 leading-snug">
-                      {highlightMatch(r.content, query.trim())}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </>
-          )}
+                  );
+                })}
+              </>
+            );
+          })()}
 
           {/* No results */}
           {!loading && searched && results.length === 0 && (

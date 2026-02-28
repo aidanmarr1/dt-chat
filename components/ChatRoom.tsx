@@ -76,7 +76,9 @@ export default function ChatRoom() {
   // Feature 5: Todos
   const [showTodos, setShowTodos] = useState(false);
   const [todoCount, setTodoCount] = useState(0);
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
   const todoCountFetched = useRef(false);
+  const newMessageIdsRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef<string | null>(null);
@@ -252,6 +254,8 @@ export default function ChatRoom() {
       // Force reflow to restart animation
       void el.offsetWidth;
       el.classList.add("animate-highlight");
+    } else {
+      toast("Message is outside current view", "info");
     }
   }
 
@@ -299,9 +303,21 @@ export default function ChatRoom() {
         setTypingUsers(data.typingUsers || []);
 
         if (newMessages.length > 0) {
+          // Mark as loaded after first successful fetch
+          if (!messagesLoaded) setMessagesLoaded(true);
+
           const latestId = newMessages[newMessages.length - 1].id;
           if (latestId !== latestMessageIdRef.current) {
             const prevLatest = latestMessageIdRef.current;
+            // Track new messages (arrived after initial load)
+            if (prevLatest) {
+              const existingIds = new Set(messages.map((m) => m.id));
+              for (const nm of newMessages) {
+                if (!existingIds.has(nm.id)) {
+                  newMessageIdsRef.current.add(nm.id);
+                }
+              }
+            }
             const lastMsg = newMessages[newMessages.length - 1];
             if (prevLatest && lastMsg.userId !== user!.id) {
               if (soundEnabled) playNotificationSound();
@@ -811,6 +827,8 @@ export default function ChatRoom() {
       const prev = i > 0 ? messages[i - 1] : null;
       const isGrouped = prev ? isGroupable(prev, msg) && isSameDay(prev.createdAt, msg.createdAt) : false;
 
+      const isNew = newMessageIdsRef.current.has(msg.id);
+
       elements.push(
         <MessageBubble
           key={msg.id}
@@ -833,6 +851,7 @@ export default function ChatRoom() {
           reminderTime={reminderTimeMap.get(msg.id) ?? null}
           replyCount={replyCountMap.get(msg.id) || 0}
           onViewThread={handleViewThread}
+          isNew={isNew}
         />
       );
     }
@@ -1070,59 +1089,75 @@ export default function ChatRoom() {
       />
 
       {/* Messages */}
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth"
-        onScroll={(e) => {
-          const el = e.target as HTMLElement;
-          setHeaderShadow(el.scrollTop > 0);
-          setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100);
-        }}
-      >
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-4">
-            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <div className="flex-1 relative overflow-hidden">
+        <div
+          ref={scrollContainerRef}
+          className="absolute inset-0 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth"
+          onScroll={(e) => {
+            const el = e.target as HTMLElement;
+            setHeaderShadow(el.scrollTop > 0);
+            setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100);
+          }}
+        >
+          {!messagesLoaded && messages.length === 0 ? (
+            /* Skeleton message loaders */
+            <div className="space-y-5">
+              {[0.6, 0.4, 0.75, 0.5, 0.35].map((w, i) => (
+                <div key={i} className={`flex animate-fade-in ${i % 2 === 1 ? "justify-end" : "justify-start"}`} style={{ animationDelay: `${i * 80}ms` }}>
+                  {i % 2 !== 1 && <div className="w-7 h-7 rounded-full animate-shimmer mr-2.5 mt-1 shrink-0" />}
+                  <div className="space-y-1.5" style={{ width: `${w * 55}%` }}>
+                    {i % 2 !== 1 && <div className="h-3 w-16 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 30}ms` }} />}
+                    <div className={`rounded-2xl animate-shimmer ${i % 2 === 1 ? "h-10" : "h-14"}`} style={{ animationDelay: `${i * 80 + 60}ms` }} />
+                    <div className="h-2.5 w-12 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 90}ms` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
+                <p className="text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
+                <p className="text-muted text-sm">No messages yet — start the conversation!</p>
+                <p className="text-muted/50 text-xs mt-2">Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> to focus input</p>
+              </div>
+            </div>
+          ) : (
+            renderMessages()
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Scroll to bottom FAB */}
+        {!isAtBottom && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 animate-fab-in">
+            <button
+              onClick={scrollToBottom}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all active:scale-95 shadow-lg backdrop-blur-sm ${
+                showNewMessages
+                  ? "bg-accent text-background shadow-accent/20 animate-glow-pulse"
+                  : "bg-surface/90 border border-border text-foreground hover:border-accent hover:text-accent"
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
               </svg>
-            </div>
-            <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              <p className="text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
-              <p className="text-muted text-sm">No messages yet — start the conversation!</p>
-              <p className="text-muted/50 text-xs mt-2">Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> to focus input</p>
-            </div>
+              {showNewMessages
+                ? unreadCount > 0
+                  ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}`
+                  : "New messages"
+                : "Scroll to bottom"}
+            </button>
           </div>
-        ) : (
-          renderMessages()
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Typing indicator */}
       <TypingIndicator users={typingUsers} />
-
-      {/* Scroll to bottom / New messages indicator */}
-      {!isAtBottom && (
-        <div className="flex justify-center -mt-12 mb-2 relative z-10 animate-slide-up">
-          <button
-            onClick={scrollToBottom}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all active:scale-95 shadow-lg backdrop-blur-sm ${
-              showNewMessages
-                ? "bg-accent text-background shadow-accent/20 animate-glow-pulse"
-                : "bg-surface/90 border border-border text-foreground hover:border-accent hover:text-accent"
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-            {showNewMessages
-              ? unreadCount > 0
-                ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}`
-                : "New messages"
-              : "Scroll to bottom"}
-          </button>
-        </div>
-      )}
 
       {/* Input */}
       <MessageInput

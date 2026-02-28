@@ -9,6 +9,30 @@ import Avatar from "./Avatar";
 import { formatFileSize } from "@/lib/file-utils";
 import type { Message, OnlineUser } from "@/lib/types";
 
+function InputFileTypeIcon({ type }: { type: string }) {
+  const isPdf = type === "application/pdf";
+  const isDoc = type.includes("word") || type === "text/plain" || type === "text/csv";
+  const isSpreadsheet = type.includes("excel") || type.includes("spreadsheet");
+  const isPresentation = type.includes("powerpoint") || type.includes("presentation");
+  const isArchive = type.includes("zip") || type.includes("rar") || type.includes("7z") || type.includes("tar") || type.includes("gzip");
+  const isAudio = type.startsWith("audio/");
+
+  let label = "FILE";
+  let color = "text-muted";
+  if (isPdf) { label = "PDF"; color = "text-red-400"; }
+  else if (isDoc) { label = "DOC"; color = "text-blue-400"; }
+  else if (isSpreadsheet) { label = "XLS"; color = "text-green-400"; }
+  else if (isPresentation) { label = "PPT"; color = "text-orange-400"; }
+  else if (isArchive) { label = "ZIP"; color = "text-yellow-400"; }
+  else if (isAudio) { label = "AUD"; color = "text-purple-400"; }
+
+  return (
+    <div className={`w-16 h-12 rounded-lg bg-background border border-border flex items-center justify-center text-xs font-bold ${color}`}>
+      {label}
+    </div>
+  );
+}
+
 const SLASH_COMMANDS: { name: string; description: string; type: "text" | "action"; value?: string; action?: string }[] = [
   { name: "giphy", description: "Open GIF picker", type: "action", action: "gif" },
   { name: "poll", description: "Create a poll", type: "action", action: "poll" },
@@ -58,6 +82,7 @@ export default function MessageInput({
   const [mentionIndex, setMentionIndex] = useState(0);
   const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [aiChecking, setAiChecking] = useState(false);
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -269,20 +294,35 @@ export default function MessageInput({
 
     if (filePreview) {
       setUploading(true);
+      setUploadProgress(0);
       try {
-        const formData = new FormData();
-        formData.append("file", filePreview.file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) {
-          setUploading(false);
-          return;
-        }
-        fileData = await res.json();
+        fileData = await new Promise<{ fileName: string; fileType: string; fileSize: number; filePath: string }>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.upload.addEventListener("progress", (e) => {
+            if (e.lengthComputable) {
+              setUploadProgress(Math.round((e.loaded / e.total) * 100));
+            }
+          });
+          xhr.addEventListener("load", () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(new Error("Upload failed"));
+            }
+          });
+          xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+          const formData = new FormData();
+          formData.append("file", filePreview.file);
+          xhr.open("POST", "/api/upload");
+          xhr.send(formData);
+        });
       } catch {
         setUploading(false);
+        setUploadProgress(0);
         return;
       }
       setUploading(false);
+      setUploadProgress(0);
     }
 
     onSend(trimmed, fileData, replyingTo?.id);
@@ -366,7 +406,15 @@ export default function MessageInput({
   }
 
   const filteredMentionUsers = mentionQuery !== null
-    ? onlineUsers.filter((u) => u.displayName.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 5)
+    ? onlineUsers
+        .filter((u) => u.displayName.toLowerCase().includes(mentionQuery.toLowerCase()))
+        .sort((a, b) => {
+          const q = mentionQuery.toLowerCase();
+          const aPrefix = a.displayName.toLowerCase().startsWith(q) ? 0 : 1;
+          const bPrefix = b.displayName.toLowerCase().startsWith(q) ? 0 : 1;
+          return aPrefix - bPrefix;
+        })
+        .slice(0, 5)
     : [];
 
   function selectMention(user: OnlineUser) {
@@ -485,17 +533,15 @@ export default function MessageInput({
       {/* File preview */}
       {filePreview && (
         <div className="flex items-center gap-2 px-4 pt-3 pb-1 animate-slide-up">
-          <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg relative overflow-hidden">
             {filePreview.previewUrl ? (
               <img
                 src={filePreview.previewUrl}
                 alt="Preview"
-                className="w-10 h-10 object-cover rounded"
+                className="w-16 h-12 object-cover rounded-lg"
               />
             ) : (
-              <div className="w-10 h-10 rounded bg-background border border-border flex items-center justify-center text-[10px] font-bold text-muted">
-                FILE
-              </div>
+              <InputFileTypeIcon type={filePreview.file.type} />
             )}
             <div className="min-w-0">
               <p className="text-sm text-foreground truncate max-w-[50vw] sm:max-w-[200px]">
@@ -503,8 +549,19 @@ export default function MessageInput({
               </p>
               <p className="text-xs text-muted">
                 {formatFileSize(filePreview.file.size)}
+                {uploading && uploadProgress > 0 && (
+                  <span className="ml-1.5 text-accent">{uploadProgress}%</span>
+                )}
               </p>
             </div>
+            {uploading && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-border">
+                <div
+                  className="h-full bg-accent transition-all duration-200 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            )}
           </div>
           <button
             onClick={() => {
@@ -652,7 +709,10 @@ export default function MessageInput({
                       i === mentionIndex ? "bg-accent/10 text-accent" : "text-foreground hover:bg-border/50"
                     }`}
                   >
-                    <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
+                    <div className="relative">
+                      <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-surface" />
+                    </div>
                     <span className="font-medium">{u.displayName}</span>
                   </button>
                 ))}
@@ -675,9 +735,12 @@ export default function MessageInput({
               style={{ transition: "height 0.12s ease-out, border-color 0.15s" }}
               className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] resize-none text-base sm:text-sm"
             />
-            {value.length > 1800 && (
+            {value.length > 1000 && (
               <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
-                value.length > 1950 ? "text-red-400" : "text-muted"
+                value.length > 1950 ? "text-red-400 font-medium"
+                : value.length > 1800 ? "text-orange-400"
+                : value.length > 1500 ? "text-yellow-500/70"
+                : "text-muted/50"
               }`}>
                 {value.length}/2000
               </span>

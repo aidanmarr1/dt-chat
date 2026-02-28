@@ -487,6 +487,26 @@ html[data-reduce-motion="true"] *::after {
   overflow: hidden;
 }
 
+/* FAB entrance animation */
+@keyframes fab-in {
+  from { opacity: 0; transform: scale(0.8) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@utility animate-fab-in {
+  animation: fab-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Toast progress bar shrink */
+@keyframes shrink-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@utility animate-shrink-bar {
+  animation: shrink-bar linear forwards;
+}
+
 /* Glass morphism utility */
 @utility glass {
   background: color-mix(in srgb, var(--bg) 80%, transparent);

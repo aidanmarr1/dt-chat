@@ -12,6 +12,7 @@ interface ToastItem {
   message: string;
   type: "success" | "info" | "error";
   action?: ToastAction;
+  duration: number;
 }
 
 interface ToastContextValue {
@@ -35,10 +36,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const toast = useCallback((message: string, type: "success" | "info" | "error" = "success", action?: ToastAction) => {
     const id = ++nextId;
-    setToasts((prev) => [...prev.slice(-2), { id, message, type, action }]);
+    const duration = action ? 4000 : 2500;
+    setToasts((prev) => [...prev.slice(-2), { id, message, type, action, duration }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, action ? 4000 : 2500);
+    }, duration);
   }, []);
 
   return (
@@ -49,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg backdrop-blur-md animate-toast-in pointer-events-auto flex items-center gap-2 ${
+            className={`rounded-xl text-sm font-medium shadow-lg backdrop-blur-md animate-toast-in pointer-events-auto overflow-hidden ${
               t.type === "success"
                 ? "bg-green-500/90 text-white shadow-green-500/20"
                 : t.type === "error"
@@ -57,30 +59,42 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 : "bg-surface/95 text-foreground border border-border shadow-black/10"
             }`}
           >
-            {t.type === "success" && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            )}
-            {t.type === "error" && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-            )}
-            {t.message}
-            {t.action && (
-              <button
-                onClick={() => {
-                  t.action!.onClick();
-                  dismiss(t.id);
-                }}
-                className={`ml-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 active:scale-95 ${
-                  t.type === "success"
-                    ? "bg-white/20 text-white"
-                    : t.type === "error"
-                    ? "bg-white/20 text-white"
-                    : "bg-accent/15 text-accent"
-                }`}
-              >
-                {t.action.label}
-              </button>
-            )}
+            <div className="flex items-center gap-2 px-4 py-2.5">
+              {t.type === "success" && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              )}
+              {t.type === "error" && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+              )}
+              {t.message}
+              {t.action && (
+                <button
+                  onClick={() => {
+                    t.action!.onClick();
+                    dismiss(t.id);
+                  }}
+                  className={`ml-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 active:scale-95 ${
+                    t.type === "success"
+                      ? "bg-white/20 text-white"
+                      : t.type === "error"
+                      ? "bg-white/20 text-white"
+                      : "bg-accent/15 text-accent"
+                  }`}
+                >
+                  {t.action.label}
+                </button>
+              )}
+            </div>
+            <div
+              className={`h-0.5 animate-shrink-bar ${
+                t.type === "success"
+                  ? "bg-white/30"
+                  : t.type === "error"
+                  ? "bg-white/30"
+                  : "bg-accent/30"
+              }`}
+              style={{ animationDuration: `${t.duration}ms` }}
+            />
           </div>
         ))}
       </div>

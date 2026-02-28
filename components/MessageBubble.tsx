@@ -36,6 +36,7 @@ interface MessageBubbleProps {
   reminderTime?: number | null;
   replyCount?: number;
   onViewThread?: (messageId: string) => void;
+  isNew?: boolean;
 }
 
 function relativeTime(dateStr: string): string {
@@ -142,6 +143,7 @@ export default function MessageBubble({
   reminderTime,
   replyCount = 0,
   onViewThread,
+  isNew,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -254,7 +256,7 @@ export default function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
-        } animate-fade-in group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
+        } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => { setHovered(false); setShowActions(false); }}
         onTouchStart={handleTouchStart}
