@@ -39,7 +39,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const secret = process.env.JWT_SECRET ?? "fallback";
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+  }
   const gateCookie = req.cookies.get("gate-passed")?.value;
 
   if (!(await verifyGateCookie(gateCookie, secret))) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
 function signGateCookie(): string {
-  const secret = process.env.JWT_SECRET ?? "fallback";
+  const secret = process.env.JWT_SECRET!;
   const sig = crypto.createHmac("sha256", secret).update("gate-passed").digest("hex");
   return sig;
 }

@@ -24,20 +24,25 @@ export async function POST(
 
   await ensurePollTables();
 
-  // Check poll exists
-  const poll = await db.select().from(polls).where(eq(polls.id, pollId)).get();
-  if (!poll) {
-    return NextResponse.json({ error: "Poll not found" }, { status: 404 });
-  }
+  // Use a transaction to prevent race conditions (double-voting + TOCTOU on poll check)
+  let pollNotFound = false;
+  let invalidOption = false;
 
-  // Validate optionId exists in the poll's options
-  const pollOptions = JSON.parse(poll.options as string) as { id: string }[];
-  if (!pollOptions.some((o) => o.id === optionId)) {
-    return NextResponse.json({ error: "Invalid option ID" }, { status: 400 });
-  }
-
-  // Use a transaction to prevent race conditions (double-voting)
   await db.transaction(async (tx) => {
+    // Check poll exists inside transaction to prevent TOCTOU
+    const poll = await tx.select().from(polls).where(eq(polls.id, pollId)).get();
+    if (!poll) {
+      pollNotFound = true;
+      return;
+    }
+
+    // Validate optionId exists in the poll's options
+    const pollOptions = JSON.parse(poll.options as string) as { id: string }[];
+    if (!pollOptions.some((o) => o.id === optionId)) {
+      invalidOption = true;
+      return;
+    }
+
     const existingVote = await tx
       .select()
       .from(pollVotes)
@@ -69,6 +74,13 @@ export async function POST(
       });
     }
   });
+
+  if (pollNotFound) {
+    return NextResponse.json({ error: "Poll not found" }, { status: 404 });
+  }
+  if (invalidOption) {
+    return NextResponse.json({ error: "Invalid option ID" }, { status: 400 });
+  }
 
   return NextResponse.json({ success: true });
 }
