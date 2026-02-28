@@ -42,7 +42,7 @@ function isAudioFile(fileName: string): boolean {
 }
 
 function renderContent(text: string, isOwn: boolean) {
-  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
+  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|~~[^~]+~~|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
   return parts.map((part, i) => {
     if (part.match(/^(https?:\/\/|www\.)/)) {
       if (isTenorUrl(part)) {
@@ -59,6 +59,9 @@ function renderContent(text: string, isOwn: boolean) {
     }
     if (part.startsWith("`") && part.endsWith("`") && part.length > 1) {
       return <code key={i} className="px-1.5 py-0.5 rounded text-[13px] font-mono border bg-background border-border">{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith("~~") && part.endsWith("~~") && part.length > 4) {
+      return <del key={i} className="opacity-60">{part.slice(2, -2)}</del>;
     }
     if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
