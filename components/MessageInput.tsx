@@ -489,6 +489,33 @@ export default function MessageInput({
     onCancelReply?.();
   }
 
+  function wrapSelection(before: string, after: string) {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = value.slice(start, end);
+    // If already wrapped, unwrap
+    const textBefore = value.slice(Math.max(0, start - before.length), start);
+    const textAfter = value.slice(end, end + after.length);
+    if (textBefore === before && textAfter === after) {
+      const newVal = value.slice(0, start - before.length) + selected + value.slice(end + after.length);
+      setValue(newVal);
+      setTimeout(() => { el.selectionStart = start - before.length; el.selectionEnd = end - before.length; el.focus(); }, 0);
+      return;
+    }
+    const newVal = value.slice(0, start) + before + selected + after + value.slice(end);
+    setValue(newVal);
+    setTimeout(() => {
+      if (selected) {
+        el.selectionStart = start + before.length;
+        el.selectionEnd = end + before.length;
+      } else {
+        el.selectionStart = el.selectionEnd = start + before.length;
+      }
+      el.focus();
+    }, 0);
+  }
 
   return (
     <div
@@ -716,6 +743,23 @@ export default function MessageInput({
                     <span className="font-medium">{u.displayName}</span>
                   </button>
                 ))}
+              </div>
+            )}
+            {/* Formatting toolbar */}
+            {value.length > 0 && (
+              <div className="absolute -top-7 left-0 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-sm border border-border rounded-lg px-1 py-0.5 shadow-sm animate-fade-in z-10">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("**", "**"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Bold (Ctrl+B)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
+                </button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("*", "*"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Italic (Ctrl+I)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
+                </button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("`", "`"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all font-mono text-[10px] font-bold" title="Code">
+                  {"</>"}
+                </button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); wrapSelection("~~", "~~"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Strikethrough">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
+                </button>
               </div>
             )}
             <textarea

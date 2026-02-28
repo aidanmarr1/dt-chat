@@ -153,12 +153,16 @@ export default function MessageBubble({
   const [showAbsoluteTime, setShowAbsoluteTime] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
+  const [swipeX, setSwipeX] = useState(0);
   const { toast } = useToast();
   const editRef = useRef<HTMLTextAreaElement>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const swipeTriggeredRef = useRef(false);
 
   useEffect(() => {
     if (editing && editRef.current) {
@@ -167,17 +171,66 @@ export default function MessageBubble({
     }
   }, [editing]);
 
-  // Long-press for mobile touch
-  function handleTouchStart() {
+  // Close context menu on click anywhere
+  useEffect(() => {
+    if (!contextMenu) return;
+    function close() { setContextMenu(null); }
+    document.addEventListener("click", close);
+    document.addEventListener("contextmenu", close);
+    return () => { document.removeEventListener("click", close); document.removeEventListener("contextmenu", close); };
+  }, [contextMenu]);
+
+  function handleContextMenu(e: React.MouseEvent) {
+    // Only on desktop (no touch)
+    if ("ontouchstart" in window) return;
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }
+
+  // Swipe-to-reply on mobile
+  function handleTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    swipeTriggeredRef.current = false;
     longPressRef.current = setTimeout(() => {
       setShowActions(true);
+      touchStartRef.current = null;
     }, 500);
   }
   function handleTouchEnd() {
     if (longPressRef.current) clearTimeout(longPressRef.current);
+    if (swipeTriggeredRef.current) {
+      onReply(message);
+    }
+    setSwipeX(0);
+    touchStartRef.current = null;
   }
-  function handleTouchMove() {
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    // If vertical scroll is dominant, cancel swipe
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+      if (longPressRef.current) clearTimeout(longPressRef.current);
+      touchStartRef.current = null;
+      setSwipeX(0);
+      return;
+    }
     if (longPressRef.current) clearTimeout(longPressRef.current);
+    // Swipe direction: right for others, left for own
+    const swipeDir = isOwn ? -dx : dx;
+    if (swipeDir > 0) {
+      const clamped = Math.min(swipeDir, 80);
+      setSwipeX(isOwn ? -clamped : clamped);
+      if (clamped >= 60 && !swipeTriggeredRef.current) {
+        swipeTriggeredRef.current = true;
+        // Haptic feedback if available
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+    } else {
+      setSwipeX(0);
+    }
   }
 
   function handleCopy() {
@@ -252,18 +305,28 @@ export default function MessageBubble({
 
   return (
     <>
+      <div className="relative overflow-hidden -mx-2 px-2">
+        {/* Swipe-to-reply indicator */}
+        {swipeX !== 0 && (
+          <div className={`absolute top-1/2 -translate-y-1/2 ${isOwn ? "right-3" : "left-3"} flex items-center justify-center w-8 h-8 rounded-full transition-all ${Math.abs(swipeX) >= 60 ? "bg-accent text-background scale-110" : "bg-surface border border-border text-muted scale-100"}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+            </svg>
+          </div>
+        )}
       <div
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
-        } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg -mx-2 px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
+        } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => { setHovered(false); setShowActions(false); }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}
+        onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
-        style={{ userSelect: "text", WebkitUserSelect: "text" }}
+        style={{ userSelect: "text", WebkitUserSelect: "text", transform: swipeX ? `translateX(${swipeX}px)` : undefined, transition: swipeX ? "none" : "transform 0.25s ease-out" }}
       >
         {/* Avatar for others */}
         {!isOwn && !isGrouped && (
@@ -638,6 +701,56 @@ export default function MessageBubble({
           )}
         </div>
       </div>
+      </div>
+
+      {/* Desktop right-click context menu */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-2xl shadow-black/20 py-1 min-w-[160px] animate-fade-scale"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <button onClick={() => { onReply(message); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-border/50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
+            Reply
+          </button>
+          <button onClick={() => { handleCopy(); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-border/50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+            Copy
+          </button>
+          <button onClick={() => { onPin(message.id); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-border/50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={message.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={message.isPinned ? "text-accent" : "text-muted"}>
+              <line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+            </svg>
+            {message.isPinned ? "Unpin" : "Pin"}
+          </button>
+          {onBookmark && (
+            <button onClick={() => { onBookmark(message.id); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-border/50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isBookmarked ? "text-accent" : "text-muted"}>
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+              </svg>
+              {isBookmarked ? "Remove Bookmark" : "Bookmark"}
+            </button>
+          )}
+          {canEdit && (
+            <>
+              <div className="h-px bg-border mx-2 my-0.5" />
+              <button onClick={() => { startEdit(); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-border/50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                Edit
+              </button>
+            </>
+          )}
+          {isOwn && (
+            <>
+              <div className="h-px bg-border mx-2 my-0.5" />
+              <button onClick={() => { onDelete(message.id); setContextMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {lightboxSrc && <ImageLightbox src={lightboxSrc} alt={message.fileName || "Image"} onClose={() => setLightboxSrc(null)} />}
       {showReminderPicker && onReminder && (

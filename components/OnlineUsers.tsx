@@ -9,9 +9,10 @@ interface OnlineUsersProps {
   users: OnlineUser[];
   count: number;
   currentUserId?: string;
+  typingUsers?: string[];
 }
 
-export default function OnlineUsers({ users, count, currentUserId }: OnlineUsersProps) {
+export default function OnlineUsers({ users, count, currentUserId, typingUsers = [] }: OnlineUsersProps) {
   const [open, setOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -87,10 +88,22 @@ export default function OnlineUsers({ users, count, currentUserId }: OnlineUsers
                 <div className="min-w-0 flex-1">
                   <span className="text-sm text-foreground truncate block">
                     {u.displayName}
+                    {u.id === currentUserId && (
+                      <span className="ml-1.5 text-[9px] font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">You</span>
+                    )}
                   </span>
-                  {u.status && (
+                  {typingUsers.includes(u.displayName) ? (
+                    <span className="text-[10px] text-accent truncate block flex items-center gap-1">
+                      typing
+                      <span className="inline-flex gap-[2px]">
+                        {[0, 1, 2].map((i) => (
+                          <span key={i} className="w-[3px] h-[3px] bg-accent rounded-full inline-block" style={{ animation: "pulse-dot 1.4s infinite ease-in-out", animationDelay: `${i * 0.2}s` }} />
+                        ))}
+                      </span>
+                    </span>
+                  ) : u.status ? (
                     <span className="text-[10px] text-muted truncate block">{u.status}</span>
-                  )}
+                  ) : null}
                 </div>
               </button>
             ))}

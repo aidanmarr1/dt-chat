@@ -210,7 +210,7 @@ export default function ChatRoom() {
     }
   }
 
-  // Update page title with unread indicator
+  // Update page title with unread indicator + clear on tab focus
   useEffect(() => {
     if (showNewMessages && unreadCount > 0) {
       document.title = `(${unreadCount}) D&T Chat`;
@@ -220,6 +220,18 @@ export default function ChatRoom() {
       document.title = "D&T Chat";
     }
   }, [showNewMessages, unreadCount]);
+
+  useEffect(() => {
+    function handleVisibility() {
+      if (!document.hidden && isAtBottom) {
+        setShowNewMessages(false);
+        setUnreadCount(0);
+        document.title = "D&T Chat";
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isAtBottom]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -982,7 +994,7 @@ export default function ChatRoom() {
               {user?.status || "Set status"}
             </button>
           </div>
-          <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} />
+          <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Media gallery */}
