@@ -673,7 +673,7 @@ export default function MessageBubble({
 
           {/* Quick reactions row — desktop only */}
           {hovered && !showReactionPicker && !showActions && !editing && (
-            <div className={`absolute ${isOwn ? "-left-1 -translate-x-full" : "-right-1 translate-x-full"} -top-16 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-md border border-border rounded-full shadow-lg px-1 py-0.5 animate-fade-scale z-10`}>
+            <div className={`absolute ${isOwn ? "-left-1 -translate-x-full" : "-right-1 translate-x-full"} -top-11 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-md border border-border rounded-full shadow-lg px-1 py-0.5 animate-fade-scale z-10`}>
               {["👍", "❤️", "😂", "😮", "😢"].map((emoji, i) => (
                 <button
                   key={emoji}
