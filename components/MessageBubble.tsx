@@ -58,6 +58,7 @@ interface MessageBubbleProps {
   replyCount?: number;
   onViewThread?: (messageId: string) => void;
   isNew?: boolean;
+  onImageClick?: (src: string) => void;
 }
 
 function relativeTime(dateStr: string): string {
@@ -143,7 +144,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 }
 
 function renderInline(text: string, isOwn: boolean, keyPrefix: string) {
-  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|~~[^~]+~~|\*\*[^*]+\*\*|\*[^*]+\*|@\w+)/g);
+  const parts = text.split(/(https?:\/\/[^\s<]+|www\.[^\s<]+|`[^`]+`|~~[^~]+~~|\*\*[^*]+\*\*|\*[^*]+\*|@\w+|[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/g);
   return parts.map((part, i) => {
     const key = `${keyPrefix}-${i}`;
     if (part.match(/^(https?:\/\/|www\.)/)) {
@@ -154,6 +155,13 @@ function renderInline(text: string, isOwn: boolean, keyPrefix: string) {
       return (
         <a key={key} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
           {displayText}
+        </a>
+      );
+    }
+    if (part.match(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)) {
+      return (
+        <a key={key} href={`mailto:${part}`} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
+          {part}
         </a>
       );
     }
@@ -250,6 +258,7 @@ export default function MessageBubble({
   replyCount = 0,
   onViewThread,
   isNew,
+  onImageClick,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -556,7 +565,7 @@ export default function MessageBubble({
                         src={fileUrl}
                         alt={message.fileName || "Image"}
                         className={`max-w-full max-h-64 rounded-lg cursor-pointer hover:opacity-90 hover:shadow-lg transition-all ${!imageLoaded ? "h-0 overflow-hidden" : ""}`}
-                        onClick={() => setLightboxSrc(fileUrl)}
+                        onClick={() => onImageClick ? onImageClick(fileUrl!) : setLightboxSrc(fileUrl)}
                         onLoad={() => setImageLoaded(true)}
                       />
                     </div>

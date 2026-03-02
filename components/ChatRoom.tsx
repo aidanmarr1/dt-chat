@@ -21,6 +21,7 @@ import ThreadPanel from "./ThreadPanel";
 import TodoPanel from "./TodoPanel";
 import ConfirmDialog from "./ConfirmDialog";
 import KeyboardShortcuts from "./KeyboardShortcuts";
+import ImageLightbox from "./ImageLightbox";
 import { useToast } from "./Toast";
 import { playNotificationSound } from "@/lib/sounds";
 import type { Message, User, OnlineUser, Bookmark, Reminder } from "@/lib/types";
@@ -82,7 +83,6 @@ export default function ChatRoom() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<{ src: string; alt: string }[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const unreadSeparatorIdRef = useRef<string | null>(null);
@@ -849,6 +849,25 @@ export default function ChatRoom() {
     return map;
   }, [messages]);
 
+  // Collect all images for lightbox navigation
+  const allImages = useMemo(() => {
+    const imgs: { src: string; alt: string; messageId: string }[] = [];
+    for (const msg of messages) {
+      if (msg.isDeleted) continue;
+      if (msg.fileType?.startsWith("image/") && msg.filePath) {
+        const src = msg.filePath.startsWith("http") ? msg.filePath : `/api/files/${msg.filePath}`;
+        imgs.push({ src, alt: msg.fileName || "Image", messageId: msg.id });
+      }
+    }
+    return imgs;
+  }, [messages]);
+
+  function openLightbox(imageSrc: string) {
+    const idx = allImages.findIndex((img) => img.src === imageSrc);
+    setLightboxIndex(idx >= 0 ? idx : 0);
+    setShowLightbox(true);
+  }
+
   const threadParent = threadParentId ? messages.find((m) => m.id === threadParentId) : null;
   const threadReplies = threadParentId ? messages.filter((m) => m.replyToId === threadParentId) : [];
 
@@ -923,6 +942,7 @@ export default function ChatRoom() {
           replyCount={replyCountMap.get(msg.id) || 0}
           onViewThread={handleViewThread}
           isNew={isNew}
+          onImageClick={openLightbox}
         />
       );
     }
@@ -987,7 +1007,10 @@ export default function ChatRoom() {
       <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
           <div className="flex items-center gap-2">
-            <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+              <span className={`w-1.5 h-1.5 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
+            </div>
             <button
               onClick={() => setShowStatusPicker(true)}
               className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:border-accent text-muted hover:text-accent transition-all truncate max-w-[140px] flex items-center gap-1"
@@ -999,7 +1022,14 @@ export default function ChatRoom() {
               {user?.status || "Set status"}
             </button>
           </div>
-          <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
+          <div className="flex items-center gap-2">
+            <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
+            {messages.length > 0 && (
+              <span className="hidden sm:inline text-[10px] text-muted/60 tabular-nums" title={`${messages.length} messages`}>
+                {messages.length} msg{messages.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Media gallery */}
@@ -1161,6 +1191,10 @@ export default function ChatRoom() {
 
       {/* Messages */}
       <div className="flex-1 relative overflow-hidden">
+        {/* Scroll shadow: top */}
+        <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent z-[5] pointer-events-none transition-opacity duration-200 ${headerShadow ? "opacity-100" : "opacity-0"}`} />
+        {/* Scroll shadow: bottom */}
+        <div className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent z-[5] pointer-events-none transition-opacity duration-200 ${!isAtBottom ? "opacity-100" : "opacity-0"}`} />
         <div
           ref={scrollContainerRef}
           className="absolute inset-0 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth"
@@ -1185,16 +1219,27 @@ export default function ChatRoom() {
               ))}
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+            <div className="flex flex-col items-center justify-center h-full gap-5">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center animate-fade-in" style={{ animationDelay: "0.5s" }}>
+                  <span className="text-[10px]">✨</span>
+                </div>
               </div>
-              <div className="text-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                <p className="text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
+              <div className="text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
+                <p className="text-lg text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
                 <p className="text-muted text-sm">No messages yet — start the conversation!</p>
-                <p className="text-muted/50 text-xs mt-2">Press <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> to focus input</p>
+              </div>
+              <div className="flex items-center gap-3 text-muted/50 text-xs animate-fade-in" style={{ animationDelay: "0.4s" }}>
+                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> focus</span>
+                <span className="w-px h-3 bg-border" />
+                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">@</kbd> mention</span>
+                <span className="w-px h-3 bg-border" />
+                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">?</kbd> shortcuts</span>
               </div>
             </div>
           ) : (
@@ -1255,6 +1300,17 @@ export default function ChatRoom() {
       {/* Keyboard shortcuts overlay */}
       {showShortcuts && (
         <KeyboardShortcuts onClose={() => setShowShortcuts(false)} />
+      )}
+
+      {/* Global image lightbox with navigation */}
+      {showLightbox && allImages.length > 0 && (
+        <ImageLightbox
+          src={allImages[lightboxIndex]?.src || ""}
+          alt={allImages[lightboxIndex]?.alt || ""}
+          onClose={() => setShowLightbox(false)}
+          images={allImages}
+          initialIndex={lightboxIndex}
+        />
       )}
     </div>
   );

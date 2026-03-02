@@ -13,7 +13,10 @@ function formatDateLabel(dateStr: string): string {
   if (date.toDateString() === today.toDateString()) return "Today";
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
 
+  // Show day-of-week for dates within the last 7 days
+  const daysDiff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  if (daysDiff < 7) opts.weekday = "long";
   if (date.getFullYear() !== today.getFullYear()) opts.year = "numeric";
   return date.toLocaleDateString("en-US", opts);
 }
