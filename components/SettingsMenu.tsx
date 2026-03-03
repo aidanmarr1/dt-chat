@@ -327,7 +327,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
   }
 
   const accentHex = ACCENT_COLORS.find(c => c.id === accentColor)?.[theme === "dark" ? "dark" : "light"] ?? "#FCAA26";
-  const fontSizePreviewPx = fontSize === "small" ? "13px" : fontSize === "large" ? "15px" : "14px";
+
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     {
@@ -400,7 +400,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
       />
 
       {/* Mobile: full-screen sheet from bottom. Desktop: centered modal */}
-      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[560px] sm:h-[min(38rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[680px] sm:h-[min(85dvh,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
 
         {/* === MOBILE HEADER === */}
         <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-border sm:hidden relative">
@@ -486,13 +486,13 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
           <div key={tab} className="animate-tab-enter">
           {/* Profile (merged Account + Avatar) */}
           {tab === "profile" && (
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Profile</h3>
-              <p className="text-xs text-muted mb-5">Your identity and how you appear</p>
+              <p className="text-xs text-muted mb-4">Your identity and how you appear</p>
 
               {/* Profile card with accent gradient banner */}
-              <div className="mb-5 rounded-xl bg-background border border-border overflow-hidden animate-settings-item" style={stagger(0)}>
-                <div className="h-20 relative" style={{ background: `linear-gradient(135deg, ${accentHex}55, ${accentHex}20, transparent)` }}>
+              <div className="mb-4 rounded-xl bg-background border border-border overflow-hidden animate-settings-item" style={stagger(0)}>
+                <div className="h-16 relative" style={{ background: `linear-gradient(135deg, ${accentHex}55, ${accentHex}20, transparent)` }}>
                   <div className="absolute -bottom-6 left-4">
                     <div className="ring-4 ring-background rounded-full" style={{ boxShadow: `0 0 20px ${accentHex}33` }}>
                       <Avatar displayName={user.displayName} userId={user.id} avatarId={user.avatarId} size="lg" />
@@ -538,7 +538,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
               </div>
 
               {/* Avatar section */}
-              <div className="mt-6 pt-5 border-t border-border animate-settings-item" style={stagger(4)}>
+              <div className="mt-5 pt-4 border-t border-border animate-settings-item" style={stagger(4)}>
                 <SectionLabel icon={
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -571,11 +571,11 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
           {/* Appearance — pure visual settings */}
           {tab === "appearance" && (
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Appearance</h3>
-              <p className="text-xs text-muted mb-5">Customize how things look</p>
+              <p className="text-xs text-muted mb-4">Customize how things look</p>
 
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {/* Theme section — 3 cards */}
                 <div className="animate-settings-item" style={stagger(0)}>
                   <SectionLabel icon={
@@ -593,7 +593,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                           : "border-border hover:border-muted"
                       }`}
                     >
-                      <div className="rounded-lg overflow-hidden border border-[#2C2C2C] bg-[#141414] p-2 mb-2">
+                      <div className="rounded-lg overflow-hidden border border-[#2C2C2C] bg-[#141414] p-2 mb-1.5">
                         <div className="h-1.5 w-6 rounded-full bg-[#2C2C2C] mb-1.5" />
                         <div className="flex gap-1">
                           <div className="h-2.5 flex-1 rounded bg-[#FAFAFA] opacity-90" />
@@ -621,7 +621,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                           : "border-border hover:border-muted"
                       }`}
                     >
-                      <div className="rounded-lg overflow-hidden border border-[#E5E5E5] bg-[#F9F9F9] p-2 mb-2">
+                      <div className="rounded-lg overflow-hidden border border-[#E5E5E5] bg-[#F9F9F9] p-2 mb-1.5">
                         <div className="h-1.5 w-6 rounded-full bg-[#E5E5E5] mb-1.5" />
                         <div className="flex gap-1">
                           <div className="h-2.5 flex-1 rounded bg-[#141414] opacity-90" />
@@ -650,7 +650,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       }`}
                     >
                       {/* Half-dark / half-light mockup */}
-                      <div className="rounded-lg overflow-hidden border border-border mb-2 flex">
+                      <div className="rounded-lg overflow-hidden border border-border mb-1.5 flex">
                         <div className="flex-1 bg-[#141414] p-2">
                           <div className="h-1.5 w-4 rounded-full bg-[#2C2C2C] mb-1.5" />
                           <div className="h-2.5 w-full rounded bg-[#FAFAFA] opacity-90 mb-1" />
@@ -679,44 +679,21 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
                     </svg>
                   }>Accent Color</SectionLabel>
-                  <div className="p-3.5 rounded-xl bg-background border border-border">
+                  <div className="p-3 rounded-xl bg-background border border-border">
                     <div className="grid grid-cols-7 gap-2">
                       {ACCENT_COLORS.map((c) => (
-                        <div key={c.id} className="flex flex-col items-center gap-1">
-                          <button
-                            onClick={() => handleAccentColorChange(c.id)}
-                            className={`w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95 ${
-                              accentColor === c.id
-                                ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110"
-                                : "hover:ring-1 hover:ring-border"
-                            }`}
-                            style={{ backgroundColor: theme === "dark" ? c.dark : c.light }}
-                          />
-                          <span className={`text-[9px] font-medium ${accentColor === c.id ? "text-accent" : "text-muted"}`}>{c.label}</span>
-                        </div>
+                        <button
+                          key={c.id}
+                          title={c.label}
+                          onClick={() => handleAccentColorChange(c.id)}
+                          className={`w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95 mx-auto ${
+                            accentColor === c.id
+                              ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110"
+                              : "hover:ring-1 hover:ring-border"
+                          }`}
+                          style={{ backgroundColor: theme === "dark" ? c.dark : c.light }}
+                        />
                       ))}
-                    </div>
-                    {/* Mini chat preview showing accent in action */}
-                    <div className="mt-3 p-3 rounded-lg bg-surface border border-border/50">
-                      <p className="text-[10px] text-muted mb-2 uppercase tracking-wider">Preview</p>
-                      <div className="space-y-1.5">
-                        <div className="flex justify-start">
-                          <div className="px-3 py-1.5 rounded-xl bg-background border border-border rounded-bl-sm max-w-[80%]">
-                            <p className="text-xs text-foreground">Hey <span className="font-semibold text-accent">@you</span>, check this out</p>
-                          </div>
-                        </div>
-                        <div className="flex justify-end">
-                          <div className="px-3 py-1.5 rounded-xl bg-foreground text-background rounded-br-sm max-w-[80%]">
-                            <p className="text-xs">Looks great!</p>
-                          </div>
-                        </div>
-                        <div className="flex justify-start">
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-border text-[10px]">
-                            <span style={{ color: accentHex }}>+1</span>
-                            <span>reaction</span>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -730,17 +707,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                   }>Messages</SectionLabel>
                   <div className="space-y-3">
                     {/* Bubble style */}
-                    <div className="p-3.5 rounded-xl bg-background border border-border">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">Bubble style</p>
-                          <p className="text-[11px] text-muted">Choose message bubble appearance</p>
-                        </div>
+                    <div className="p-3 rounded-xl bg-background border border-border">
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-foreground">Bubble style</p>
+                        <p className="text-[11px] text-muted">Choose message bubble appearance</p>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         {/* Modern */}
@@ -786,19 +756,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                     </div>
 
                     {/* Font size */}
-                    <div className="p-3.5 rounded-xl bg-background border border-border">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="4 7 4 4 20 4 20 7" />
-                            <line x1="9" y1="20" x2="15" y2="20" />
-                            <line x1="12" y1="4" x2="12" y2="20" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">Font size</p>
-                          <p className="text-[11px] text-muted">Adjust message text size</p>
-                        </div>
+                    <div className="p-3 rounded-xl bg-background border border-border">
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-foreground">Font size</p>
+                        <p className="text-[11px] text-muted">Adjust message text size</p>
                       </div>
                       <SegmentedControl
                         value={fontSize}
@@ -809,36 +770,13 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         ]}
                         onChange={(id) => handleFontSizeChange(id as FontSize)}
                       />
-                      {/* Live chat preview */}
-                      <div className="mt-3 p-3 rounded-lg bg-surface border border-border/50">
-                        <p className="text-[10px] text-muted mb-2 uppercase tracking-wider">Preview</p>
-                        <div className="space-y-1.5">
-                          <div className="flex justify-start">
-                            <div className="px-3 py-1.5 rounded-xl bg-background border border-border rounded-bl-sm max-w-[75%]">
-                              <p style={{ fontSize: fontSizePreviewPx }} className="text-foreground">Hey, how&apos;s it going?</p>
-                            </div>
-                          </div>
-                          <div className="flex justify-end">
-                            <div className="px-3 py-1.5 rounded-xl bg-foreground text-background rounded-br-sm max-w-[75%]">
-                              <p style={{ fontSize: fontSizePreviewPx }}>Pretty good! Just working on the project.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                     </div>
 
                     {/* Chat density */}
-                    <div className="p-3.5 rounded-xl bg-background border border-border">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">Message density</p>
-                          <p className="text-[11px] text-muted">Adjust spacing between messages</p>
-                        </div>
+                    <div className="p-3 rounded-xl bg-background border border-border">
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-foreground">Message density</p>
+                        <p className="text-[11px] text-muted">Adjust spacing between messages</p>
                       </div>
                       <SegmentedControl
                         value={density}
@@ -864,18 +802,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
                     </svg>
                   }>Accessibility</SectionLabel>
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M5 12h14" />
-                          <path d="M12 5v14" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">Reduce motion</p>
-                        <p className="text-[11px] text-muted">{reduceMotion ? "Animations disabled" : "Disable animations and transitions"}</p>
-                      </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">Reduce motion</p>
+                      <p className="text-[11px] text-muted">{reduceMotion ? "Animations disabled" : "Disable animations and transitions"}</p>
                     </div>
                     <ToggleSwitch on={reduceMotion} onToggle={handleReduceMotionToggle} />
                   </div>
@@ -886,41 +816,25 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
           {/* Chat — behavior & input settings */}
           {tab === "chat" && (
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Chat</h3>
-              <p className="text-xs text-muted mb-5">How the chat behaves</p>
+              <p className="text-xs text-muted mb-4">How the chat behaves</p>
 
               <div className="space-y-3">
                 {/* Enter to send */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 10 4 15 9 20" />
-                        <path d="M20 4v7a4 4 0 0 1-4 4H4" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Enter to send</p>
-                      <p className="text-[11px] text-muted">{enterToSend ? "Enter sends, Shift+Enter for new line" : "Cmd+Enter sends, Enter for new line"}</p>
-                    </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">Enter to send</p>
+                    <p className="text-[11px] text-muted">{enterToSend ? "Enter sends, Shift+Enter for new line" : "Cmd+Enter sends, Enter for new line"}</p>
                   </div>
                   <ToggleSwitch on={enterToSend} onToggle={handleEnterToSendToggle} />
                 </div>
 
                 {/* Time format */}
-                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(1)}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Time format</p>
-                      <p className="text-[11px] text-muted">How timestamps are displayed</p>
-                    </div>
+                <div className="p-3 rounded-xl bg-background border border-border animate-settings-item" style={stagger(1)}>
+                  <div className="mb-2">
+                    <p className="text-sm font-medium text-foreground">Time format</p>
+                    <p className="text-[11px] text-muted">How timestamps are displayed</p>
                   </div>
                   <SegmentedControl
                     value={timeFormat}
@@ -933,24 +847,17 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 </div>
 
                 {/* AI Writing Assistant */}
-                <div className="p-3.5 rounded-xl bg-background border border-border animate-settings-item" style={stagger(2)}>
+                <div className="p-3 rounded-xl bg-background border border-border animate-settings-item" style={stagger(2)}>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                        </svg>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
-                        <p className="text-[11px] text-muted">Checks spelling & grammar before sending</p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">AI Writing Assistant</p>
+                      <p className="text-[11px] text-muted">Checks spelling & grammar before sending</p>
                     </div>
                     <div className="opacity-50 cursor-not-allowed pointer-events-none">
                       <ToggleSwitch on={true} onToggle={() => {}} />
                     </div>
                   </div>
-                  <p className="text-[10px] text-muted/70 mt-2 ml-12 italic">Due to platform restrictions, this option is currently unable to be disabled. This is being worked on and will be able to be turned off in the near future.</p>
+                  <p className="text-[10px] text-muted/70 mt-2 ml-0 italic">Due to platform restrictions, this option is currently unable to be disabled. This is being worked on and will be able to be turned off in the near future.</p>
                 </div>
               </div>
             </div>
@@ -958,58 +865,25 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
           {/* Notifications */}
           {tab === "notifications" && (
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Notifications</h3>
-              <p className="text-xs text-muted mb-5">Manage how you get notified</p>
+              <p className="text-xs text-muted mb-4">Manage how you get notified</p>
 
               <div className="space-y-3">
                 {/* Sound */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      {soundEnabled ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                          <line x1="23" y1="9" x2="17" y2="15" />
-                          <line x1="17" y1="9" x2="23" y2="15" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Sounds</p>
-                      <p className="text-[11px] text-muted">{soundEnabled ? "Play sounds for new messages" : "Sounds disabled"}</p>
-                    </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">Sounds</p>
+                    <p className="text-[11px] text-muted">{soundEnabled ? "Play sounds for new messages" : "Sounds disabled"}</p>
                   </div>
                   <ToggleSwitch on={soundEnabled} onToggle={onSoundToggle} />
                 </div>
 
                 {/* Browser notifications */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(1)}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-surface border border-border flex items-center justify-center text-muted shrink-0">
-                      {notificationsEnabled ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                          <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Browser notifications</p>
-                      <p className="text-[11px] text-muted">{notificationsEnabled ? "Get notified when away" : "Notifications disabled"}</p>
-                    </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(1)}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">Browser notifications</p>
+                    <p className="text-[11px] text-muted">{notificationsEnabled ? "Get notified when away" : "Notifications disabled"}</p>
                   </div>
                   <ToggleSwitch on={notificationsEnabled} onToggle={onNotificationsToggle} />
                 </div>
@@ -1021,9 +895,9 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
           {/* Shortcuts */}
           {tab === "shortcuts" && (
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-5">
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Keyboard Shortcuts</h3>
-              <p className="text-xs text-muted mb-5">Quick actions for power users</p>
+              <p className="text-xs text-muted mb-4">Quick actions for power users</p>
 
               <div className="space-y-1">
                 {SHORTCUTS.map((s, i) => (
