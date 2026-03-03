@@ -96,6 +96,7 @@ export default function ChatRoom() {
   const lastSeenCountRef = useRef(0);
   const messagesRef = useRef<Message[]>([]);
   const pendingMessageIdsRef = useRef<Set<string>>(new Set());
+  const pendingDeleteIdsRef = useRef<Set<string>>(new Set());
   const router = useRouter();
   const { toast } = useToast();
 
@@ -398,9 +399,21 @@ export default function ChatRoom() {
               for (const id of pendingMessageIdsRef.current) {
                 if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
               }
-              return pendingMsgs.length > 0
+              let merged = pendingMsgs.length > 0
                 ? [...newMessages, ...pendingMsgs]
                 : newMessages;
+              // Preserve isDeleted for optimistically deleted messages
+              if (pendingDeleteIdsRef.current.size > 0) {
+                merged = merged.map((m) =>
+                  pendingDeleteIdsRef.current.has(m.id) ? { ...m, isDeleted: true } : m
+                );
+                // Clean up once server confirms deletion
+                for (const id of pendingDeleteIdsRef.current) {
+                  const serverMsg = newMessages.find((m) => m.id === id);
+                  if (serverMsg?.isDeleted) pendingDeleteIdsRef.current.delete(id);
+                }
+              }
+              return merged;
             });
 
             if (isNearBottom()) {
@@ -425,9 +438,20 @@ export default function ChatRoom() {
               for (const id of pendingMessageIdsRef.current) {
                 if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
               }
-              return pendingMsgs.length > 0
+              let merged = pendingMsgs.length > 0
                 ? [...newMessages, ...pendingMsgs]
                 : newMessages;
+              // Preserve isDeleted for optimistically deleted messages
+              if (pendingDeleteIdsRef.current.size > 0) {
+                merged = merged.map((m) =>
+                  pendingDeleteIdsRef.current.has(m.id) ? { ...m, isDeleted: true } : m
+                );
+                for (const id of pendingDeleteIdsRef.current) {
+                  const serverMsg = newMessages.find((m) => m.id === id);
+                  if (serverMsg?.isDeleted) pendingDeleteIdsRef.current.delete(id);
+                }
+              }
+              return merged;
             });
           }
         }
@@ -567,6 +591,10 @@ export default function ChatRoom() {
     const messageId = deleteConfirmId;
     if (!messageId) return;
     setDeleteConfirmId(null);
+
+    // Track optimistic deletion so polling doesn't overwrite it
+    pendingDeleteIdsRef.current.add(messageId);
+    setTimeout(() => pendingDeleteIdsRef.current.delete(messageId), 10000);
 
     // Optimistically mark as deleted
     setMessages((prev) =>

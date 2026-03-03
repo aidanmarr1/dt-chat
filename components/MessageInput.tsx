@@ -865,6 +865,9 @@ export default function MessageInput({
                 ref={editorRef}
                 contentEditable
                 suppressContentEditableWarning
+                spellCheck={false}
+                autoCorrect="off"
+                autoCapitalize="off"
                 role="textbox"
                 aria-multiline="true"
                 aria-placeholder={placeholder}
