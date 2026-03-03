@@ -74,6 +74,7 @@ export interface OnlineUser {
 
 export interface Reminder {
   id: string;
+  userId?: string;
   messageId: string;
   messagePreview: string;
   reminderTime: number;
@@ -99,6 +100,8 @@ export interface MessagesResponse {
 }
 
 export interface Bookmark {
+  id: string;
+  userId?: string;
   messageId: string;
   content: string;
   displayName: string;

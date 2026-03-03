@@ -133,19 +133,91 @@ export default function ChatRoom() {
     }
     const tf = localStorage.getItem("dt-time-format");
     if (tf === "24h") setTimeFormat("24h");
-    // Load bookmarks
-    try {
-      const storedBookmarks = localStorage.getItem("dt-bookmarks");
-      if (storedBookmarks) setBookmarks(JSON.parse(storedBookmarks));
-    } catch { /* ignore */ }
     // Load reduce motion preference
     const rm = localStorage.getItem("dt-reduce-motion");
     if (rm === "true") setReduceMotion(true);
-    // Load reminders
-    try {
-      const storedReminders = localStorage.getItem("dt-reminders");
-      if (storedReminders) setReminders(JSON.parse(storedReminders));
-    } catch { /* ignore */ }
+
+    // Load bookmarks from DB
+    fetch("/api/bookmarks")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.bookmarks && data.bookmarks.length > 0) {
+          setBookmarks(data.bookmarks);
+        } else {
+          // One-time migration from localStorage
+          try {
+            const stored = localStorage.getItem("dt-bookmarks");
+            if (stored) {
+              const local: Bookmark[] = JSON.parse(stored);
+              if (local.length > 0) {
+                Promise.all(
+                  local.map((b) =>
+                    fetch("/api/bookmarks", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(b),
+                    }).then((r) => r.json())
+                  )
+                ).then((results) => {
+                  const migrated = results
+                    .filter((r) => r.bookmark)
+                    .map((r) => r.bookmark);
+                  if (migrated.length > 0) setBookmarks(migrated);
+                  localStorage.removeItem("dt-bookmarks");
+                });
+              }
+            }
+          } catch { /* ignore */ }
+        }
+      })
+      .catch(() => {
+        // Fallback: load from localStorage if API fails
+        try {
+          const stored = localStorage.getItem("dt-bookmarks");
+          if (stored) setBookmarks(JSON.parse(stored));
+        } catch { /* ignore */ }
+      });
+
+    // Load reminders from DB
+    fetch("/api/reminders")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reminders && data.reminders.length > 0) {
+          setReminders(data.reminders);
+        } else {
+          // One-time migration from localStorage
+          try {
+            const stored = localStorage.getItem("dt-reminders");
+            if (stored) {
+              const local: Reminder[] = JSON.parse(stored);
+              if (local.length > 0) {
+                Promise.all(
+                  local.map((r) =>
+                    fetch("/api/reminders", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(r),
+                    }).then((res) => res.json())
+                  )
+                ).then((results) => {
+                  const migrated = results
+                    .filter((r) => r.reminder)
+                    .map((r) => r.reminder);
+                  if (migrated.length > 0) setReminders(migrated);
+                  localStorage.removeItem("dt-reminders");
+                });
+              }
+            }
+          } catch { /* ignore */ }
+        }
+      })
+      .catch(() => {
+        // Fallback: load from localStorage if API fails
+        try {
+          const stored = localStorage.getItem("dt-reminders");
+          if (stored) setReminders(JSON.parse(stored));
+        } catch { /* ignore */ }
+      });
 
     // Sync settings from DB (DB is authoritative for cross-device sync)
     fetchSettings().then(s => {
@@ -673,31 +745,61 @@ export default function ChatRoom() {
   }
 
   function handleBookmark(messageId: string) {
-    setBookmarks((prev) => {
-      const exists = prev.find((b) => b.messageId === messageId);
-      let next: Bookmark[];
-      if (exists) {
-        next = prev.filter((b) => b.messageId !== messageId);
-        toast("Bookmark removed");
-      } else {
-        const msg = messages.find((m) => m.id === messageId);
-        if (!msg) return prev;
-        next = [
-          {
-            messageId: msg.id,
-            content: msg.content,
-            displayName: msg.displayName,
-            createdAt: msg.createdAt,
-            bookmarkedAt: new Date().toISOString(),
-            fileName: msg.fileName,
-          },
-          ...prev,
-        ];
-        toast("Message bookmarked");
-      }
-      localStorage.setItem("dt-bookmarks", JSON.stringify(next));
-      return next;
-    });
+    const exists = bookmarks.find((b) => b.messageId === messageId);
+    if (exists) {
+      // Optimistic remove
+      const prev = bookmarks;
+      setBookmarks((b) => b.filter((x) => x.messageId !== messageId));
+      toast("Bookmark removed");
+      fetch("/api/bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId }),
+      }).catch(() => {
+        setBookmarks(prev);
+        toast("Failed to remove bookmark", "error");
+      });
+    } else {
+      const msg = messages.find((m) => m.id === messageId);
+      if (!msg) return;
+      const newBookmark: Bookmark = {
+        id: crypto.randomUUID(),
+        messageId: msg.id,
+        content: msg.content,
+        displayName: msg.displayName,
+        createdAt: msg.createdAt,
+        bookmarkedAt: new Date().toISOString(),
+        fileName: msg.fileName,
+      };
+      // Optimistic add
+      const prev = bookmarks;
+      setBookmarks((b) => [newBookmark, ...b]);
+      toast("Message bookmarked");
+      fetch("/api/bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageId: msg.id,
+          content: msg.content,
+          displayName: msg.displayName,
+          createdAt: msg.createdAt,
+          fileName: msg.fileName,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.bookmark) {
+            // Update with server-assigned id
+            setBookmarks((b) =>
+              b.map((x) => (x.id === newBookmark.id ? { ...x, id: data.bookmark.id } : x))
+            );
+          }
+        })
+        .catch(() => {
+          setBookmarks(prev);
+          toast("Failed to bookmark message", "error");
+        });
+    }
   }
 
   async function handleVote(pollId: string, optionId: string) {
@@ -814,43 +916,87 @@ export default function ChatRoom() {
   function handleSetReminder(messageId: string, reminderTime: number) {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
+    const tempId = crypto.randomUUID();
     const reminder: Reminder = {
-      id: crypto.randomUUID(),
+      id: tempId,
       messageId,
       messagePreview: msg.content?.slice(0, 100) || msg.fileName || "Message",
       reminderTime,
       createdAt: Date.now(),
     };
-    setReminders((prev) => {
-      const next = [...prev, reminder];
-      localStorage.setItem("dt-reminders", JSON.stringify(next));
-      return next;
-    });
+    // Optimistic add
+    const prev = reminders;
+    setReminders((r) => [...r, reminder]);
     toast("Reminder set");
+    fetch("/api/reminders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messageId,
+        messagePreview: reminder.messagePreview,
+        reminderTime,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reminder) {
+          setReminders((r) =>
+            r.map((x) => (x.id === tempId ? { ...x, id: data.reminder.id } : x))
+          );
+        }
+      })
+      .catch(() => {
+        setReminders(prev);
+        toast("Failed to set reminder", "error");
+      });
   }
 
   function handleDeleteReminder(reminderId: string) {
-    setReminders((prev) => {
-      const next = prev.filter((r) => r.id !== reminderId);
-      localStorage.setItem("dt-reminders", JSON.stringify(next));
-      return next;
-    });
+    // Optimistic remove
+    const prev = reminders;
+    setReminders((r) => r.filter((x) => x.id !== reminderId));
     toast("Reminder removed");
+    fetch(`/api/reminders/${reminderId}`, { method: "DELETE" }).catch(() => {
+      setReminders(prev);
+      toast("Failed to delete reminder", "error");
+    });
   }
 
   // Snooze a reminder
   function handleSnoozeReminder(reminder: Reminder, minutes: number) {
+    const tempId = crypto.randomUUID();
     const snoozed: Reminder = {
       ...reminder,
-      id: crypto.randomUUID(),
+      id: tempId,
       reminderTime: Date.now() + minutes * 60 * 1000,
     };
-    setReminders((prev) => {
-      const next = [...prev, snoozed];
-      localStorage.setItem("dt-reminders", JSON.stringify(next));
-      return next;
-    });
+    // Optimistic: remove old, add snoozed
+    const prev = reminders;
+    setReminders((r) => [...r, snoozed]);
     toast(`Snoozed for ${minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`}`);
+    // Delete old + create new via API
+    fetch(`/api/reminders/${reminder.id}`, { method: "DELETE" }).catch(() => {});
+    fetch("/api/reminders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messageId: snoozed.messageId,
+        messagePreview: snoozed.messagePreview,
+        reminderTime: snoozed.reminderTime,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reminder) {
+          setReminders((r) =>
+            r.map((x) => (x.id === tempId ? { ...x, id: data.reminder.id } : x))
+          );
+        }
+      })
+      .catch(() => {
+        setReminders(prev);
+        toast("Failed to snooze reminder", "error");
+      });
   }
 
   // Check reminders periodically — use messagesRef to avoid restarting interval on every poll
@@ -864,11 +1010,12 @@ export default function ChatRoom() {
       const messageIds = new Set(currentMessages.map((m) => m.id));
       const orphans = reminders.filter((r) => !messageIds.has(r.messageId) && currentMessages.length > 0);
       if (orphans.length > 0) {
-        setReminders((prev) => {
-          const next = prev.filter((r) => messageIds.has(r.messageId) || currentMessages.length === 0);
-          localStorage.setItem("dt-reminders", JSON.stringify(next));
-          return next;
-        });
+        for (const o of orphans) {
+          fetch(`/api/reminders/${o.id}`, { method: "DELETE" }).catch(() => {});
+        }
+        setReminders((prev) =>
+          prev.filter((r) => messageIds.has(r.messageId) || currentMessages.length === 0)
+        );
       }
 
       const due = reminders.filter((r) => r.reminderTime <= now && messageIds.has(r.messageId));
@@ -885,11 +1032,11 @@ export default function ChatRoom() {
         }
         scrollToMessage(r.messageId);
       }
-      setReminders((prev) => {
-        const next = prev.filter((r) => r.reminderTime > now);
-        localStorage.setItem("dt-reminders", JSON.stringify(next));
-        return next;
-      });
+      // Delete fired reminders from DB
+      for (const r of due) {
+        fetch(`/api/reminders/${r.id}`, { method: "DELETE" }).catch(() => {});
+      }
+      setReminders((prev) => prev.filter((r) => r.reminderTime > now));
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -93,6 +93,34 @@ export const todos = sqliteTable("todos", {
   position: integer("position").notNull().default(0),
 });
 
+export const bookmarks = sqliteTable("bookmarks", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  messageId: text("message_id")
+    .notNull()
+    .references(() => messages.id),
+  content: text("content"),
+  displayName: text("display_name"),
+  createdAt: text("created_at"),
+  fileName: text("file_name"),
+  bookmarkedAt: integer("bookmarked_at").notNull(),
+});
+
+export const reminders = sqliteTable("reminders", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  messageId: text("message_id")
+    .notNull()
+    .references(() => messages.id),
+  messagePreview: text("message_preview"),
+  reminderTime: integer("reminder_time").notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
 export const pollVotes = sqliteTable("pollVotes", {
   id: text("id").primaryKey(),
   pollId: text("poll_id")

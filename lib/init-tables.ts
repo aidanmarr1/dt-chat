@@ -81,3 +81,39 @@ export async function ensureTodoTable() {
   `);
   todoInitialized = true;
 }
+
+let bookmarkInitialized = false;
+
+export async function ensureBookmarkTable() {
+  if (bookmarkInitialized) return;
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      message_id TEXT NOT NULL REFERENCES messages(id),
+      content TEXT,
+      display_name TEXT,
+      created_at TEXT,
+      file_name TEXT,
+      bookmarked_at INTEGER NOT NULL
+    )
+  `);
+  bookmarkInitialized = true;
+}
+
+let reminderInitialized = false;
+
+export async function ensureReminderTable() {
+  if (reminderInitialized) return;
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS reminders (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      message_id TEXT NOT NULL REFERENCES messages(id),
+      message_preview TEXT,
+      reminder_time INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+  reminderInitialized = true;
+}
