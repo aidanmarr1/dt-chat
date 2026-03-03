@@ -51,20 +51,29 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`rounded-xl text-sm font-medium shadow-lg backdrop-blur-md animate-toast-in pointer-events-auto overflow-hidden ${
+            className={`rounded-2xl text-sm font-medium shadow-xl backdrop-blur-xl animate-toast-in pointer-events-auto overflow-hidden ${
               t.type === "success"
-                ? "bg-green-500/90 text-white shadow-green-500/20"
+                ? "bg-green-500/90 text-white shadow-green-500/25"
                 : t.type === "error"
-                ? "bg-red-500/90 text-white shadow-red-500/20"
-                : "bg-surface/95 text-foreground border border-border shadow-black/10"
+                ? "bg-red-500/90 text-white shadow-red-500/25"
+                : "bg-surface/95 text-foreground border border-border shadow-black/15"
             }`}
           >
-            <div className="flex items-center gap-2 px-4 py-2.5">
+            <div className="flex items-center gap-2.5 px-4 py-2.5">
               {t.type === "success" && (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                </div>
               )}
               {t.type === "error" && (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </div>
+              )}
+              {t.type === "info" && (
+                <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                </div>
               )}
               {t.message}
               {t.action && (

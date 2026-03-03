@@ -942,7 +942,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
     <>
       <button
         onClick={() => { setOpen(true); setTab("profile"); }}
-        className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+        className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
         title="Settings"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

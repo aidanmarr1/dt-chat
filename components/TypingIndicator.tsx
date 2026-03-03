@@ -25,7 +25,7 @@ export default function TypingIndicator({ users, onlineUsers = [] }: TypingIndic
 
   return (
     <div className="px-4 py-1.5 animate-fade-in">
-      <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-sm border border-border/50 text-xs text-muted">
+      <div className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-full bg-surface/80 backdrop-blur-sm border border-border/50 text-xs text-muted shadow-sm">
         {/* Typing user avatars */}
         <div className="flex items-center -space-x-1">
           {typingOnlineUsers.map((u, i) =>

@@ -51,7 +51,7 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
       >
         {/* Avatar stack */}
         <div className="flex items-center -space-x-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-online-pulse glow-green mr-1" />
+          <span className="relative w-2 h-2 rounded-full bg-green-500 glow-green mr-1 animate-online-ring" />
           {previewUsers.map((u, i) => (
             <div key={u.id} className="ring-2 ring-background rounded-full transition-transform group-hover:translate-x-0" style={{ zIndex: 3 - i }}>
               <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />

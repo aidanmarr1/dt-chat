@@ -1224,12 +1224,12 @@ export default function ChatRoom() {
       )}
 
       {/* Header */}
-      <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
+      <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-2">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5">
               <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
-              <span className={`w-1.5 h-1.5 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
+              <span className={`relative w-1.5 h-1.5 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500 animate-online-ring"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
             </div>
             <button
               onClick={() => setShowStatusPicker(true)}
@@ -1255,7 +1255,7 @@ export default function ChatRoom() {
           {/* Media gallery */}
           <button
             onClick={() => setShowMediaGallery(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
             title="Media gallery"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1265,7 +1265,7 @@ export default function ChatRoom() {
           {/* Bookmarks */}
           <button
             onClick={() => setShowBookmarks(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
             title="Bookmarks"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1280,7 +1280,7 @@ export default function ChatRoom() {
           {/* To-Do */}
           <button
             onClick={() => setShowTodos(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
             title="To-do list"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1295,7 +1295,7 @@ export default function ChatRoom() {
           {/* Reminders */}
           <button
             onClick={() => setShowReminders(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
             title="Reminders"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1311,7 +1311,7 @@ export default function ChatRoom() {
           {/* Search */}
           <button
             onClick={() => setShowSearch(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95"
+            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
             title="Search (Ctrl+F)"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1441,13 +1441,13 @@ export default function ChatRoom() {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-5">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float">
+                <div className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float shadow-lg shadow-accent/5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                 </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center animate-fade-in" style={{ animationDelay: "0.5s" }}>
-                  <span className="text-[10px]">✨</span>
+                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center animate-spring-in" style={{ animationDelay: "0.5s" }}>
+                  <span className="text-xs">✨</span>
                 </div>
               </div>
               <div className="text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
