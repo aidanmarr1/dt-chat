@@ -276,6 +276,7 @@ export default function MessageBubble({
   const [showHeartPop, setShowHeartPop] = useState(false);
   const { toast } = useToast();
   const editRef = useRef<HTMLTextAreaElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const swipeTriggeredRef = useRef(false);
@@ -287,6 +288,10 @@ export default function MessageBubble({
       editRef.current.selectionStart = editRef.current.value.length;
     }
   }, [editing]);
+
+  useEffect(() => {
+    return () => { if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current); };
+  }, []);
 
   // Close context menu on click anywhere
   useEffect(() => {
@@ -454,8 +459,8 @@ export default function MessageBubble({
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
         } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => { setHovered(false); setShowActions(false); }}
+        onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
+        onMouseLeave={() => { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); }, 150); }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
