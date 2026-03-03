@@ -25,6 +25,7 @@ html, html[data-theme="dark"] {
   --mtd: #A1A1A1;
   --acc: #FCAA26;
   --acc-rgb: 252, 170, 38;
+  color-scheme: dark;
 }
 
 /* Light theme */
@@ -36,6 +37,17 @@ html[data-theme="light"] {
   --mtd: #737373;
   --acc: #E09500;
   --acc-rgb: 224, 149, 0;
+  color-scheme: light;
+}
+
+/* Override browser autofill white background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--srf) inset !important;
+  -webkit-text-fill-color: var(--fg) !important;
+  caret-color: var(--fg);
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* === Accent color overrides === */
