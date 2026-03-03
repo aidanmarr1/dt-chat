@@ -86,6 +86,7 @@ export default function ChatRoom() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const unreadSeparatorIdRef = useRef<string | null>(null);
+  const unreadSeparatorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const todoCountFetched = useRef(false);
   const newMessageIdsRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -93,8 +94,13 @@ export default function ChatRoom() {
   const latestMessageIdRef = useRef<string | null>(null);
   const lastReadReceiptRef = useRef<string | null>(null);
   const lastSeenCountRef = useRef(0);
+  const messagesRef = useRef<Message[]>([]);
+  const pendingMessageIdsRef = useRef<Set<string>>(new Set());
   const router = useRouter();
   const { toast } = useToast();
+
+  // Keep messagesRef in sync with state (avoids stale closures in polling/intervals)
+  messagesRef.current = messages;
 
   // Track online/offline status
   useEffect(() => {
@@ -348,12 +354,15 @@ export default function ChatRoom() {
           const latestId = newMessages[newMessages.length - 1].id;
           if (latestId !== latestMessageIdRef.current) {
             const prevLatest = latestMessageIdRef.current;
-            // Track new messages (arrived after initial load)
+            // Track new messages (arrived after initial load) — use ref to avoid stale closure
             if (prevLatest) {
-              const existingIds = new Set(messages.map((m) => m.id));
+              const existingIds = new Set(messagesRef.current.map((m) => m.id));
               for (const nm of newMessages) {
                 if (!existingIds.has(nm.id)) {
                   newMessageIdsRef.current.add(nm.id);
+                  // Auto-clear after 3s so animation doesn't replay
+                  const nmId = nm.id;
+                  setTimeout(() => newMessageIdsRef.current.delete(nmId), 3000);
                   // Set unread separator to first new message when user is scrolled up
                   if (!isNearBottom() && !unreadSeparatorIdRef.current) {
                     unreadSeparatorIdRef.current = nm.id;
@@ -378,22 +387,48 @@ export default function ChatRoom() {
             }
 
             latestMessageIdRef.current = latestId;
-            setMessages(newMessages);
+
+            // Merge: keep any pending optimistic messages the server hasn't returned yet
+            const serverIds = new Set(newMessages.map((m) => m.id));
+            setMessages((prev) => {
+              const pendingMsgs = prev.filter(
+                (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
+              );
+              // Clean up pending IDs that the server now knows about
+              for (const id of pendingMessageIdsRef.current) {
+                if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
+              }
+              return pendingMsgs.length > 0
+                ? [...newMessages, ...pendingMsgs]
+                : newMessages;
+            });
 
             if (isNearBottom()) {
               setTimeout(() => scrollToBottom(), 50);
               postReadReceipt(latestId);
               lastSeenCountRef.current = newMessages.length;
             } else {
-              // Count unread since user scrolled up
+              // Absolute unread count formula — avoids stale closure issues
               const newCount = newMessages.length - lastSeenCountRef.current;
               if (newCount > 0) {
-                setUnreadCount((prev) => prev + (newMessages.length - (messages.length || lastSeenCountRef.current)));
+                setUnreadCount(newCount);
               }
               setShowNewMessages(true);
             }
           } else {
-            setMessages(newMessages);
+            // Same latest ID — still merge pending messages
+            const serverIds = new Set(newMessages.map((m) => m.id));
+            setMessages((prev) => {
+              const pendingMsgs = prev.filter(
+                (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
+              );
+              for (const id of pendingMessageIdsRef.current) {
+                if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
+              }
+              return pendingMsgs.length > 0
+                ? [...newMessages, ...pendingMsgs]
+                : newMessages;
+            });
           }
         }
       } catch {
@@ -415,7 +450,11 @@ export default function ChatRoom() {
       lastSeenCountRef.current = messages.length;
       // Clear unread separator after a delay so user sees it briefly
       if (unreadSeparatorIdRef.current) {
-        setTimeout(() => { unreadSeparatorIdRef.current = null; }, 5000);
+        if (unreadSeparatorTimeoutRef.current) clearTimeout(unreadSeparatorTimeoutRef.current);
+        unreadSeparatorTimeoutRef.current = setTimeout(() => {
+          unreadSeparatorIdRef.current = null;
+          unreadSeparatorTimeoutRef.current = null;
+        }, 5000);
       }
     }
   }, [isAtBottom, messages.length]);
@@ -443,6 +482,10 @@ export default function ChatRoom() {
             ? data.message.createdAt
             : new Date(data.message.createdAt).toISOString(),
       };
+
+      // Track as pending so polling merges it until server catches up
+      pendingMessageIdsRef.current.add(newMsg.id);
+      setTimeout(() => pendingMessageIdsRef.current.delete(newMsg.id), 10000);
 
       setMessages((prev) => {
         lastSeenCountRef.current = prev.length + 1;
@@ -782,18 +825,19 @@ export default function ChatRoom() {
     toast(`Snoozed for ${minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`}`);
   }
 
-  // Check reminders periodically
+  // Check reminders periodically — use messagesRef to avoid restarting interval on every poll
   useEffect(() => {
     if (reminders.length === 0) return;
     const interval = setInterval(() => {
       const now = Date.now();
+      const currentMessages = messagesRef.current;
 
       // Orphan cleanup: remove reminders whose message no longer exists
-      const messageIds = new Set(messages.map((m) => m.id));
-      const orphans = reminders.filter((r) => !messageIds.has(r.messageId) && messages.length > 0);
+      const messageIds = new Set(currentMessages.map((m) => m.id));
+      const orphans = reminders.filter((r) => !messageIds.has(r.messageId) && currentMessages.length > 0);
       if (orphans.length > 0) {
         setReminders((prev) => {
-          const next = prev.filter((r) => messageIds.has(r.messageId) || messages.length === 0);
+          const next = prev.filter((r) => messageIds.has(r.messageId) || currentMessages.length === 0);
           localStorage.setItem("dt-reminders", JSON.stringify(next));
           return next;
         });
@@ -821,7 +865,7 @@ export default function ChatRoom() {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reminders, messages, soundEnabled]);
+  }, [reminders, soundEnabled]);
 
   // === Feature 3: Status handler ===
   async function handleSetStatus(status: string | null, expiresIn?: number | null) {
