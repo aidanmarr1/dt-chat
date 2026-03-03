@@ -692,7 +692,7 @@ export default function MessageBubble({
                 <button
                   key={emoji}
                   onClick={() => onReaction(message.id, emoji)}
-                  className="w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-border hover:scale-125 active:scale-90 transition-all"
+                  className="w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-border active:scale-90 transition-all"
                   style={{ animationDelay: `${i * 20}ms` }}
                 >
                   {emoji}
