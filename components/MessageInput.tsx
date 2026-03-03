@@ -305,6 +305,20 @@ export default function MessageInput({
     }
   }
 
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.detail > 1) return;
+    const sel = window.getSelection();
+    if (!sel || !sel.isCollapsed) return;
+    let range: Range | null = null;
+    if (document.caretRangeFromPoint) {
+      range = document.caretRangeFromPoint(e.clientX, e.clientY);
+    }
+    if (range) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+
   function handlePaste(e: React.ClipboardEvent<HTMLDivElement>) {
     // Check for pasted images first
     const files = e.clipboardData.files;
@@ -883,6 +897,7 @@ export default function MessageInput({
                 onInput={handleInput}
                 onKeyDown={handleKeyDown}
                 onBeforeInput={handleBeforeInput}
+                onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
                 className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
