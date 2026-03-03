@@ -315,8 +315,9 @@ export default function ChatRoom() {
   // Keyboard shortcuts
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable) return;
       if (e.key === "/") {
         e.preventDefault();
         document.querySelector<HTMLTextAreaElement>("textarea")?.focus();
