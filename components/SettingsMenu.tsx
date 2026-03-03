@@ -400,7 +400,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
       />
 
       {/* Mobile: full-screen sheet from bottom. Desktop: centered modal */}
-      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[680px] sm:h-[min(85dvh,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[860px] sm:h-[min(38rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
 
         {/* === MOBILE HEADER === */}
         <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-border sm:hidden relative">
