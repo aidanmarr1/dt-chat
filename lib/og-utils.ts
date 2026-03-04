@@ -1,8 +1,11 @@
 export function extractUrls(text: string): string[] {
   const urlRegex = /https?:\/\/[^\s<]+/g;
   const matches = text.match(urlRegex) || [];
-  // Filter out Tenor GIF URLs since those render inline
-  return matches.filter((url) => !url.includes("tenor.com/") && !url.includes("media.tenor.com/"));
+  // Strip trailing punctuation that gets captured when URLs appear mid-sentence
+  return matches
+    .map(url => url.replace(/[.,;:!?)]+$/, ''))
+    // Filter out Tenor GIF URLs since those render inline
+    .filter((url) => !url.includes("tenor.com/") && !url.includes("media.tenor.com/"));
 }
 
 export function isUrlSafe(urlStr: string): boolean {

@@ -367,8 +367,14 @@ export default function MessageInput({
       }
     }
 
+    // Skip autocorrect for messages that are only URLs
+    const isLinksOnly = (() => {
+      const withoutUrls = markdown.replace(/https?:\/\/[^\s<]+/g, "").trim();
+      return withoutUrls.length === 0;
+    })();
+
     // AI message check — auto-correct and send (always enabled)
-    if (markdown && !filePreview) {
+    if (markdown && !filePreview && !isLinksOnly) {
       setAiChecking(true);
       try {
         const res = await fetch("/api/check-message", {
