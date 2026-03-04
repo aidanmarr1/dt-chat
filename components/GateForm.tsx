@@ -29,6 +29,7 @@ export default function GateForm() {
         setShaking(true);
         setTimeout(() => setShaking(false), 500);
         setPassword("");
+        setLoading(false);
       } else {
         setSuccess(true);
         setTimeout(() => router.push("/auth"), 700);

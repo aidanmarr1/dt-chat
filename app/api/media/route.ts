@@ -33,7 +33,7 @@ export async function GET() {
     fileSize: r.fileSize || 0,
     filePath: r.filePath!,
     displayName: r.displayName,
-    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : new Date(Number(r.createdAt) * 1000).toISOString(),
   }));
 
   return NextResponse.json({ media });

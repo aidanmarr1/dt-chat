@@ -66,7 +66,9 @@ function flushSettings() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
     keepalive: true,
-  }).catch(() => {});
+  }).catch(() => {
+    Object.assign(pendingUpdates, updates);
+  });
 }
 
 // Flush pending changes before page unload so nothing is lost
