@@ -83,19 +83,21 @@ export async function fetchOpenGraph(url: string): Promise<{
     if (!contentType.includes("text/html")) return null;
 
     const html = await res.text();
-    // Some sites (e.g. Amazon) put OG tags far into the HTML after large inline scripts
-    const scanLimit = html.slice(0, 100000);
+
+    // Extract all <meta> tags from the full HTML (sites like YouTube put OG tags 600k+ chars deep)
+    const metaTags = html.match(/<meta[^>]*(?:property|name|content)=[^>]*>/gi) || [];
+    const metaBlock = metaTags.join("\n");
 
     const getMetaContent = (property: string): string | undefined => {
       const regex = new RegExp(
         `<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']|<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`,
         "i"
       );
-      const match = scanLimit.match(regex);
+      const match = metaBlock.match(regex);
       return match?.[1] || match?.[2] || undefined;
     };
 
-    const title = getMetaContent("og:title") || scanLimit.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
+    const title = getMetaContent("og:title") || html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
     const description = getMetaContent("og:description") || getMetaContent("description");
     const rawImageUrl = getMetaContent("og:image");
     const siteName = getMetaContent("og:site_name") || getMetaContent("og:sitename");
