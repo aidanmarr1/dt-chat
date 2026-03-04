@@ -9,8 +9,6 @@ import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 
 const checkMessageRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
-// One-time backfill: fetch link previews for old messages that don't have them
-let backfillDone = false;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -283,49 +281,6 @@ export async function GET() {
     .where(
       sql`${users.typingAt} > ${threeSecondsAgo} AND ${users.id} != ${user.id}`
     );
-
-  // One-time backfill: fetch previews for old messages missing them
-  if (!backfillDone) {
-    backfillDone = true;
-    after(async () => {
-      try {
-        await ensureLinkPreviewTable();
-        const candidates = await db
-          .select({ id: messages.id, content: messages.content })
-          .from(messages)
-          .where(
-            sql`${messages.content} LIKE '%http%' AND ${messages.deletedAt} IS NULL AND ${messages.id} NOT IN (SELECT DISTINCT ${linkPreviews.messageId} FROM ${linkPreviews})`
-          )
-          .limit(50);
-
-        for (const msg of candidates) {
-          const urls = extractUrls(msg.content);
-          for (const url of urls.slice(0, 3)) {
-            try {
-              const og = await fetchOpenGraph(url);
-              if (og) {
-                await db.insert(linkPreviews).values({
-                  id: crypto.randomUUID(),
-                  messageId: msg.id,
-                  url,
-                  title: og.title || null,
-                  description: og.description || null,
-                  imageUrl: og.imageUrl || null,
-                  siteName: og.siteName || null,
-                  fetchedAt: new Date(),
-                });
-              }
-            } catch {
-              // skip
-            }
-          }
-        }
-      } catch {
-        // If backfill fails, allow retry on next cold start
-        backfillDone = false;
-      }
-    });
-  }
 
   return NextResponse.json({
     messages: responseMessages,

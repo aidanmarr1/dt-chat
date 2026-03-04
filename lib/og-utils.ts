@@ -43,7 +43,7 @@ export async function fetchOpenGraph(url: string): Promise<{
   if (!isUrlSafe(url)) return null;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     let currentUrl = url;
     let res: Response | null = null;
@@ -79,21 +79,22 @@ export async function fetchOpenGraph(url: string): Promise<{
     if (!contentType.includes("text/html")) return null;
 
     const html = await res.text();
-    const first32k = html.slice(0, 32000);
+    // Some sites (e.g. Amazon) put OG tags far into the HTML after large inline scripts
+    const scanLimit = html.slice(0, 100000);
 
     const getMetaContent = (property: string): string | undefined => {
       const regex = new RegExp(
         `<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']|<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`,
         "i"
       );
-      const match = first32k.match(regex);
+      const match = scanLimit.match(regex);
       return match?.[1] || match?.[2] || undefined;
     };
 
-    const title = getMetaContent("og:title") || first32k.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
+    const title = getMetaContent("og:title") || scanLimit.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
     const description = getMetaContent("og:description") || getMetaContent("description");
     const rawImageUrl = getMetaContent("og:image");
-    const siteName = getMetaContent("og:site_name");
+    const siteName = getMetaContent("og:site_name") || getMetaContent("og:sitename");
 
     if (!title && !description) return null;
 
