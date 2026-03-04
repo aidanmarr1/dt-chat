@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
 
   const q = req.nextUrl.searchParams.get("q")?.trim();
-  if (!q || q.length < 2) {
+  if (!q || q.length < 2 || q.length > 200) {
     return NextResponse.json({ results: [] });
   }
 

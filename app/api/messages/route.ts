@@ -226,7 +226,7 @@ export async function GET() {
           totalVotes: votes.length,
           createdBy: poll.createdBy,
           createdByName: creatorUser?.displayName || "Unknown",
-          createdAt: poll.createdAt instanceof Date ? poll.createdAt.toISOString() : String(poll.createdAt),
+          createdAt: poll.createdAt instanceof Date ? poll.createdAt.toISOString() : new Date(Number(poll.createdAt) * 1000).toISOString(),
         });
       }
     } catch {
@@ -435,12 +435,15 @@ export async function POST(req: NextRequest) {
       replyToId: replyToId || null,
       replyContent: null,
       replyDisplayName: null,
+      replyAvatarId: null,
       reactions: [],
       editedAt: null,
       isDeleted: false,
       isPinned: false,
       pinnedByName: null,
+      readBy: [],
       linkPreviews: fetchedPreviews,
+      poll: null,
     },
   });
 }
