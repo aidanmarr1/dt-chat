@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { messages } from "@/lib/schema";
+import { messages, linkPreviews } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { ensureLinkPreviewTable } from "@/lib/init-tables";
+import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 
 // Edit message
 export async function PATCH(
@@ -44,12 +46,52 @@ export async function PATCH(
     return NextResponse.json({ error: "Edit window expired (15 min)" }, { status: 400 });
   }
 
+  const trimmed = content.trim();
+
   await db
     .update(messages)
-    .set({ content: content.trim(), editedAt: new Date() })
+    .set({ content: trimmed, editedAt: new Date() })
     .where(eq(messages.id, messageId));
 
-  return NextResponse.json({ success: true });
+  // Regenerate link previews for the edited content
+  const fetchedPreviews: { id: string; url: string; title: string | null; description: string | null; imageUrl: string | null; siteName: string | null }[] = [];
+  await ensureLinkPreviewTable();
+
+  // Delete old previews for this message
+  await db.delete(linkPreviews).where(eq(linkPreviews.messageId, messageId));
+
+  // Fetch new previews
+  const urls = extractUrls(trimmed);
+  for (const url of urls.slice(0, 3)) {
+    try {
+      const og = await fetchOpenGraph(url);
+      if (og) {
+        const previewId = crypto.randomUUID();
+        await db.insert(linkPreviews).values({
+          id: previewId,
+          messageId,
+          url,
+          title: og.title || null,
+          description: og.description || null,
+          imageUrl: og.imageUrl || null,
+          siteName: og.siteName || null,
+          fetchedAt: new Date(),
+        });
+        fetchedPreviews.push({
+          id: previewId,
+          url,
+          title: og.title || null,
+          description: og.description || null,
+          imageUrl: og.imageUrl || null,
+          siteName: og.siteName || null,
+        });
+      }
+    } catch {
+      // skip failed previews
+    }
+  }
+
+  return NextResponse.json({ success: true, linkPreviews: fetchedPreviews });
 }
 
 // Delete message (soft delete)

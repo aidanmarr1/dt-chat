@@ -642,10 +642,11 @@ export default function ChatRoom() {
         body: JSON.stringify({ content }),
       });
       if (res.ok) {
+        const data = await res.json();
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === messageId
-              ? { ...msg, content, editedAt: new Date().toISOString() }
+              ? { ...msg, content, editedAt: new Date().toISOString(), linkPreviews: data.linkPreviews ?? [] }
               : msg
           )
         );
