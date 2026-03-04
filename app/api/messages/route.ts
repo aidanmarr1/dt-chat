@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -381,11 +381,12 @@ export async function POST(req: NextRequest) {
     .set({ lastActiveAt: now, typingAt: null })
     .where(eq(users.id, user.id));
 
-  // Fire-and-forget: extract URLs and fetch link previews
+  // Schedule link preview fetching after response is sent (survives serverless shutdown)
   if (finalContent) {
     const urls = extractUrls(finalContent);
     if (urls.length > 0) {
-      (async () => {
+      after(async () => {
+        await ensureLinkPreviewTable();
         for (const url of urls.slice(0, 3)) {
           try {
             const og = await fetchOpenGraph(url);
@@ -405,7 +406,7 @@ export async function POST(req: NextRequest) {
             // skip failed previews
           }
         }
-      })();
+      });
     }
   }
 
