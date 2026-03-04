@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -383,32 +383,40 @@ export async function POST(req: NextRequest) {
     .set({ lastActiveAt: now, typingAt: null })
     .where(eq(users.id, user.id));
 
-  // Schedule link preview fetching after response is sent (survives serverless shutdown)
+  // Fetch link previews synchronously before responding
+  const fetchedPreviews: { id: string; url: string; title: string | null; description: string | null; imageUrl: string | null; siteName: string | null }[] = [];
   if (finalContent) {
     const urls = extractUrls(finalContent);
     if (urls.length > 0) {
-      after(async () => {
-        await ensureLinkPreviewTable();
-        for (const url of urls.slice(0, 3)) {
-          try {
-            const og = await fetchOpenGraph(url);
-            if (og) {
-              await db.insert(linkPreviews).values({
-                id: crypto.randomUUID(),
-                messageId,
-                url,
-                title: og.title || null,
-                description: og.description || null,
-                imageUrl: og.imageUrl || null,
-                siteName: og.siteName || null,
-                fetchedAt: new Date(),
-              });
-            }
-          } catch {
-            // skip failed previews
+      await ensureLinkPreviewTable();
+      for (const url of urls.slice(0, 3)) {
+        try {
+          const og = await fetchOpenGraph(url);
+          if (og) {
+            const previewId = crypto.randomUUID();
+            await db.insert(linkPreviews).values({
+              id: previewId,
+              messageId,
+              url,
+              title: og.title || null,
+              description: og.description || null,
+              imageUrl: og.imageUrl || null,
+              siteName: og.siteName || null,
+              fetchedAt: new Date(),
+            });
+            fetchedPreviews.push({
+              id: previewId,
+              url,
+              title: og.title || null,
+              description: og.description || null,
+              imageUrl: og.imageUrl || null,
+              siteName: og.siteName || null,
+            });
           }
+        } catch {
+          // skip failed previews
         }
-      });
+      }
     }
   }
 
@@ -432,7 +440,7 @@ export async function POST(req: NextRequest) {
       isDeleted: false,
       isPinned: false,
       pinnedByName: null,
-      linkPreviews: [],
+      linkPreviews: fetchedPreviews,
     },
   });
 }
