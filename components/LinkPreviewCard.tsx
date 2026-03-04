@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { LinkPreview } from "@/lib/types";
 
 interface LinkPreviewCardProps {
@@ -8,6 +9,8 @@ interface LinkPreviewCardProps {
 }
 
 export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps) {
+  const [imgError, setImgError] = useState(false);
+
   const hostname = (() => {
     try {
       return new URL(preview.url).hostname.replace(/^www\./, "");
@@ -17,51 +20,51 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
   })();
 
   const safeUrl = preview.url.startsWith("https://") || preview.url.startsWith("http://") ? preview.url : "#";
+  const hasImage = !imgError && preview.imageUrl && preview.imageUrl.startsWith("https://");
+  const siteLabel = preview.siteName || hostname;
 
   return (
     <a
       href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block mt-2 rounded-lg border overflow-hidden transition-all hover:opacity-80 ${
+      className={`block mt-2 max-w-sm rounded-lg border overflow-hidden transition-all hover:opacity-80 ${
         isOwn
           ? "border-background/20 hover:bg-background/10"
           : "border-border hover:bg-background"
-      }`}
+      } ${!hasImage ? (isOwn ? "border-l-[3px] border-l-background/40" : "border-l-[3px] border-l-accent") : ""}`}
     >
-      <div className="flex gap-3 p-2.5">
-        {preview.imageUrl && preview.imageUrl.startsWith("https://") && (
-          <img
-            src={preview.imageUrl}
-            alt=""
-            className="w-16 h-16 rounded-md object-cover shrink-0"
-            referrerPolicy="no-referrer"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
+      {hasImage && (
+        <img
+          src={preview.imageUrl!}
+          alt=""
+          className="w-full h-44 object-cover"
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
+      )}
+      <div className="px-3 py-2.5">
+        {siteLabel && (
+          <p className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${
+            isOwn ? "text-background/50" : "text-muted"
+          }`}>
+            {siteLabel}
+          </p>
         )}
-        <div className="min-w-0 flex-1">
-          {(preview.siteName || hostname) && (
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${
-              isOwn ? "text-background/50" : "text-muted"
-            }`}>
-              {preview.siteName || hostname}
-            </p>
-          )}
-          {preview.title && (
-            <p className={`text-sm font-medium leading-tight ${
-              isOwn ? "text-background" : "text-foreground"
-            }`} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-              {preview.title}
-            </p>
-          )}
-          {preview.description && (
-            <p className={`text-xs mt-0.5 leading-snug ${
-              isOwn ? "text-background/60" : "text-muted"
-            }`} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-              {preview.description}
-            </p>
-          )}
-        </div>
+        {preview.title && (
+          <p className={`text-sm font-medium leading-tight ${
+            isOwn ? "text-background" : "text-foreground"
+          }`} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {preview.title}
+          </p>
+        )}
+        {preview.description && (
+          <p className={`text-xs mt-0.5 leading-snug ${
+            isOwn ? "text-background/60" : "text-muted"
+          }`} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {preview.description}
+          </p>
+        )}
       </div>
     </a>
   );
