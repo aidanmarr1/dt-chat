@@ -117,3 +117,22 @@ export async function ensureReminderTable() {
   `);
   reminderInitialized = true;
 }
+
+let linkPreviewInitialized = false;
+
+export async function ensureLinkPreviewTable() {
+  if (linkPreviewInitialized) return;
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS linkPreviews (
+      id TEXT PRIMARY KEY,
+      message_id TEXT NOT NULL REFERENCES messages(id),
+      url TEXT NOT NULL,
+      title TEXT,
+      description TEXT,
+      image_url TEXT,
+      site_name TEXT,
+      fetched_at INTEGER NOT NULL
+    )
+  `);
+  linkPreviewInitialized = true;
+}

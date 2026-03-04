@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { ensurePollTables, ensureStatusColumn } from "@/lib/init-tables";
+import { ensurePollTables, ensureStatusColumn, ensureLinkPreviewTable } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
@@ -167,9 +167,10 @@ export async function GET() {
     });
   }
 
-  // Ensure poll tables and status column exist
+  // Ensure poll tables, status column, and link preview table exist
   await ensurePollTables();
   await ensureStatusColumn();
+  await ensureLinkPreviewTable();
 
   // Enrich poll messages
   const pollMessageIds = rows

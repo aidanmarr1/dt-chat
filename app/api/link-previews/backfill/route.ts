@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 import { sql } from "drizzle-orm";
+import { ensureLinkPreviewTable } from "@/lib/init-tables";
 
 const checkBackfillRateLimit = createRateLimiter({ maxAttempts: 1, windowMs: 5 * 60 * 1000 });
 
@@ -13,6 +14,8 @@ export async function POST() {
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  await ensureLinkPreviewTable();
 
   if (!(await checkBackfillRateLimit(user.id + ":backfill"))) {
     return NextResponse.json({ error: "Rate limited. Try again in 5 minutes." }, { status: 429 });
