@@ -289,6 +289,9 @@ export async function GET() {
     backfillDone = true;
     after(async () => {
       try {
+        // Hard-delete all soft-deleted messages
+        await db.delete(messages).where(sql`${messages.deletedAt} IS NOT NULL`);
+
         await ensureLinkPreviewTable();
         const candidates = await db
           .select({ id: messages.id, content: messages.content })
