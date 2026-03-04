@@ -16,6 +16,11 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  // Ensure tables exist before querying
+  await ensureLinkPreviewTable();
+  await ensurePollTables();
+  await ensureStatusColumn();
+
   // Update caller's lastActiveAt
   await db
     .update(users)
@@ -168,10 +173,6 @@ export async function GET() {
     });
   }
 
-  // Ensure poll tables, status column, and link preview table exist
-  await ensurePollTables();
-  await ensureStatusColumn();
-  await ensureLinkPreviewTable();
 
   // Enrich poll messages
   const pollMessageIds = rows
