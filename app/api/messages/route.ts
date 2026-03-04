@@ -24,9 +24,6 @@ export async function GET() {
     .set({ lastActiveAt: new Date() })
     .where(eq(users.id, user.id));
 
-  // Hard-delete all soft-deleted messages so they never appear
-  await db.delete(messages).where(sql`${messages.deletedAt} IS NOT NULL`);
-
   // Get last 50 messages with user info
   const rows = await db
     .select({
