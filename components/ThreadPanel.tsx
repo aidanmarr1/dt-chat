@@ -203,11 +203,7 @@ export default function ThreadPanel({
                       </span>
                     </div>
                     <div className="text-sm text-foreground whitespace-pre-wrap break-words mt-0.5">
-                      {msg.isDeleted ? (
-                        <span className="italic text-muted">This message was deleted</span>
-                      ) : (
-                        renderContent(msg.content, isOwn)
-                      )}
+                      {renderContent(msg.content, isOwn)}
                     </div>
                     {renderFileAttachment(msg)}
                   </div>

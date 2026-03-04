@@ -176,7 +176,7 @@ export async function GET() {
 
   // Enrich poll messages
   const pollMessageIds = rows
-    .filter((r) => !r.deletedAt && r.content.startsWith("::poll::"))
+    .filter((r) => r.content.startsWith("::poll::"))
     .map((r) => r.content.replace("::poll::", ""));
 
   const pollMap = new Map<string, {
@@ -237,16 +237,13 @@ export async function GET() {
   // Build response messages
   const responseMessages = rows.reverse().map((row) => {
     const reply = row.replyToId ? replyMap.get(row.replyToId) : null;
-    const isDeleted = !!row.deletedAt;
-
     // Check if this is a poll message
-    const pollId = !isDeleted && row.content.startsWith("::poll::") ? row.content.replace("::poll::", "") : null;
+    const pollId = row.content.startsWith("::poll::") ? row.content.replace("::poll::", "") : null;
     const poll = pollId ? pollMap.get(pollId) ?? null : null;
 
     return {
       ...row,
-      content: isDeleted ? "" : row.content,
-      isDeleted,
+      content: row.content,
       isPinned: !!row.pinnedAt,
       pinnedByName: row.pinnedBy ? (pinnerMap.get(row.pinnedBy) ?? null) : null,
       editedAt: row.editedAt ?? null,
@@ -438,7 +435,6 @@ export async function POST(req: NextRequest) {
       replyAvatarId: null,
       reactions: [],
       editedAt: null,
-      isDeleted: false,
       isPinned: false,
       pinnedByName: null,
       readBy: [],

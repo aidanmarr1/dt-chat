@@ -57,7 +57,6 @@ export interface Message {
   replyAvatarId?: string | null;
   reactions?: MessageReaction[];
   editedAt?: string | null;
-  isDeleted?: boolean;
   isPinned?: boolean;
   pinnedByName?: string | null;
   readBy?: { userId: string; displayName: string; avatarId?: string | null }[];

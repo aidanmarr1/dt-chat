@@ -376,26 +376,7 @@ export default function MessageBubble({
   }
 
   // Check if within edit window (15 min)
-  const canEdit = isOwn && !message.isDeleted && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
-
-  // Deleted message
-  if (message.isDeleted) {
-    return (
-      <div
-        id={message.id}
-        className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isGrouped ? "mb-0.5" : "mb-3"} animate-fade-in`}
-      >
-        {!isOwn && !isGrouped && <div className="mr-2 mt-1"><Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" /></div>}
-        {!isOwn && isGrouped && <div className="w-6 mr-2" />}
-        <div className="max-w-[88%] sm:max-w-[75%]">
-          {!isOwn && !isGrouped && <p className="text-xs text-muted mb-1 px-1 font-medium">{message.displayName}</p>}
-          <div className="px-4 py-2 rounded-xl bg-surface/50 border border-border/50 italic text-muted text-sm">
-            This message was deleted
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const canEdit = isOwn && (Date.now() - new Date(message.createdAt).getTime() < 15 * 60 * 1000);
 
   const isMentioned = !isOwn && currentDisplayName && message.content
     ? new RegExp(`@${currentDisplayName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(message.content)

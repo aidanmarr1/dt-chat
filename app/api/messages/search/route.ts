@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { eq, sql, isNull } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const checkSearchRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     .from(messages)
     .innerJoin(users, eq(messages.userId, users.id))
     .where(
-      sql`${messages.content} LIKE ${"%" + escapedQ + "%"} ESCAPE '\\' AND ${isNull(messages.deletedAt)}`
+      sql`${messages.content} LIKE ${"%" + escapedQ + "%"} ESCAPE '\\'`
     )
     .orderBy(sql`${messages.createdAt} DESC`)
     .limit(20);

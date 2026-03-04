@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
       replyDisplayName: null,
       reactions: [],
       editedAt: null,
-      isDeleted: false,
       isPinned: false,
       pinnedByName: null,
       linkPreviews: [],

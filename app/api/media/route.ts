@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { and, eq, isNotNull, isNull, desc } from "drizzle-orm";
+import { eq, isNotNull, desc } from "drizzle-orm";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -22,7 +22,7 @@ export async function GET() {
     })
     .from(messages)
     .innerJoin(users, eq(messages.userId, users.id))
-    .where(and(isNotNull(messages.filePath), isNull(messages.deletedAt)))
+    .where(isNotNull(messages.filePath))
     .orderBy(desc(messages.createdAt))
     .limit(200);
 

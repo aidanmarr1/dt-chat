@@ -475,15 +475,13 @@ export default function ChatRoom() {
               let merged = pendingMsgs.length > 0
                 ? [...newMessages, ...pendingMsgs]
                 : newMessages;
-              // Preserve isDeleted for optimistically deleted messages
+              // Filter out optimistically deleted messages
               if (pendingDeleteIdsRef.current.size > 0) {
-                merged = merged.map((m) =>
-                  pendingDeleteIdsRef.current.has(m.id) ? { ...m, isDeleted: true } : m
-                );
-                // Clean up once server confirms deletion
+                merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
+                // Clean up once server confirms deletion (message absent from server)
                 for (const id of pendingDeleteIdsRef.current) {
                   const serverMsg = newMessages.find((m) => m.id === id);
-                  if (serverMsg?.isDeleted) pendingDeleteIdsRef.current.delete(id);
+                  if (!serverMsg) pendingDeleteIdsRef.current.delete(id);
                 }
               }
               return merged;
@@ -514,14 +512,12 @@ export default function ChatRoom() {
               let merged = pendingMsgs.length > 0
                 ? [...newMessages, ...pendingMsgs]
                 : newMessages;
-              // Preserve isDeleted for optimistically deleted messages
+              // Filter out optimistically deleted messages
               if (pendingDeleteIdsRef.current.size > 0) {
-                merged = merged.map((m) =>
-                  pendingDeleteIdsRef.current.has(m.id) ? { ...m, isDeleted: true } : m
-                );
+                merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
                 for (const id of pendingDeleteIdsRef.current) {
                   const serverMsg = newMessages.find((m) => m.id === id);
-                  if (serverMsg?.isDeleted) pendingDeleteIdsRef.current.delete(id);
+                  if (!serverMsg) pendingDeleteIdsRef.current.delete(id);
                 }
               }
               return merged;
@@ -666,16 +662,13 @@ export default function ChatRoom() {
     if (!messageId) return;
     setDeleteConfirmId(null);
 
-    // Track optimistic deletion so polling doesn't overwrite it
+    // Track optimistic deletion so polling doesn't re-add it
     pendingDeleteIdsRef.current.add(messageId);
     setTimeout(() => pendingDeleteIdsRef.current.delete(messageId), 10000);
 
-    // Optimistically mark as deleted
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId ? { ...msg, isDeleted: true } : msg
-      )
-    );
+    // Save message for revert, then optimistically remove it
+    const savedMsg = messages.find((m) => m.id === messageId);
+    setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
 
     try {
       const res = await fetch(`/api/messages/${messageId}`, {
@@ -684,21 +677,18 @@ export default function ChatRoom() {
       if (res.ok) {
         toast("Message deleted");
       } else {
-        // Revert on failure
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === messageId ? { ...msg, isDeleted: false } : msg
-          )
-        );
+        // Revert on failure — re-insert the saved message
+        if (savedMsg) {
+          setMessages((prev) => [...prev, savedMsg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+        }
+        pendingDeleteIdsRef.current.delete(messageId);
         toast("Failed to delete", "error");
       }
     } catch {
-      // Revert on failure
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId ? { ...msg, isDeleted: false } : msg
-        )
-      );
+      if (savedMsg) {
+        setMessages((prev) => [...prev, savedMsg].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+      }
+      pendingDeleteIdsRef.current.delete(messageId);
       toast("Failed to delete", "error");
     }
   }
@@ -1074,7 +1064,6 @@ export default function ChatRoom() {
   const allImages = useMemo(() => {
     const imgs: { src: string; alt: string; messageId: string }[] = [];
     for (const msg of messages) {
-      if (msg.isDeleted) continue;
       if (msg.fileType?.startsWith("image/") && msg.filePath) {
         const src = msg.filePath.startsWith("http") ? msg.filePath : `/api/files/${msg.filePath}`;
         imgs.push({ src, alt: msg.fileName || "Image", messageId: msg.id });
@@ -1103,7 +1092,7 @@ export default function ChatRoom() {
   const reminderMessageIds = new Set(reminders.map((r) => r.messageId));
   const reminderTimeMap = new Map(reminders.map((r) => [r.messageId, r.reminderTime]));
 
-  const pinnedMessages = messages.filter((m) => m.isPinned && !m.isDeleted);
+  const pinnedMessages = messages.filter((m) => m.isPinned);
   const showConnectionIssue = isOffline || failedPolls >= 3;
   const bookmarkedIds = new Set(bookmarks.map((b) => b.messageId));
 

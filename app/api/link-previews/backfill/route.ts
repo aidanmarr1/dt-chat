@@ -26,7 +26,7 @@ export async function POST() {
     .select({ id: messages.id, content: messages.content })
     .from(messages)
     .where(
-      sql`${messages.content} LIKE '%http%' AND ${messages.deletedAt} IS NULL AND ${messages.id} NOT IN (SELECT DISTINCT ${linkPreviews.messageId} FROM ${linkPreviews})`
+      sql`${messages.content} LIKE '%http%' AND ${messages.id} NOT IN (SELECT DISTINCT ${linkPreviews.messageId} FROM ${linkPreviews})`
     )
     .limit(20);
 
@@ -66,7 +66,7 @@ export async function POST() {
     .select({ count: sql<number>`COUNT(*)` })
     .from(messages)
     .where(
-      sql`${messages.content} LIKE '%http%' AND ${messages.deletedAt} IS NULL AND ${messages.id} NOT IN (SELECT DISTINCT ${linkPreviews.messageId} FROM ${linkPreviews})`
+      sql`${messages.content} LIKE '%http%' AND ${messages.id} NOT IN (SELECT DISTINCT ${linkPreviews.messageId} FROM ${linkPreviews})`
     );
 
   const remaining = Number(remainingResult[0]?.count ?? 0);

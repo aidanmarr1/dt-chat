@@ -27,10 +27,6 @@ export async function POST(
     return NextResponse.json({ error: "Message not found" }, { status: 404 });
   }
 
-  if (message.deletedAt) {
-    return NextResponse.json({ error: "Cannot pin deleted message" }, { status: 400 });
-  }
-
   // Accept explicit action to avoid toggle race conditions
   let body: { action?: string } = {};
   try { body = await req.json(); } catch { /* no body = toggle */ }

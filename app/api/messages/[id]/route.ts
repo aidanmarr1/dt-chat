@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { eq, inArray } from "drizzle-orm";
 import { ensureLinkPreviewTable } from "@/lib/init-tables";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
+import { cascadeDeleteMessage } from "@/lib/message-utils";
 
 // Edit message
 export async function PATCH(
@@ -34,10 +35,6 @@ export async function PATCH(
 
   if (message.userId !== user.id) {
     return NextResponse.json({ error: "Not your message" }, { status: 403 });
-  }
-
-  if (message.deletedAt) {
-    return NextResponse.json({ error: "Message deleted" }, { status: 400 });
   }
 
   // Only allow editing within 15 minutes
@@ -122,7 +119,7 @@ export async function PATCH(
   return NextResponse.json({ success: true, linkPreviews: allPreviews });
 }
 
-// Delete message (soft delete)
+// Delete message (hard delete)
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -143,14 +140,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not your message" }, { status: 403 });
   }
 
-  if (message.deletedAt) {
-    return NextResponse.json({ error: "Already deleted" }, { status: 400 });
-  }
-
-  await db
-    .update(messages)
-    .set({ deletedAt: new Date() })
-    .where(eq(messages.id, messageId));
+  await cascadeDeleteMessage(messageId);
 
   return NextResponse.json({ success: true });
 }
