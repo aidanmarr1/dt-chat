@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent, useMemo } from "react";
 import EmojiPicker from "./EmojiPicker";
 import GifPicker from "./GifPicker";
 import { useToast } from "./Toast";
@@ -634,11 +634,15 @@ export default function MessageInput({
     setValue(getPlainText(el));
   }
 
+  const lastReplyRef = useRef<Message | null>(null);
+  if (replyingTo) lastReplyRef.current = replyingTo;
+  const replyDisplay = replyingTo || lastReplyRef.current;
+
   const placeholder = replyingTo ? `Reply to ${replyingTo.displayName}...` : enterToSend ? "Type a message..." : "Type a message... (Cmd+Enter to send)";
 
   return (
     <div
-      className={`border-t border-border glass input-accent-line ${
+      className={`border-t border-border glass input-accent-line-focus ${
         dragOver ? "ring-2 ring-accent ring-inset" : ""
       }`}
       onDragOver={handleDragOver}
@@ -646,42 +650,46 @@ export default function MessageInput({
       onDrop={handleDrop}
     >
       {/* Reply preview */}
-      {replyingTo && (
-        <div className="flex items-center gap-2 px-4 pt-3 pb-1 animate-slide-up">
-          <div className="flex-1 flex items-start gap-2 px-3 py-1.5 rounded-lg bg-surface border-l-2 border-accent text-xs">
-            {replyingTo.avatarId !== undefined && (
-              <div className="shrink-0 mt-0.5">
-                <Avatar displayName={replyingTo.displayName} userId={replyingTo.userId} avatarId={replyingTo.avatarId} size="sm" />
+      <div className={`collapsible ${replyingTo ? "open" : ""}`}>
+        <div className="collapsible-inner">
+          {replyDisplay && (
+            <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+              <div className="flex-1 flex items-start gap-2 px-3 py-1.5 rounded-lg bg-surface border-l-2 border-accent text-xs">
+                {replyDisplay.avatarId !== undefined && (
+                  <div className="shrink-0 mt-0.5">
+                    <Avatar displayName={replyDisplay.displayName} userId={replyDisplay.userId} avatarId={replyDisplay.avatarId} size="sm" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="font-medium text-foreground flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <polyline points="9 17 4 12 9 7" />
+                      <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                    </svg>
+                    Replying to {replyDisplay.displayName}
+                  </span>
+                  <p className="text-muted line-clamp-2">
+                    {replyDisplay.content
+                      ? replyDisplay.content.length > 150
+                        ? replyDisplay.content.slice(0, 150) + "..."
+                        : replyDisplay.content
+                      : replyDisplay.fileName || ""}
+                  </p>
+                </div>
               </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <span className="font-medium text-foreground flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                  <polyline points="9 17 4 12 9 7" />
-                  <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+              <button
+                onClick={onCancelReply}
+                className="p-1 rounded hover:bg-surface transition-all active:scale-90 text-muted hover:text-foreground"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
-                Replying to {replyingTo.displayName}
-              </span>
-              <p className="text-muted line-clamp-2">
-                {replyingTo.content
-                  ? replyingTo.content.length > 150
-                    ? replyingTo.content.slice(0, 150) + "..."
-                    : replyingTo.content
-                  : replyingTo.fileName || ""}
-              </p>
+              </button>
             </div>
-          </div>
-          <button
-            onClick={onCancelReply}
-            className="p-1 rounded hover:bg-surface transition-all active:scale-90 text-muted hover:text-foreground"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* File preview */}
       {filePreview && (
@@ -906,7 +914,7 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_20px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12),0_0_24px_rgba(var(--acc-rgb),0.08)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
             </div>

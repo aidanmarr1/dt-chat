@@ -630,6 +630,92 @@ html[data-reduce-motion="true"] *::after {
   mask-image: linear-gradient(to top, transparent, black 2rem);
 }
 
+/* Slide out right for panel exit */
+@keyframes slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+@utility animate-slide-out-right {
+  animation: slide-out-right 0.2s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* Fade out for backdrop exit */
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@utility animate-fade-out {
+  animation: fade-out 0.2s ease-out both;
+}
+
+/* Fade scale out for modals */
+@keyframes fade-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@utility animate-fade-scale-out {
+  animation: fade-scale-out 0.15s ease-out both;
+}
+
+/* Message exit animation */
+@keyframes message-exit {
+  0% { opacity: 1; transform: scale(1); max-height: 200px; margin-bottom: 0.75rem; }
+  50% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 0; transform: scale(0.95); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+}
+
+@utility animate-message-exit {
+  animation: message-exit 0.3s ease-out both;
+}
+
+/* Message hover accent bar */
+@utility msg-hover-accent {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 2px;
+    border-radius: 9999px;
+    background: rgba(var(--acc-rgb), 0.3);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Input area accent line with focus enhancement */
+@utility input-accent-line-focus {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--acc-rgb), 0.3), rgba(var(--acc-rgb), 0.5), rgba(var(--acc-rgb), 0.3), transparent);
+    transition: height 0.2s ease, opacity 0.2s ease;
+  }
+  &:focus-within::before {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(var(--acc-rgb), 0.5), rgba(var(--acc-rgb), 0.7), rgba(var(--acc-rgb), 0.5), transparent);
+  }
+}
+
+/* Reduced motion guard for collapsible */
+@media (prefers-reduced-motion: reduce) {
+  .collapsible { transition: none; }
+}
+html[data-reduce-motion="true"] .collapsible { transition: none; }
+
 /* === Code Syntax Highlighting (hljs) === */
 /* Dark theme tokens */
 html, html[data-theme="dark"] {

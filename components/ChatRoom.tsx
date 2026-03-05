@@ -81,7 +81,9 @@ export default function ChatRoom() {
   const [todoCount, setTodoCount] = useState(0);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
@@ -666,8 +668,11 @@ export default function ChatRoom() {
     pendingDeleteIdsRef.current.add(messageId);
     setTimeout(() => pendingDeleteIdsRef.current.delete(messageId), 10000);
 
-    // Save message for revert, then optimistically remove it
+    // Save message for revert, animate exit then remove
     const savedMsg = messages.find((m) => m.id === messageId);
+    setDeletingIds((prev) => new Set(prev).add(messageId));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    setDeletingIds((prev) => { const next = new Set(prev); next.delete(messageId); return next; });
     setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
 
     try {
@@ -1153,6 +1158,7 @@ export default function ChatRoom() {
           onViewThread={handleViewThread}
           isNew={isNew}
           onImageClick={openLightbox}
+          isDeleting={deletingIds.has(msg.id)}
         />
       );
     }
@@ -1242,73 +1248,132 @@ export default function ChatRoom() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Media gallery */}
-          <button
-            onClick={() => setShowMediaGallery(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
-            title="Media gallery"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-            </svg>
-          </button>
-          {/* Bookmarks */}
-          <button
-            onClick={() => setShowBookmarks(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
-            title="Bookmarks"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-            </svg>
-            {bookmarks.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
-                {bookmarks.length > 9 ? "9+" : bookmarks.length}
-              </span>
+          {/* Desktop toolbar buttons */}
+          <div className="hidden sm:flex items-center gap-2">
+            {/* Media gallery */}
+            <button
+              onClick={() => setShowMediaGallery(true)}
+              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
+              title="Media gallery"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+              </svg>
+            </button>
+            {/* Bookmarks */}
+            <button
+              onClick={() => setShowBookmarks(true)}
+              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              title="Bookmarks"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+              </svg>
+              {bookmarks.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {bookmarks.length > 9 ? "9+" : bookmarks.length}
+                </span>
+              )}
+            </button>
+            {/* To-Do */}
+            <button
+              onClick={() => setShowTodos(true)}
+              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              title="To-do list"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+              {todoCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {todoCount > 9 ? "9+" : todoCount}
+                </span>
+              )}
+            </button>
+            {/* Reminders */}
+            <button
+              onClick={() => setShowReminders(true)}
+              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              title="Reminders"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              {reminders.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {reminders.length > 9 ? "9+" : reminders.length}
+                </span>
+              )}
+            </button>
+            {/* Search */}
+            <button
+              onClick={() => setShowSearch(true)}
+              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
+              title="Search (Ctrl+F)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+          </div>
+          {/* Mobile overflow menu */}
+          <div className="relative sm:hidden">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+              title="More"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
+              </svg>
+              {(bookmarks.length > 0 || todoCount > 0 || reminders.length > 0) && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent rounded-full" />
+              )}
+            </button>
+            {showMobileMenu && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setShowMobileMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-border rounded-xl shadow-xl z-40 overflow-hidden animate-slide-down">
+                  <button onClick={() => { setShowMediaGallery(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                    Media
+                  </button>
+                  <button onClick={() => { setShowBookmarks(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                    </svg>
+                    Bookmarks
+                    {bookmarks.length > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{bookmarks.length}</span>}
+                  </button>
+                  <button onClick={() => { setShowTodos(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                    </svg>
+                    To-Do
+                    {todoCount > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{todoCount}</span>}
+                  </button>
+                  <button onClick={() => { setShowReminders(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    Reminders
+                    {reminders.length > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{reminders.length}</span>}
+                  </button>
+                  <button onClick={() => { setShowSearch(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    Search
+                  </button>
+                </div>
+              </>
             )}
-          </button>
-          {/* To-Do */}
-          <button
-            onClick={() => setShowTodos(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
-            title="To-do list"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-            {todoCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
-                {todoCount > 9 ? "9+" : todoCount}
-              </span>
-            )}
-          </button>
-          {/* Reminders */}
-          <button
-            onClick={() => setShowReminders(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
-            title="Reminders"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-            {reminders.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
-                {reminders.length > 9 ? "9+" : reminders.length}
-              </span>
-            )}
-          </button>
-          {/* Search */}
-          <button
-            onClick={() => setShowSearch(true)}
-            className="p-2 sm:p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
-            title="Search (Ctrl+F)"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
+          </div>
           <SettingsMenu
             user={user}
             onAvatarChange={(avatarId) => setUser((prev) => prev ? { ...prev, avatarId } : prev)}

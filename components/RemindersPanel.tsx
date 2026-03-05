@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSwipeToClose } from "@/lib/hooks/useSwipeToClose";
 import type { Reminder } from "@/lib/types";
 
@@ -42,7 +42,13 @@ export default function RemindersPanel({
   onScrollTo,
   onDelete,
 }: RemindersPanelProps) {
-  const panelRef = useSwipeToClose(onClose);
+  const [isClosing, setIsClosing] = useState(false);
+  const handleClose = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(onClose, 200);
+  }, [isClosing, onClose]);
+  const panelRef = useSwipeToClose(handleClose);
   const now = Date.now();
   const sortedReminders = [...reminders].sort((a, b) => a.reminderTime - b.reminderTime);
   const upcoming = sortedReminders.filter((r) => r.reminderTime > now);
@@ -51,11 +57,11 @@ export default function RemindersPanel({
   // Escape key to close
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [handleClose]);
 
   function formatTime(ts: number): string {
     const d = new Date(ts);
@@ -81,7 +87,7 @@ export default function RemindersPanel({
         style={{ animationDelay: `${i * 50}ms` }}
         onClick={() => {
           onScrollTo(r.messageId);
-          onClose();
+          handleClose();
         }}
       >
         <div className="flex items-start justify-between gap-2">
@@ -119,8 +125,8 @@ export default function RemindersPanel({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div ref={panelRef} className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
+      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
@@ -133,7 +139,7 @@ export default function RemindersPanel({
             </div>
             <span className="text-xs text-muted">({reminders.length})</span>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">
+          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>

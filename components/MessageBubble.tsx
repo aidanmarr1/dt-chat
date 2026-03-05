@@ -59,6 +59,7 @@ interface MessageBubbleProps {
   onViewThread?: (messageId: string) => void;
   isNew?: boolean;
   onImageClick?: (src: string) => void;
+  isDeleting?: boolean;
 }
 
 function relativeTime(dateStr: string): string {
@@ -90,6 +91,19 @@ function isGifOnlyMessage(text: string): boolean {
   return isTenorUrl(trimmed) && !trimmed.includes(" ");
 }
 
+const LANG_DISPLAY: Record<string, string> = {
+  js: "JavaScript", javascript: "JavaScript",
+  ts: "TypeScript", typescript: "TypeScript",
+  py: "Python", python: "Python",
+  css: "CSS", html: "HTML", xml: "XML",
+  json: "JSON", bash: "Bash", sh: "Shell",
+  jsx: "JSX", tsx: "TSX",
+  sql: "SQL", rust: "Rust", go: "Go",
+  java: "Java", cpp: "C++", c: "C",
+  ruby: "Ruby", php: "PHP", swift: "Swift",
+  kotlin: "Kotlin", dart: "Dart",
+};
+
 function CodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -109,6 +123,8 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
     highlighted = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  const displayLang = LANG_DISPLAY[detectedLang.toLowerCase()] || detectedLang.toUpperCase() || "Code";
+
   function handleCopy() {
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -118,15 +134,18 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   return (
     <div className="relative group/code my-1.5 rounded-lg overflow-hidden border border-border bg-[#1a1a1a]">
       <div className="flex items-center justify-between px-3 py-1.5 bg-border/30 text-[10px] text-muted">
-        <span className="uppercase tracking-wider font-medium">{detectedLang || "code"}</span>
+        <span className="flex items-center gap-1.5 tracking-wider font-medium">
+          <span className="text-accent/60 font-mono text-[9px]">&lt;/&gt;</span>
+          {displayLang}
+        </span>
         <button
           onClick={handleCopy}
           className="flex items-center gap-1 px-1.5 py-0.5 rounded text-muted hover:text-foreground transition-colors"
         >
           {copied ? (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-              Copied
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400 animate-draw-check"><polyline points="20 6 9 17 4 12" /></svg>
+              <span className="text-green-400">Copied!</span>
             </>
           ) : (
             <>
@@ -259,6 +278,7 @@ export default function MessageBubble({
   onViewThread,
   isNew,
   onImageClick,
+  isDeleting,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -439,7 +459,7 @@ export default function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
-        } ${isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-foreground/[0.03] transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
+        } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
         onMouseLeave={() => { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); }, 150); }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}

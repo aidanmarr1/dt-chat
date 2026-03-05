@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ImageLightbox from "./ImageLightbox";
 import { formatFileSize } from "@/lib/file-utils";
 
@@ -23,6 +23,20 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"images" | "files">("images");
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+  const handleClose = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(onClose, 200);
+  }, [isClosing, onClose]);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") handleClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [handleClose]);
 
   useEffect(() => {
     fetch("/api/media")
@@ -65,8 +79,8 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
+      <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -75,7 +89,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
             </svg>
             <h2 className="text-base font-semibold font-heading">Media</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">
+          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
