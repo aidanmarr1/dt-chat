@@ -1237,10 +1237,9 @@ export default function ChatRoom() {
             </div>
             <div className="h-3 w-20 rounded-md animate-shimmer mt-1.5" style={{ animationDelay: "0.1s" }} />
           </div>
-          <div className="flex gap-1.5 sm:gap-2">
-            {[0.15, 0.2, 0.25, 0.3, 0.35, 0.4].map((d, i) => (
-              <div key={i} className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: `${d}s` }} />
-            ))}
+          <div className="flex gap-1">
+            <div className="flex gap-0 rounded-xl animate-shimmer h-9 w-52" style={{ animationDelay: "0.15s" }} />
+            <div className="h-9 w-9 rounded-lg animate-shimmer" style={{ animationDelay: "0.35s" }} />
           </div>
         </div>
         <div className="flex-1 px-4 py-4 space-y-5">
@@ -1309,30 +1308,30 @@ export default function ChatRoom() {
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Desktop toolbar buttons */}
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-0.5 bg-surface/50 rounded-xl p-1 border border-border/50">
             {/* Media gallery */}
             <button
               onClick={() => setShowMediaGallery(true)}
-              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95"
               title="Media gallery"
               aria-label="Media gallery"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
               </svg>
             </button>
             {/* Bookmarks */}
             <button
               onClick={() => setShowBookmarks(true)}
-              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
               title="Bookmarks"
               aria-label="Bookmarks"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
               {bookmarks.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
                   {bookmarks.length > 9 ? "9+" : bookmarks.length}
                 </span>
               )}
@@ -1340,15 +1339,15 @@ export default function ChatRoom() {
             {/* To-Do */}
             <button
               onClick={() => setShowTodos(true)}
-              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
               title="To-do list"
               aria-label="To-do list"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
               </svg>
               {todoCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
                   {todoCount > 9 ? "9+" : todoCount}
                 </span>
               )}
@@ -1356,28 +1355,29 @@ export default function ChatRoom() {
             {/* Reminders */}
             <button
               onClick={() => setShowReminders(true)}
-              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
               title="Reminders"
               aria-label="Reminders"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
               </svg>
               {reminders.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-background text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
                   {reminders.length > 9 ? "9+" : reminders.length}
                 </span>
               )}
             </button>
+            <div className="w-px h-4 bg-border/60 mx-0.5" />
             {/* Search */}
             <button
               onClick={() => setShowSearch(true)}
-              className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95"
               title="Search (Ctrl+F)"
               aria-label="Search messages"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
