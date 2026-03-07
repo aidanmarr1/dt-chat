@@ -760,17 +760,20 @@ export default function MessageInput({
       )}
 
       {/* Input row */}
-        <div className="flex items-center gap-2 p-4">
-          {/* Attach button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
-            title="Attach file"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-            </svg>
-          </button>
+        <div className="flex items-end gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3">
+          {/* Left action buttons — collapsed into a tight group */}
+          <div className="flex items-center shrink-0">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-muted hover:text-foreground hover:bg-surface rounded-lg transition-all active:scale-90"
+              title="Attach file"
+              aria-label="Attach file"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -782,70 +785,11 @@ export default function MessageInput({
             accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz,audio/*"
           />
 
-          {/* Emoji button */}
-          <div className="relative shrink-0">
-            <button
-              ref={emojiToggleRef}
-              onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
-              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
-              title="Emoji"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                <line x1="9" y1="9" x2="9.01" y2="9" />
-                <line x1="15" y1="9" x2="15.01" y2="9" />
-              </svg>
-            </button>
-            {showEmoji && (
-              <EmojiPicker
-                onSelect={insertEmoji}
-                onClose={() => setShowEmoji(false)}
-                toggleRef={emojiToggleRef}
-              />
-            )}
-          </div>
-
-          {/* GIF button */}
-          <div className="relative shrink-0">
-            <button
-              ref={gifToggleRef}
-              onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
-              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90"
-              title="GIF"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
-              </svg>
-            </button>
-            {showGif && (
-              <GifPicker
-                onSelect={handleGifSelect}
-                onClose={() => setShowGif(false)}
-                toggleRef={gifToggleRef}
-              />
-            )}
-          </div>
-
-          {/* Poll button */}
-          {onCreatePoll && (
-            <button
-              onClick={onCreatePoll}
-              className="p-2.5 text-muted hover:text-foreground hover:bg-surface rounded-xl transition-all active:scale-90 shrink-0"
-              title="Create poll"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
-                <path d="M3 3h18" /><path d="M3 9h18" /><path d="M3 15h12" /><path d="M3 21h6" />
-              </svg>
-            </button>
-          )}
-
           {/* Rich text editor */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-w-0">
             {/* Slash command dropdown */}
             {slashQuery !== null && filteredSlashCommands.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
                 {filteredSlashCommands.map((cmd, i) => (
                   <button
                     key={cmd.name}
@@ -862,7 +806,7 @@ export default function MessageInput({
             )}
             {/* Mention autocomplete dropdown */}
             {mentionQuery !== null && filteredMentionUsers.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-lg overflow-hidden z-10 animate-fade-in">
                 {filteredMentionUsers.map((u, i) => (
                   <button
                     key={u.id}
@@ -882,7 +826,7 @@ export default function MessageInput({
             )}
             {/* Formatting toolbar */}
             {value.length > 0 && (
-              <div className="absolute -top-7 left-0 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-sm border border-border rounded-lg px-1 py-0.5 shadow-sm animate-fade-in z-10">
+              <div className="absolute -top-8 left-0 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-sm border border-border rounded-lg px-1 py-0.5 shadow-sm animate-fade-in z-10">
                 <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Bold (Cmd+B)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
                 </button>
@@ -916,12 +860,71 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12),0_0_24px_rgba(var(--acc-rgb),0.08)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-3.5 py-2.5 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
+              {/* Inline action buttons inside the input area */}
+              <div className="absolute right-2 bottom-1.5 flex items-center gap-0.5">
+                <div className="relative">
+                  <button
+                    ref={emojiToggleRef}
+                    onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
+                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
+                    title="Emoji"
+                    aria-label="Insert emoji"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                      <line x1="9" y1="9" x2="9.01" y2="9" />
+                      <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>
+                  </button>
+                  {showEmoji && (
+                    <EmojiPicker
+                      onSelect={insertEmoji}
+                      onClose={() => setShowEmoji(false)}
+                      toggleRef={emojiToggleRef}
+                    />
+                  )}
+                </div>
+                <div className="relative">
+                  <button
+                    ref={gifToggleRef}
+                    onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
+                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
+                    title="GIF"
+                    aria-label="Insert GIF"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
+                    </svg>
+                  </button>
+                  {showGif && (
+                    <GifPicker
+                      onSelect={handleGifSelect}
+                      onClose={() => setShowGif(false)}
+                      toggleRef={gifToggleRef}
+                    />
+                  )}
+                </div>
+                {onCreatePoll && (
+                  <button
+                    onClick={onCreatePoll}
+                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
+                    title="Create poll"
+                    aria-label="Create poll"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                      <path d="M3 3h18" /><path d="M3 9h18" /><path d="M3 15h12" /><path d="M3 21h6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
             {value.length > 1000 && (
-              <span className={`absolute bottom-1 right-3 text-[10px] pointer-events-none animate-fade-in ${
+              <span className={`absolute bottom-1 right-24 text-[10px] pointer-events-none animate-fade-in ${
                 value.length > 1950 ? "text-red-400 font-medium"
                 : value.length > 1800 ? "text-orange-400"
                 : value.length > 1500 ? "text-yellow-500/70"
@@ -936,16 +939,19 @@ export default function MessageInput({
           <button
             onClick={handleSend}
             disabled={disabled || uploading || aiChecking || (!value.trim() && !filePreview)}
-            className={`p-2.5 bg-accent text-background rounded-xl hover:brightness-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 shadow-sm shadow-accent/20 ${justSent ? "animate-send-fly" : ""} ${(value.trim() || filePreview) && !disabled ? "animate-glow-pulse" : ""}`}
+            className={`p-2.5 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed shrink-0 active:scale-90 ${
+              (value.trim() || filePreview) && !disabled
+                ? `bg-accent text-background shadow-sm shadow-accent/25 hover:brightness-110 ${justSent ? "animate-send-fly" : ""}`
+                : "bg-surface text-muted border border-border"
+            }`}
           >
             {uploading || aiChecking ? (
               <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform block">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block">
+                <path d="m5 12 7-7 7 7" /><path d="M12 19V5" />
               </svg>
             )}
           </button>
