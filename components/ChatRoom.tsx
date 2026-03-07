@@ -801,6 +801,24 @@ export default function ChatRoom() {
     }
   }
 
+  async function handleUpdatePinLabel(messageId: string, label: string) {
+    const trimmed = label.trim();
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, pinLabel: trimmed || null } : m
+      )
+    );
+    try {
+      await fetch(`/api/messages/${messageId}/pin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: trimmed }),
+      });
+    } catch {
+      toast("Failed to update label", "error");
+    }
+  }
+
   function handleBookmark(messageId: string) {
     const exists = bookmarks.find((b) => b.messageId === messageId);
     if (exists) {
@@ -1511,6 +1529,7 @@ export default function ChatRoom() {
         messages={pinnedMessages}
         onScrollTo={scrollToMessage}
         onUnpin={handlePin}
+        onUpdateLabel={handleUpdatePinLabel}
       />
 
       {/* Messages */}

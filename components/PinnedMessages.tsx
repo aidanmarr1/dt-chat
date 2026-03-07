@@ -1,20 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Message } from "@/lib/types";
 
 interface PinnedMessagesProps {
   messages: Message[];
   onScrollTo: (messageId: string) => void;
   onUnpin: (messageId: string) => void;
+  onUpdateLabel: (messageId: string, label: string) => void;
 }
 
-export default function PinnedMessages({ messages, onScrollTo, onUnpin }: PinnedMessagesProps) {
+function EditLabelButton({ msg, onUpdateLabel }: { msg: Message; onUpdateLabel: (id: string, label: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(msg.pinLabel || "");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setValue(msg.pinLabel || "");
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 0);
+    }
+  }, [editing, msg.pinLabel]);
+
+  function save() {
+    setEditing(false);
+    const trimmed = value.trim();
+    if (trimmed !== (msg.pinLabel || "")) {
+      onUpdateLabel(msg.id, trimmed);
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setEditing(false);
+          e.stopPropagation();
+        }}
+        onClick={(e) => e.stopPropagation()}
+        maxLength={100}
+        placeholder="Add a label..."
+        className="w-28 text-xs bg-background border border-accent/40 rounded px-1.5 py-0.5 text-foreground placeholder:text-muted/50 focus:outline-none focus:border-accent"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setEditing(true);
+      }}
+      className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-muted hover:text-accent transition-all active:scale-90"
+      title="Edit label"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+        <path d="m15 5 4 4" />
+      </svg>
+    </button>
+  );
+}
+
+export default function PinnedMessages({ messages, onScrollTo, onUnpin, onUpdateLabel }: PinnedMessagesProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (messages.length === 0) return null;
 
   const latest = messages[messages.length - 1];
+  const latestDisplay = latest.pinLabel || latest.content || latest.fileName || "Pinned message";
 
   function handleBarKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" || e.key === " ") {
@@ -46,7 +108,7 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin }: Pinned
           <p className="text-xs text-foreground truncate">
             <span className="font-medium text-accent">{latest.displayName}</span>
             {": "}
-            {latest.content || latest.fileName || "Pinned message"}
+            {latestDisplay}
           </p>
         </div>
         {messages.length > 1 && (
@@ -75,12 +137,13 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin }: Pinned
                 <p className="text-xs truncate">
                   <span className="font-medium text-accent">{msg.displayName}</span>
                   <span className="text-muted"> — </span>
-                  <span className="text-foreground">{msg.content || msg.fileName || "Attachment"}</span>
+                  <span className="text-foreground">{msg.pinLabel || msg.content || msg.fileName || "Attachment"}</span>
                 </p>
                 {msg.pinnedByName && (
                   <p className="text-[10px] text-muted">Pinned by {msg.pinnedByName}</p>
                 )}
               </button>
+              <EditLabelButton msg={msg} onUpdateLabel={onUpdateLabel} />
               <button
                 onClick={() => onUnpin(msg.id)}
                 className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-surface text-muted hover:text-foreground transition-all active:scale-90"

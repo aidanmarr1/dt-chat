@@ -98,6 +98,7 @@ export async function GET(req: NextRequest) {
     editedAt: messages.editedAt,
     pinnedAt: messages.pinnedAt,
     pinnedBy: messages.pinnedBy,
+    pinLabel: messages.pinLabel,
   };
 
   const rows = beforeTimestamp
@@ -313,6 +314,7 @@ export async function GET(req: NextRequest) {
       content: row.content,
       isPinned: !!row.pinnedAt,
       pinnedByName: row.pinnedBy ? (pinnerMap.get(row.pinnedBy) ?? null) : null,
+      pinLabel: row.pinLabel ?? null,
       editedAt: row.editedAt ?? null,
       replyContent: reply?.content ?? null,
       replyDisplayName: reply?.displayName ?? null,
@@ -515,6 +517,7 @@ export async function POST(req: NextRequest) {
       editedAt: null,
       isPinned: false,
       pinnedByName: null,
+      pinLabel: null,
       readBy: [],
       linkPreviews: fetchedPreviews,
       poll: null,

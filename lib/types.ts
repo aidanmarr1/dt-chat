@@ -59,6 +59,7 @@ export interface Message {
   editedAt?: string | null;
   isPinned?: boolean;
   pinnedByName?: string | null;
+  pinLabel?: string | null;
   readBy?: { userId: string; displayName: string; avatarId?: string | null }[];
   linkPreviews?: LinkPreview[];
   poll?: Poll | null;

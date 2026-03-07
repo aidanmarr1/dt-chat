@@ -48,3 +48,36 @@ export async function POST(
 
   return NextResponse.json({ action: wantPin ? "pinned" : "unpinned" });
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkPinRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const { id: messageId } = await params;
+  const body = await req.json();
+  const label = typeof body.label === "string" ? body.label.trim().slice(0, 100) : null;
+
+  const message = await db.select().from(messages).where(eq(messages.id, messageId)).get();
+  if (!message) {
+    return NextResponse.json({ error: "Message not found" }, { status: 404 });
+  }
+  if (!message.pinnedAt) {
+    return NextResponse.json({ error: "Message is not pinned" }, { status: 400 });
+  }
+
+  await db
+    .update(messages)
+    .set({ pinLabel: label || null })
+    .where(eq(messages.id, messageId));
+
+  return NextResponse.json({ label: label || null });
+}

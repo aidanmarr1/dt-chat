@@ -31,6 +31,7 @@ export const messages = sqliteTable("messages", {
   editedAt: integer("edited_at", { mode: "timestamp" }),
   pinnedAt: integer("pinned_at", { mode: "timestamp" }),
   pinnedBy: text("pinned_by"),
+  pinLabel: text("pin_label"),
 });
 
 export const reactions = sqliteTable("reactions", {
