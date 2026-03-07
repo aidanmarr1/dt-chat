@@ -8,12 +8,17 @@ import { createRateLimiter } from "@/lib/rate-limit";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 
 const checkMessageRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
+const checkPollRateLimit = createRateLimiter({ maxAttempts: 60, windowMs: 60 * 1000 });
 
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  if (!(await checkPollRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   }
 
   // Ensure tables exist before querying
@@ -120,25 +125,23 @@ export async function GET(req: NextRequest) {
   const hasMore = rows.length === queryLimit;
   if (hasMore) rows.pop();
 
-  // Get reply info for messages that have replyToId
-  const replyIds = rows.filter((r) => r.replyToId).map((r) => r.replyToId!);
+  // Get reply info for messages that have replyToId (batched)
+  const replyIds = [...new Set(rows.filter((r) => r.replyToId).map((r) => r.replyToId!))];
   const replyMap = new Map<string, { content: string; displayName: string; avatarId: string | null }>();
 
   if (replyIds.length > 0) {
-    for (const replyId of replyIds) {
-      const reply = await db
-        .select({
-          content: messages.content,
-          displayName: users.displayName,
-          avatarId: users.avatarId,
-        })
-        .from(messages)
-        .innerJoin(users, eq(messages.userId, users.id))
-        .where(eq(messages.id, replyId))
-        .get();
-      if (reply) {
-        replyMap.set(replyId, reply);
-      }
+    const replyRows = await db
+      .select({
+        id: messages.id,
+        content: messages.content,
+        displayName: users.displayName,
+        avatarId: users.avatarId,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(sql`${messages.id} IN (${sql.join(replyIds.map((id) => sql`${id}`), sql`, `)})`);
+    for (const reply of replyRows) {
+      replyMap.set(reply.id, { content: reply.content, displayName: reply.displayName, avatarId: reply.avatarId });
     }
   }
 
@@ -154,12 +157,15 @@ export async function GET(req: NextRequest) {
         )
       : [];
 
-  // Resolve display names for reaction users
+  // Resolve display names for reaction users (batched)
   const reactionUserIds = [...new Set(allReactions.map((r) => r.userId))];
   const reactionUserNameMap = new Map<string, string>();
-  for (const uid of reactionUserIds) {
-    const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, uid)).get();
-    if (u) reactionUserNameMap.set(uid, u.displayName);
+  if (reactionUserIds.length > 0) {
+    const reactionUsers = await db
+      .select({ id: users.id, displayName: users.displayName })
+      .from(users)
+      .where(sql`${users.id} IN (${sql.join(reactionUserIds.map((id) => sql`${id}`), sql`, `)})`);
+    for (const u of reactionUsers) reactionUserNameMap.set(u.id, u.displayName);
   }
 
   // Group reactions by messageId + emoji
@@ -183,12 +189,15 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Look up pinned-by display names
+  // Look up pinned-by display names (batched)
   const pinnerIds = [...new Set(rows.filter((r) => r.pinnedBy).map((r) => r.pinnedBy!))];
   const pinnerMap = new Map<string, string>();
-  for (const pid of pinnerIds) {
-    const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, pid)).get();
-    if (u) pinnerMap.set(pid, u.displayName);
+  if (pinnerIds.length > 0) {
+    const pinnerUsers = await db
+      .select({ id: users.id, displayName: users.displayName })
+      .from(users)
+      .where(sql`${users.id} IN (${sql.join(pinnerIds.map((id) => sql`${id}`), sql`, `)})`);
+    for (const u of pinnerUsers) pinnerMap.set(u.id, u.displayName);
   }
 
   // Get all read receipts with user info
@@ -267,15 +276,18 @@ export async function GET(req: NextRequest) {
         const votes = await db.select().from(pollVotes).where(eq(pollVotes.pollId, pollId));
         const pollOptions: { id: string; text: string }[] = JSON.parse(poll.options);
 
-        // Get voter names
-        const voterIds = [...new Set(votes.map((v) => v.userId))];
+        // Get voter + creator names (batched)
+        const voterIds = [...new Set([...votes.map((v) => v.userId), poll.createdBy])];
         const voterNameMap = new Map<string, string>();
-        for (const vid of voterIds) {
-          const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, vid)).get();
-          if (u) voterNameMap.set(vid, u.displayName);
+        if (voterIds.length > 0) {
+          const voterUsers = await db
+            .select({ id: users.id, displayName: users.displayName })
+            .from(users)
+            .where(sql`${users.id} IN (${sql.join(voterIds.map((id) => sql`${id}`), sql`, `)})`);
+          for (const u of voterUsers) voterNameMap.set(u.id, u.displayName);
         }
 
-        const creatorUser = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, poll.createdBy)).get();
+        const creatorUser = { displayName: voterNameMap.get(poll.createdBy) || "Unknown" };
 
         const enrichedOptions = pollOptions.map((o) => {
           const optVotes = votes.filter((v) => v.optionId === o.id);

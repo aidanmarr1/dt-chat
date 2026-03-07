@@ -46,6 +46,36 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+/** Merge server messages with local pending/older/deleted optimistic state */
+function mergeMessages(
+  prev: Message[],
+  newMessages: Message[],
+  pendingIds: Set<string>,
+  olderIds: Set<string>,
+  pendingDeleteIds: Set<string>,
+): Message[] {
+  const serverIds = new Set(newMessages.map((m) => m.id));
+  const pendingMsgs = prev.filter(
+    (m) => pendingIds.has(m.id) && !serverIds.has(m.id)
+  );
+  const olderMsgs = prev.filter(
+    (m) => olderIds.has(m.id) && !serverIds.has(m.id)
+  );
+  // Clean up pending IDs the server now knows about
+  for (const id of pendingIds) {
+    if (serverIds.has(id)) pendingIds.delete(id);
+  }
+  let merged = [...olderMsgs, ...newMessages, ...pendingMsgs];
+  // Filter out optimistically deleted messages
+  if (pendingDeleteIds.size > 0) {
+    merged = merged.filter((m) => !pendingDeleteIds.has(m.id));
+    for (const id of pendingDeleteIds) {
+      if (!serverIds.has(id)) pendingDeleteIds.delete(id);
+    }
+  }
+  return merged;
+}
+
 export default function ChatRoom() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -483,31 +513,9 @@ export default function ChatRoom() {
             latestMessageIdRef.current = latestId;
 
             // Merge: keep any pending optimistic messages + older history the server hasn't returned
-            const serverIds = new Set(newMessages.map((m) => m.id));
-            setMessages((prev) => {
-              const pendingMsgs = prev.filter(
-                (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
-              );
-              // Keep older messages loaded via "Load older" that the server window doesn't include
-              const olderMsgs = prev.filter(
-                (m) => olderMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
-              );
-              // Clean up pending IDs that the server now knows about
-              for (const id of pendingMessageIdsRef.current) {
-                if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
-              }
-              let merged = [...olderMsgs, ...newMessages, ...pendingMsgs];
-              // Filter out optimistically deleted messages
-              if (pendingDeleteIdsRef.current.size > 0) {
-                merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
-                // Clean up once server confirms deletion (message absent from server)
-                for (const id of pendingDeleteIdsRef.current) {
-                  const serverMsg = newMessages.find((m) => m.id === id);
-                  if (!serverMsg) pendingDeleteIdsRef.current.delete(id);
-                }
-              }
-              return merged;
-            });
+            setMessages((prev) => mergeMessages(
+              prev, newMessages, pendingMessageIdsRef.current, olderMessageIdsRef.current, pendingDeleteIdsRef.current
+            ));
 
             if (isNearBottom()) {
               setTimeout(() => scrollToBottom(), 50);
@@ -523,28 +531,9 @@ export default function ChatRoom() {
             }
           } else {
             // Same latest ID — still merge pending messages
-            const serverIds = new Set(newMessages.map((m) => m.id));
-            setMessages((prev) => {
-              const pendingMsgs = prev.filter(
-                (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
-              );
-              const olderMsgs = prev.filter(
-                (m) => olderMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
-              );
-              for (const id of pendingMessageIdsRef.current) {
-                if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
-              }
-              let merged = [...olderMsgs, ...newMessages, ...pendingMsgs];
-              // Filter out optimistically deleted messages
-              if (pendingDeleteIdsRef.current.size > 0) {
-                merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
-                for (const id of pendingDeleteIdsRef.current) {
-                  const serverMsg = newMessages.find((m) => m.id === id);
-                  if (!serverMsg) pendingDeleteIdsRef.current.delete(id);
-                }
-              }
-              return merged;
-            });
+            setMessages((prev) => mergeMessages(
+              prev, newMessages, pendingMessageIdsRef.current, olderMessageIdsRef.current, pendingDeleteIdsRef.current
+            ));
           }
         }
       } catch {
