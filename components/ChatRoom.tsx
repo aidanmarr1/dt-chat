@@ -381,6 +381,10 @@ export default function ChatRoom() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => {
+        if (res.status === 403) {
+          router.push("/");
+          return null;
+        }
         if (!res.ok) {
           router.push("/auth");
           return null;
@@ -400,6 +404,7 @@ export default function ChatRoom() {
       try {
         const sinceParam = latestMessageIdRef.current ? `?since=${latestMessageIdRef.current}` : "";
         const res = await fetch(`/api/messages${sinceParam}`);
+        if (res.status === 403) { router.push("/"); return; }
         if (!res.ok) return;
         const data = await res.json();
 
