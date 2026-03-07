@@ -10,7 +10,7 @@ import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 const checkMessageRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -27,29 +27,96 @@ export async function GET() {
     .set({ lastActiveAt: new Date() })
     .where(eq(users.id, user.id));
 
-  // Get last 50 messages with user info
-  const rows = await db
-    .select({
-      id: messages.id,
-      content: messages.content,
-      createdAt: messages.createdAt,
-      userId: messages.userId,
-      displayName: users.displayName,
-      avatarId: users.avatarId,
-      fileName: messages.fileName,
-      fileType: messages.fileType,
-      fileSize: messages.fileSize,
-      filePath: messages.filePath,
-      replyToId: messages.replyToId,
-      editedAt: messages.editedAt,
-      deletedAt: messages.deletedAt,
-      pinnedAt: messages.pinnedAt,
-      pinnedBy: messages.pinnedBy,
-    })
-    .from(messages)
-    .innerJoin(users, eq(messages.userId, users.id))
-    .orderBy(desc(messages.createdAt))
-    .limit(50);
+  // Check `since` param for efficient polling — if latest message hasn't changed, skip heavy query
+  const since = req.nextUrl.searchParams.get("since");
+  const before = req.nextUrl.searchParams.get("before");
+
+  if (since && !before) {
+    const latest = await db
+      .select({ id: messages.id })
+      .from(messages)
+      .orderBy(desc(messages.createdAt))
+      .limit(1)
+      .get();
+
+    if (latest && latest.id === since) {
+      // Nothing changed — return lightweight response
+      // Auto-clear expired statuses
+      const now = new Date();
+      await db
+        .update(users)
+        .set({ status: null, statusSetAt: null, statusExpiresAt: null })
+        .where(sql`${users.statusExpiresAt} IS NOT NULL AND ${users.statusExpiresAt} < ${Math.floor(now.getTime() / 1000)}`);
+
+      const thirtySecondsAgo = new Date(Date.now() - 30_000);
+      const onlineUsers = await db
+        .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId, status: users.status })
+        .from(users)
+        .where(gt(users.lastActiveAt, thirtySecondsAgo));
+
+      const threeSecondsAgo = Date.now() - 3000;
+      const typingRows = await db
+        .select({ displayName: users.displayName })
+        .from(users)
+        .where(
+          sql`${users.typingAt} > ${threeSecondsAgo} AND ${users.id} != ${user.id}`
+        );
+
+      return NextResponse.json({
+        messages: null,
+        onlineCount: onlineUsers.length,
+        onlineUsers,
+        typingUsers: typingRows.map((r) => r.displayName),
+      });
+    }
+  }
+
+  // Handle `before` cursor for loading older messages
+  const isHistoryLoad = !!before;
+  let beforeTimestamp: Date | null = null;
+  if (before) {
+    const beforeMsg = await db.select({ createdAt: messages.createdAt }).from(messages).where(eq(messages.id, before)).get();
+    if (beforeMsg) {
+      beforeTimestamp = beforeMsg.createdAt;
+    }
+  }
+
+  // Get messages with user info (51 to detect hasMore)
+  const queryLimit = 51;
+  const selectFields = {
+    id: messages.id,
+    content: messages.content,
+    createdAt: messages.createdAt,
+    userId: messages.userId,
+    displayName: users.displayName,
+    avatarId: users.avatarId,
+    fileName: messages.fileName,
+    fileType: messages.fileType,
+    fileSize: messages.fileSize,
+    filePath: messages.filePath,
+    replyToId: messages.replyToId,
+    editedAt: messages.editedAt,
+    pinnedAt: messages.pinnedAt,
+    pinnedBy: messages.pinnedBy,
+  };
+
+  const rows = beforeTimestamp
+    ? await db
+        .select(selectFields)
+        .from(messages)
+        .innerJoin(users, eq(messages.userId, users.id))
+        .where(sql`${messages.createdAt} < ${beforeTimestamp}`)
+        .orderBy(desc(messages.createdAt))
+        .limit(queryLimit)
+    : await db
+        .select(selectFields)
+        .from(messages)
+        .innerJoin(users, eq(messages.userId, users.id))
+        .orderBy(desc(messages.createdAt))
+        .limit(queryLimit);
+
+  const hasMore = rows.length === queryLimit;
+  if (hasMore) rows.pop();
 
   // Get reply info for messages that have replyToId
   const replyIds = rows.filter((r) => r.replyToId).map((r) => r.replyToId!);
@@ -257,6 +324,14 @@ export async function GET() {
     };
   });
 
+  // For history loads, return just messages + hasMore (skip online/typing)
+  if (isHistoryLoad) {
+    return NextResponse.json({
+      messages: responseMessages,
+      hasMore,
+    });
+  }
+
   // Auto-clear expired statuses (statusExpiresAt = null means "don't clear")
   const now = new Date();
   await db
@@ -282,6 +357,7 @@ export async function GET() {
 
   return NextResponse.json({
     messages: responseMessages,
+    hasMore,
     onlineCount: onlineUsers.length,
     onlineUsers,
     typingUsers: typingRows.map((r) => r.displayName),
@@ -362,23 +438,25 @@ export async function POST(req: NextRequest) {
   const messageId = crypto.randomUUID();
   const now = new Date();
 
-  await db.insert(messages).values({
-    id: messageId,
-    content: finalContent,
-    createdAt: now,
-    userId: user.id,
-    fileName: fileName || null,
-    fileType: fileType || null,
-    fileSize: fileSize || null,
-    filePath: filePath || null,
-    replyToId: replyToId || null,
-  });
+  await db.transaction(async (tx) => {
+    await tx.insert(messages).values({
+      id: messageId,
+      content: finalContent,
+      createdAt: now,
+      userId: user.id,
+      fileName: fileName || null,
+      fileType: fileType || null,
+      fileSize: fileSize || null,
+      filePath: filePath || null,
+      replyToId: replyToId || null,
+    });
 
-  // Update lastActiveAt and clear typing
-  await db
-    .update(users)
-    .set({ lastActiveAt: now, typingAt: null })
-    .where(eq(users.id, user.id));
+    // Update lastActiveAt and clear typing
+    await tx
+      .update(users)
+      .set({ lastActiveAt: now, typingAt: null })
+      .where(eq(users.id, user.id));
+  });
 
   // Fetch link previews synchronously before responding
   const fetchedPreviews: { id: string; url: string; title: string | null; description: string | null; imageUrl: string | null; siteName: string | null }[] = [];

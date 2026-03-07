@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
   // Escape LIKE special characters to prevent wildcard injection
   const escapedQ = q.replace(/[%_\\]/g, "\\$&");
 
+  const offsetParam = req.nextUrl.searchParams.get("offset");
+  const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10) || 0) : 0;
+
   const results = await db
     .select({
       id: messages.id,
@@ -40,7 +43,9 @@ export async function GET(req: NextRequest) {
       sql`${messages.content} LIKE ${"%" + escapedQ + "%"} ESCAPE '\\'`
     )
     .orderBy(sql`${messages.createdAt} DESC`)
-    .limit(20);
+    .limit(21)
+    .offset(offset);
 
-  return NextResponse.json({ results });
+  const hasMore = results.length > 20;
+  return NextResponse.json({ results: results.slice(0, 20), hasMore });
 }

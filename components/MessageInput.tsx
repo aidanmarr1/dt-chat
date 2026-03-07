@@ -430,6 +430,7 @@ export default function MessageInput({
           xhr.send(formData);
         });
       } catch {
+        toast("Failed to upload file", "error");
         setUploading(false);
         setUploadProgress(0);
         return;
@@ -907,6 +908,7 @@ export default function MessageInput({
                 autoCapitalize="off"
                 role="textbox"
                 aria-multiline="true"
+                aria-label="Message input"
                 aria-placeholder={placeholder}
                 onInput={handleInput}
                 onKeyDown={handleKeyDown}

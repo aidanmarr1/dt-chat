@@ -707,18 +707,18 @@ export default function MessageBubble({
             <div
               className={`absolute -top-1 ${isOwn ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden sm:flex items-center gap-0.5`}
             >
-              <button onClick={() => { onReply(message); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "0ms" }} title="Reply">
+              <button onClick={() => { onReply(message); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "0ms" }} title="Reply" aria-label="Reply">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
               </button>
 
-              <button onClick={() => { onPin(message.id); }} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${message.isPinned ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "30ms" }} title={message.isPinned ? "Unpin" : "Pin"}>
+              <button onClick={() => { onPin(message.id); }} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${message.isPinned ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "30ms" }} title={message.isPinned ? "Unpin" : "Pin"} aria-label={message.isPinned ? "Unpin" : "Pin"}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={message.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
                 </svg>
               </button>
 
               {onBookmark && (
-                <button onClick={() => onBookmark(message.id)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${isBookmarked ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "45ms" }} title={isBookmarked ? "Remove bookmark" : "Bookmark"}>
+                <button onClick={() => onBookmark(message.id)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${isBookmarked ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "45ms" }} title={isBookmarked ? "Remove bookmark" : "Bookmark"} aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                   </svg>
@@ -727,7 +727,7 @@ export default function MessageBubble({
 
               {onReminder && (
                 <div className="relative">
-                  <button onClick={() => setShowReminderPicker(!showReminderPicker)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${hasReminder ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "52ms" }} title="Remind me">
+                  <button onClick={() => setShowReminderPicker(!showReminderPicker)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${hasReminder ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "52ms" }} title="Remind me" aria-label="Set reminder">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                   </button>
                   {showReminderPicker && (
@@ -739,7 +739,7 @@ export default function MessageBubble({
                 </div>
               )}
 
-              <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"}>
+              <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"} aria-label="Copy message">
                 {copied ? (
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 ) : (
@@ -748,7 +748,7 @@ export default function MessageBubble({
               </button>
 
               {canEdit && (
-                <button onClick={() => { startEdit(); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "90ms" }} title="Edit">
+                <button onClick={() => { startEdit(); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "90ms" }} title="Edit" aria-label="Edit message">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
                 </button>
               )}
@@ -759,13 +759,14 @@ export default function MessageBubble({
                   className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-red-500/15 hover:border-red-400/30 hover:text-red-400 transition-all active:scale-90 shadow-sm animate-pop-in"
                   style={{ animationDelay: "120ms" }}
                   title="Delete"
+                  aria-label="Delete message"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                 </button>
               )}
 
               <div className="relative">
-                <button onClick={() => setShowReactionPicker(!showReactionPicker)} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "150ms" }} title="React">
+                <button onClick={() => setShowReactionPicker(!showReactionPicker)} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "150ms" }} title="React" aria-label="Add reaction">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
                 </button>
                 {showReactionPicker && (

@@ -45,29 +45,31 @@ export async function POST(req: NextRequest) {
     text: text.trim(),
   }));
 
-  // Create the message first (content is a poll marker)
-  await db.insert(messages).values({
-    id: messageId,
-    content: `::poll::${pollId}`,
-    createdAt: now,
-    userId: user.id,
-  });
+  await db.transaction(async (tx) => {
+    // Create the message first (content is a poll marker)
+    await tx.insert(messages).values({
+      id: messageId,
+      content: `::poll::${pollId}`,
+      createdAt: now,
+      userId: user.id,
+    });
 
-  // Create the poll
-  await db.insert(polls).values({
-    id: pollId,
-    question: question.trim(),
-    options: JSON.stringify(pollOptions),
-    createdBy: user.id,
-    createdAt: now,
-    messageId,
-  });
+    // Create the poll
+    await tx.insert(polls).values({
+      id: pollId,
+      question: question.trim(),
+      options: JSON.stringify(pollOptions),
+      createdBy: user.id,
+      createdAt: now,
+      messageId,
+    });
 
-  // Update lastActiveAt
-  await db
-    .update(users)
-    .set({ lastActiveAt: now, typingAt: null })
-    .where(eq(users.id, user.id));
+    // Update lastActiveAt
+    await tx
+      .update(users)
+      .set({ lastActiveAt: now, typingAt: null })
+      .where(eq(users.id, user.id));
+  });
 
   return NextResponse.json({
     message: {

@@ -87,6 +87,9 @@ export default function ChatRoom() {
   const [wasOffline, setWasOffline] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderMessageIdsRef = useRef<Set<string>>(new Set());
   const unreadSeparatorIdRef = useRef<string | null>(null);
   const unreadSeparatorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const todoCountFetched = useRef(false);
@@ -395,7 +398,8 @@ export default function ChatRoom() {
 
     async function fetchMessages() {
       try {
-        const res = await fetch("/api/messages");
+        const sinceParam = latestMessageIdRef.current ? `?since=${latestMessageIdRef.current}` : "";
+        const res = await fetch(`/api/messages${sinceParam}`);
         if (!res.ok) return;
         const data = await res.json();
 
@@ -408,6 +412,14 @@ export default function ChatRoom() {
           if (prev) setWasOffline(true);
           return false;
         });
+
+        // Lightweight poll — nothing changed, only update online/typing
+        if (data.messages === null) {
+          setOnlineCount(data.onlineCount);
+          setOnlineUsers(data.onlineUsers || []);
+          setTypingUsers(data.typingUsers || []);
+          return;
+        }
 
         const newMessages: Message[] = data.messages.map(
           (m: { createdAt: string | Date } & Omit<Message, "createdAt">) => ({
@@ -422,6 +434,7 @@ export default function ChatRoom() {
         setOnlineCount(data.onlineCount);
         setOnlineUsers(data.onlineUsers || []);
         setTypingUsers(data.typingUsers || []);
+        if (typeof data.hasMore === "boolean") setHasOlderMessages(data.hasMore);
 
         if (newMessages.length > 0) {
           // Mark as loaded after first successful fetch
@@ -464,19 +477,21 @@ export default function ChatRoom() {
 
             latestMessageIdRef.current = latestId;
 
-            // Merge: keep any pending optimistic messages the server hasn't returned yet
+            // Merge: keep any pending optimistic messages + older history the server hasn't returned
             const serverIds = new Set(newMessages.map((m) => m.id));
             setMessages((prev) => {
               const pendingMsgs = prev.filter(
                 (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
               );
+              // Keep older messages loaded via "Load older" that the server window doesn't include
+              const olderMsgs = prev.filter(
+                (m) => olderMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
+              );
               // Clean up pending IDs that the server now knows about
               for (const id of pendingMessageIdsRef.current) {
                 if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
               }
-              let merged = pendingMsgs.length > 0
-                ? [...newMessages, ...pendingMsgs]
-                : newMessages;
+              let merged = [...olderMsgs, ...newMessages, ...pendingMsgs];
               // Filter out optimistically deleted messages
               if (pendingDeleteIdsRef.current.size > 0) {
                 merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
@@ -508,12 +523,13 @@ export default function ChatRoom() {
               const pendingMsgs = prev.filter(
                 (m) => pendingMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
               );
+              const olderMsgs = prev.filter(
+                (m) => olderMessageIdsRef.current.has(m.id) && !serverIds.has(m.id)
+              );
               for (const id of pendingMessageIdsRef.current) {
                 if (serverIds.has(id)) pendingMessageIdsRef.current.delete(id);
               }
-              let merged = pendingMsgs.length > 0
-                ? [...newMessages, ...pendingMsgs]
-                : newMessages;
+              let merged = [...olderMsgs, ...newMessages, ...pendingMsgs];
               // Filter out optimistically deleted messages
               if (pendingDeleteIdsRef.current.size > 0) {
                 merged = merged.filter((m) => !pendingDeleteIdsRef.current.has(m.id));
@@ -554,6 +570,46 @@ export default function ChatRoom() {
     }
   }, [isAtBottom, messages.length]);
 
+  async function loadOlderMessages() {
+    if (loadingOlder || messages.length === 0) return;
+    const oldestId = messages[0].id;
+    setLoadingOlder(true);
+    try {
+      const res = await fetch(`/api/messages?before=${oldestId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const olderMsgs: Message[] = (data.messages || []).map(
+        (m: { createdAt: string | Date } & Omit<Message, "createdAt">) => ({
+          ...m,
+          createdAt:
+            typeof m.createdAt === "string"
+              ? m.createdAt
+              : new Date(m.createdAt).toISOString(),
+        })
+      );
+      if (olderMsgs.length > 0) {
+        // Track these IDs so polling preserves them
+        for (const m of olderMsgs) olderMessageIdsRef.current.add(m.id);
+        // Preserve scroll position
+        const container = scrollContainerRef.current;
+        const prevHeight = container?.scrollHeight || 0;
+        setMessages((prev) => [...olderMsgs, ...prev]);
+        // Restore scroll position after render
+        requestAnimationFrame(() => {
+          if (container) {
+            const newHeight = container.scrollHeight;
+            container.scrollTop += newHeight - prevHeight;
+          }
+        });
+      }
+      setHasOlderMessages(data.hasMore === true);
+    } catch {
+      toast("Failed to load older messages", "error");
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
+
   async function handleSend(
     content: string,
     file?: { fileName: string; fileType: string; fileSize: number; filePath: string },
@@ -567,7 +623,11 @@ export default function ChatRoom() {
         body: JSON.stringify({ content, ...file, replyToId }),
       });
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to send message", "error");
+        return;
+      }
       const data = await res.json();
 
       const newMsg: Message = {
@@ -628,7 +688,7 @@ export default function ChatRoom() {
         })
       );
     } catch {
-      // Handle silently
+      toast("Failed to react", "error");
     }
   }
 
@@ -1255,6 +1315,7 @@ export default function ChatRoom() {
               onClick={() => setShowMediaGallery(true)}
               className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
               title="Media gallery"
+              aria-label="Media gallery"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
@@ -1265,6 +1326,7 @@ export default function ChatRoom() {
               onClick={() => setShowBookmarks(true)}
               className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
               title="Bookmarks"
+              aria-label="Bookmarks"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
@@ -1280,6 +1342,7 @@ export default function ChatRoom() {
               onClick={() => setShowTodos(true)}
               className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
               title="To-do list"
+              aria-label="To-do list"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
@@ -1295,6 +1358,7 @@ export default function ChatRoom() {
               onClick={() => setShowReminders(true)}
               className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow relative"
               title="Reminders"
+              aria-label="Reminders"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
@@ -1311,6 +1375,7 @@ export default function ChatRoom() {
               onClick={() => setShowSearch(true)}
               className="p-1.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 hover-glow"
               title="Search (Ctrl+F)"
+              aria-label="Search messages"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
@@ -1322,8 +1387,9 @@ export default function ChatRoom() {
           <div className="relative sm:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+              className="p-2.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
               title="More"
+              aria-label="More options"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
@@ -1472,6 +1538,8 @@ export default function ChatRoom() {
         <div className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent z-[5] pointer-events-none transition-opacity duration-200 ${!isAtBottom ? "opacity-100" : "opacity-0"}`} />
         <div
           ref={scrollContainerRef}
+          role="log"
+          aria-live="polite"
           className="absolute inset-0 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth"
           onScroll={(e) => {
             const el = e.target as HTMLElement;
@@ -1518,7 +1586,32 @@ export default function ChatRoom() {
               </div>
             </div>
           ) : (
-            renderMessages()
+            <>
+              {hasOlderMessages && messages.length > 0 && (
+                <div className="flex justify-center py-3">
+                  <button
+                    onClick={loadOlderMessages}
+                    disabled={loadingOlder}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-surface border border-border rounded-full hover:border-accent transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {loadingOlder ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                        Load older messages
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+              {renderMessages()}
+            </>
           )}
           <div ref={messagesEndRef} />
         </div>

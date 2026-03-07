@@ -68,6 +68,8 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [activeResultId, setActiveResultId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,23 +93,31 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  const search = useCallback(async (q: string) => {
+  const search = useCallback(async (q: string, offset = 0) => {
     if (q.trim().length < 2) {
       setResults([]);
       setSearched(false);
+      setHasMore(false);
       return;
     }
-    setLoading(true);
+    if (offset === 0) setLoading(true);
+    else setLoadingMore(true);
     try {
-      const res = await fetch(`/api/messages/search?q=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/messages/search?q=${encodeURIComponent(q.trim())}&offset=${offset}`);
       if (res.ok) {
         const data = await res.json();
-        setResults(data.results || []);
+        if (offset === 0) {
+          setResults(data.results || []);
+        } else {
+          setResults((prev) => [...prev, ...(data.results || [])]);
+        }
+        setHasMore(data.hasMore === true);
         setSearched(true);
-        setSelectedIndex(-1);
+        if (offset === 0) setSelectedIndex(-1);
       }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
@@ -170,7 +180,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
           />
           {query && (
             <button
-              onClick={() => { setQuery(""); setResults([]); setSearched(false); inputRef.current?.focus(); }}
+              onClick={() => { setQuery(""); setResults([]); setSearched(false); setHasMore(false); inputRef.current?.focus(); }}
               className="p-1 rounded-md text-muted hover:text-foreground hover:bg-background transition-all"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -242,6 +252,26 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
               </>
             );
           })()}
+
+          {/* Load more results */}
+          {!loading && hasMore && results.length > 0 && (
+            <div className="flex justify-center py-3">
+              <button
+                onClick={() => search(query, results.length)}
+                disabled={loadingMore}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-background border border-border rounded-full hover:border-accent transition-all active:scale-95 disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load more results"
+                )}
+              </button>
+            </div>
+          )}
 
           {/* No results */}
           {!loading && searched && results.length === 0 && (
