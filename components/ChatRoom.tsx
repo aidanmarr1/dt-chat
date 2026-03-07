@@ -1229,17 +1229,22 @@ export default function ChatRoom() {
   if (!user) {
     return (
       <div className="flex flex-col h-dvh">
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 border-b border-border glass">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <div className="h-5 w-24 rounded-md animate-shimmer" />
               <div className="h-4 w-16 rounded-full animate-shimmer" style={{ animationDelay: "0.05s" }} />
             </div>
             <div className="h-3 w-20 rounded-md animate-shimmer mt-1.5" style={{ animationDelay: "0.1s" }} />
           </div>
-          <div className="flex gap-1">
-            <div className="flex gap-0 rounded-xl animate-shimmer h-9 w-52" style={{ animationDelay: "0.15s" }} />
-            <div className="h-9 w-9 rounded-lg animate-shimmer" style={{ animationDelay: "0.35s" }} />
+          <div className="flex items-center gap-1.5">
+            <div className="flex gap-0.5">
+              {[0.15, 0.2, 0.25, 0.3, 0.35].map((d, i) => (
+                <div key={i} className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: `${d}s` }} />
+              ))}
+            </div>
+            <div className="w-px h-5 bg-border/40" />
+            <div className="h-8 w-8 rounded-lg animate-shimmer" style={{ animationDelay: "0.4s" }} />
           </div>
         </div>
         <div className="flex-1 px-4 py-4 space-y-5">
@@ -1279,16 +1284,16 @@ export default function ChatRoom() {
       )}
 
       {/* Header */}
-      <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
-        <div className="min-w-0 mr-2">
-          <div className="flex items-center gap-2">
+      <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
+        <div className="min-w-0 mr-3">
+          <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
               <span className={`relative w-1.5 h-1.5 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500 animate-online-ring"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
             </div>
             <button
               onClick={() => setShowStatusPicker(true)}
-              className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:border-accent text-muted hover:text-accent transition-all truncate max-w-[140px] flex items-center gap-1"
+              className="hidden sm:flex text-[10px] px-2 py-0.5 rounded-full bg-surface/60 hover:bg-surface text-muted hover:text-accent transition-all truncate max-w-[140px] items-center gap-1"
               title="Set your status"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -1297,97 +1302,85 @@ export default function ChatRoom() {
               {user?.status || "Set status"}
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-0.5">
             <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
-            {messages.length > 0 && (
-              <span className="hidden sm:inline text-[10px] text-muted/60 tabular-nums" title={`${messages.length} messages`}>
-                {messages.length} msg{messages.length !== 1 ? "s" : ""}
-              </span>
-            )}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Desktop toolbar buttons */}
-          <div className="hidden sm:flex items-center gap-0.5 bg-surface/50 rounded-xl p-1 border border-border/50">
+          <div className="hidden sm:flex items-center gap-0.5 rounded-xl p-0.5">
+            {/* Search — promoted to first for discoverability */}
+            <button
+              onClick={() => setShowSearch(true)}
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95"
+              title="Search (Ctrl+F)"
+              aria-label="Search messages"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
             {/* Media gallery */}
             <button
               onClick={() => setShowMediaGallery(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95"
               title="Media gallery"
               aria-label="Media gallery"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
               </svg>
             </button>
             {/* Bookmarks */}
             <button
               onClick={() => setShowBookmarks(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
               title="Bookmarks"
               aria-label="Bookmarks"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
               {bookmarks.length > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
-                  {bookmarks.length > 9 ? "9+" : bookmarks.length}
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
             {/* To-Do */}
             <button
               onClick={() => setShowTodos(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
               title="To-do list"
               aria-label="To-do list"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
               </svg>
               {todoCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
-                  {todoCount > 9 ? "9+" : todoCount}
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
             {/* Reminders */}
             <button
               onClick={() => setShowReminders(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95 relative"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
               title="Reminders"
               aria-label="Reminders"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
               </svg>
               {reminders.length > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-accent text-background text-[8px] font-bold rounded-full flex items-center justify-center ring-2 ring-background">
-                  {reminders.length > 9 ? "9+" : reminders.length}
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
-            </button>
-            <div className="w-px h-4 bg-border/60 mx-0.5" />
-            {/* Search */}
-            <button
-              onClick={() => setShowSearch(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-95"
-              title="Search (Ctrl+F)"
-              aria-label="Search messages"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
             </button>
           </div>
           {/* Mobile overflow menu */}
           <div className="relative sm:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2.5 rounded-lg border border-border hover:border-accent hover:bg-surface text-muted hover:text-foreground transition-all active:scale-95 relative"
+              className="p-2.5 rounded-xl text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
               title="More"
               aria-label="More options"
             >
@@ -1395,51 +1388,41 @@ export default function ChatRoom() {
                 <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
               </svg>
               {(bookmarks.length > 0 || todoCount > 0 || reminders.length > 0) && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent rounded-full" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
             {showMobileMenu && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowMobileMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-border rounded-xl shadow-xl z-40 overflow-hidden animate-slide-down">
-                  <button onClick={() => { setShowMediaGallery(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-surface/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl shadow-black/20 z-40 overflow-hidden animate-slide-down p-1.5">
+                  {[
+                    { label: "Search", icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>, action: () => { setShowSearch(true); setShowMobileMenu(false); } },
+                    { label: "Media", icon: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></>, action: () => { setShowMediaGallery(true); setShowMobileMenu(false); } },
+                    { label: "Bookmarks", badge: bookmarks.length, icon: <><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></>, action: () => { setShowBookmarks(true); setShowMobileMenu(false); } },
+                    { label: "To-Do", badge: todoCount, icon: <><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></>, action: () => { setShowTodos(true); setShowMobileMenu(false); } },
+                    { label: "Reminders", badge: reminders.length, icon: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>, action: () => { setShowReminders(true); setShowMobileMenu(false); } },
+                  ].map((item, i) => (
+                    <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-foreground hover:bg-border/40 transition-colors rounded-lg" style={{ animationDelay: `${i * 30}ms` }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                        {item.icon}
+                      </svg>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {(item as { badge?: number }).badge ? <span className="text-[10px] text-accent font-semibold bg-accent/10 px-1.5 py-0.5 rounded-full">{(item as { badge: number }).badge}</span> : null}
+                    </button>
+                  ))}
+                  <div className="mx-2 my-1 h-px bg-border/50" />
+                  <button onClick={() => { setShowStatusPicker(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-foreground hover:bg-border/40 transition-colors rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                      <circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
                     </svg>
-                    Media
-                  </button>
-                  <button onClick={() => { setShowBookmarks(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-                    </svg>
-                    Bookmarks
-                    {bookmarks.length > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{bookmarks.length}</span>}
-                  </button>
-                  <button onClick={() => { setShowTodos(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                      <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                    </svg>
-                    To-Do
-                    {todoCount > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{todoCount}</span>}
-                  </button>
-                  <button onClick={() => { setShowReminders(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                    </svg>
-                    Reminders
-                    {reminders.length > 0 && <span className="ml-auto text-[10px] text-accent font-medium">{reminders.length}</span>}
-                  </button>
-                  <button onClick={() => { setShowSearch(true); setShowMobileMenu(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-border/50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                    Search
+                    <span className="flex-1 text-left">{user?.status ? "Change status" : "Set status"}</span>
+                    {user?.status && <span className="text-[10px] text-muted truncate max-w-[60px]">{user.status}</span>}
                   </button>
                 </div>
               </>
             )}
           </div>
+          <div className="hidden sm:block w-px h-5 bg-border/40" />
           <SettingsMenu
             user={user}
             onAvatarChange={(avatarId) => setUser((prev) => prev ? { ...prev, avatarId } : prev)}
