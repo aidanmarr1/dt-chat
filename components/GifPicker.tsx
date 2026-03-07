@@ -97,16 +97,16 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
     const rect = el.getBoundingClientRect();
     const pad = 8;
     if (rect.left < pad) {
-      el.style.left = `${pad - rect.left}px`;
+      el.style.transform = `translateX(${pad - rect.left}px)`;
     } else if (rect.right > window.innerWidth - pad) {
-      el.style.left = `${window.innerWidth - pad - rect.right}px`;
+      el.style.transform = `translateX(${window.innerWidth - pad - rect.right}px)`;
     }
   }, []);
 
   return (
     <div
       ref={ref}
-      className="absolute bottom-full mb-2 left-0 w-80 max-w-[calc(100vw-1rem)] bg-surface/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl shadow-black/20 animate-fade-scale overflow-hidden z-50"
+      className="absolute bottom-full mb-2 right-0 w-80 max-w-[calc(100vw-1rem)] bg-surface/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl shadow-black/20 animate-fade-scale overflow-hidden z-50"
     >
       {/* Search */}
       <div className="p-2.5 pb-2 border-b border-border">

@@ -167,6 +167,7 @@ html[data-density="comfortable"] .msg-bubble-spaced { margin-bottom: 1rem; }
 html, body {
   height: 100%;
   height: 100dvh;
+  overflow: hidden;
 }
 
 body {

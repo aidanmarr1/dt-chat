@@ -865,50 +865,32 @@ export default function MessageInput({
               />
               {/* Inline action buttons inside the input area */}
               <div className="absolute right-2 bottom-1.5 flex items-center gap-0.5">
-                <div className="relative">
-                  <button
-                    ref={emojiToggleRef}
-                    onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
-                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
-                    title="Emoji"
-                    aria-label="Insert emoji"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                      <line x1="9" y1="9" x2="9.01" y2="9" />
-                      <line x1="15" y1="9" x2="15.01" y2="9" />
-                    </svg>
-                  </button>
-                  {showEmoji && (
-                    <EmojiPicker
-                      onSelect={insertEmoji}
-                      onClose={() => setShowEmoji(false)}
-                      toggleRef={emojiToggleRef}
-                    />
-                  )}
-                </div>
-                <div className="relative">
-                  <button
-                    ref={gifToggleRef}
-                    onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
-                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
-                    title="GIF"
-                    aria-label="Insert GIF"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
-                      <rect x="2" y="4" width="20" height="16" rx="2" />
-                      <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
-                    </svg>
-                  </button>
-                  {showGif && (
-                    <GifPicker
-                      onSelect={handleGifSelect}
-                      onClose={() => setShowGif(false)}
-                      toggleRef={gifToggleRef}
-                    />
-                  )}
-                </div>
+                <button
+                  ref={emojiToggleRef}
+                  onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
+                  className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
+                  title="Emoji"
+                  aria-label="Insert emoji"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                  </svg>
+                </button>
+                <button
+                  ref={gifToggleRef}
+                  onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
+                  className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
+                  title="GIF"
+                  aria-label="Insert GIF"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
+                  </svg>
+                </button>
                 {onCreatePoll && (
                   <button
                     onClick={onCreatePoll}
@@ -923,6 +905,22 @@ export default function MessageInput({
                 )}
               </div>
             </div>
+            {/* Emoji picker — rendered at outer level to avoid overflow issues */}
+            {showEmoji && (
+              <EmojiPicker
+                onSelect={insertEmoji}
+                onClose={() => setShowEmoji(false)}
+                toggleRef={emojiToggleRef}
+              />
+            )}
+            {/* GIF picker — rendered at outer level to avoid overflow issues */}
+            {showGif && (
+              <GifPicker
+                onSelect={handleGifSelect}
+                onClose={() => setShowGif(false)}
+                toggleRef={gifToggleRef}
+              />
+            )}
             {value.length > 1000 && (
               <span className={`absolute bottom-1 right-24 text-[10px] pointer-events-none animate-fade-in ${
                 value.length > 1950 ? "text-red-400 font-medium"
