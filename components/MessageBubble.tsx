@@ -284,6 +284,7 @@ export default function MessageBubble({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showAbsoluteTime, setShowAbsoluteTime] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -461,7 +462,7 @@ export default function MessageBubble({
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
         } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
-        onMouseLeave={() => { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); }, 150); }}
+        onMouseLeave={() => { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); setShowMoreMenu(false); }, 150); }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
@@ -686,93 +687,96 @@ export default function MessageBubble({
             )}
           </p>
 
-          {/* Quick reactions row — desktop only */}
-          {hovered && !showReactionPicker && !showActions && !editing && (
-            <div className={`absolute ${isOwn ? "-left-1 -translate-x-full" : "-right-1 translate-x-full"} -top-11 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-md border border-border rounded-full shadow-lg px-1 py-0.5 animate-fade-scale z-10`}>
-              {["👍", "❤️", "😂", "😮", "😢"].map((emoji, i) => (
-                <button
-                  key={emoji}
-                  onClick={() => onReaction(message.id, emoji)}
-                  className="w-7 h-7 flex items-center justify-center text-sm rounded-full hover:bg-border active:scale-90 transition-all"
-                  style={{ animationDelay: `${i * 20}ms` }}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Action buttons — desktop: inline beside message */}
-          {(hovered || showReactionPicker) && !showActions && !editing && (
-            <div
-              className={`absolute -top-1 ${isOwn ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden sm:flex items-center gap-0.5`}
-            >
-              <button onClick={() => { onReply(message); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "0ms" }} title="Reply" aria-label="Reply">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
-              </button>
-
-              <button onClick={() => { onPin(message.id); }} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${message.isPinned ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "30ms" }} title={message.isPinned ? "Unpin" : "Pin"} aria-label={message.isPinned ? "Unpin" : "Pin"}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={message.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                </svg>
-              </button>
-
-              {onBookmark && (
-                <button onClick={() => onBookmark(message.id)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${isBookmarked ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "45ms" }} title={isBookmarked ? "Remove bookmark" : "Bookmark"} aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-                  </svg>
-                </button>
-              )}
-
-              {onReminder && (
-                <div className="relative">
-                  <button onClick={() => setShowReminderPicker(!showReminderPicker)} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${hasReminder ? "bg-accent/15 border-accent/30 text-accent" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "52ms" }} title="Remind me" aria-label="Set reminder">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+          {/* Compact action toolbar — desktop only */}
+          {(hovered || showReactionPicker || showMoreMenu) && !showActions && !editing && (
+            <div className={`absolute -top-10 ${isOwn ? "right-0" : "left-8"} hidden sm:flex items-center bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-lg z-10 animate-fade-scale`}>
+              {/* Quick reaction emojis */}
+              <div className="flex items-center px-0.5">
+                {["👍", "❤️", "😂"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => onReaction(message.id, emoji)}
+                    className="w-7 h-7 flex items-center justify-center text-sm rounded-lg hover:bg-border/50 active:scale-90 transition-all"
+                  >
+                    {emoji}
                   </button>
-                  {showReminderPicker && (
-                    <ReminderPicker
-                      onSet={(time) => { onReminder(message.id, time); setShowReminderPicker(false); }}
-                      onClose={() => setShowReminderPicker(false)}
-                    />
-                  )}
-                </div>
-              )}
-
-              <button onClick={handleCopy} className={`p-1.5 rounded-lg border backdrop-blur-sm transition-all active:scale-90 shadow-sm animate-pop-in ${copied ? "bg-green-500/15 border-green-500/30 text-green-500" : "bg-surface/90 border-border hover:bg-border hover:border-accent/30"}`} style={{ animationDelay: "60ms" }} title={copied ? "Copied!" : "Copy"} aria-label="Copy message">
-                {copied ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                )}
+                ))}
+              </div>
+              <div className="w-px h-5 bg-border/50" />
+              {/* Reply */}
+              <button onClick={() => onReply(message)} className="p-1.5 mx-0.5 text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-90 rounded-lg" title="Reply" aria-label="Reply">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
               </button>
-
-              {canEdit && (
-                <button onClick={() => { startEdit(); }} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "90ms" }} title="Edit" aria-label="Edit message">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-                </button>
-              )}
-
-              {isOwn && (
-                <button
-                  onClick={() => onDelete(message.id)}
-                  className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-red-500/15 hover:border-red-400/30 hover:text-red-400 transition-all active:scale-90 shadow-sm animate-pop-in"
-                  style={{ animationDelay: "120ms" }}
-                  title="Delete"
-                  aria-label="Delete message"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
-                </button>
-              )}
-
+              <div className="w-px h-5 bg-border/50" />
+              {/* More menu */}
               <div className="relative">
-                <button onClick={() => setShowReactionPicker(!showReactionPicker)} className="p-1.5 rounded-lg bg-surface/90 backdrop-blur-sm border border-border hover:bg-border hover:border-accent/30 transition-all active:scale-90 shadow-sm animate-pop-in" style={{ animationDelay: "150ms" }} title="React" aria-label="Add reaction">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
+                <button onClick={(e) => { e.stopPropagation(); setShowMoreMenu(!showMoreMenu); }} className={`p-1.5 mx-0.5 transition-all active:scale-90 rounded-lg ${showMoreMenu ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-border/50"}`} title="More actions" aria-label="More actions">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
                 </button>
-                {showReactionPicker && (
-                  <ReactionPicker onSelect={(emoji) => onReaction(message.id, emoji)} onClose={() => { setShowReactionPicker(false); setShowActions(false); }} />
+                {showMoreMenu && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setShowMoreMenu(false); }} />
+                    <div className={`absolute top-full mt-1.5 ${isOwn ? "right-0" : "left-0"} w-44 bg-surface/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl shadow-black/20 z-40 overflow-hidden animate-slide-down py-1`}>
+                      <button onClick={() => { onPin(message.id); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={message.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={message.isPinned ? "text-accent shrink-0" : "text-muted shrink-0"}><line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" /></svg>
+                        {message.isPinned ? "Unpin" : "Pin"}
+                      </button>
+                      {onBookmark && (
+                        <button onClick={() => { onBookmark(message.id); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isBookmarked ? "text-accent shrink-0" : "text-muted shrink-0"}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+                          {isBookmarked ? "Remove bookmark" : "Bookmark"}
+                        </button>
+                      )}
+                      {onReminder && (
+                        <button onClick={() => { setShowReminderPicker(true); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={hasReminder ? "text-accent shrink-0" : "text-muted shrink-0"}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                          {hasReminder ? "Reminder set" : "Remind me"}
+                        </button>
+                      )}
+                      <div className="mx-2 my-1 h-px bg-border/50" />
+                      <button onClick={() => { handleCopy(); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                        {copied ? "Copied!" : "Copy"}
+                      </button>
+                      {canEdit && (
+                        <button onClick={() => { startEdit(); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                          Edit
+                        </button>
+                      )}
+                      {isOwn && (
+                        <>
+                          <div className="mx-2 my-1 h-px bg-border/50" />
+                          <button onClick={() => { onDelete(message.id); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-400 hover:bg-red-500/10 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      <div className="mx-2 my-1 h-px bg-border/50" />
+                      <button onClick={() => { setShowReactionPicker(true); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>
+                        More reactions
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
+            </div>
+          )}
+          {/* Reaction picker (from compact toolbar) */}
+          {showReactionPicker && !showActions && (
+            <div className={`absolute -top-10 ${isOwn ? "right-0" : "left-8"} hidden sm:block z-20`}>
+              <ReactionPicker onSelect={(emoji) => onReaction(message.id, emoji)} onClose={() => { setShowReactionPicker(false); setShowMoreMenu(false); }} />
+            </div>
+          )}
+          {/* Desktop reminder picker (from compact toolbar more menu) */}
+          {showReminderPicker && onReminder && (
+            <div className={`absolute -top-2 ${isOwn ? "right-0" : "left-8"} hidden sm:block z-20`}>
+              <ReminderPicker
+                onSet={(time) => { onReminder(message.id, time); setShowReminderPicker(false); }}
+                onClose={() => setShowReminderPicker(false)}
+              />
             </div>
           )}
 

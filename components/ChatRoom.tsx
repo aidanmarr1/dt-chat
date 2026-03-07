@@ -1601,23 +1601,24 @@ export default function ChatRoom() {
 
         {/* Scroll to bottom FAB */}
         {!isAtBottom && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 animate-fab-in">
+          <div className="absolute bottom-4 right-4 z-10 animate-fab-in">
             <button
               onClick={scrollToBottom}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all active:scale-95 shadow-lg backdrop-blur-sm ${
+              className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
                 showNewMessages
-                  ? "bg-accent text-background shadow-accent/20 animate-glow-pulse"
-                  : "bg-surface/90 border border-border text-foreground hover:border-accent hover:text-accent"
+                  ? "bg-accent text-background shadow-accent/25"
+                  : "bg-surface/90 backdrop-blur-sm border border-border text-muted hover:text-foreground hover:border-accent"
               }`}
+              aria-label={showNewMessages ? `${unreadCount} new messages` : "Scroll to bottom"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
-              {showNewMessages
-                ? unreadCount > 0
-                  ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}`
-                  : "New messages"
-                : "Scroll to bottom"}
+              {showNewMessages && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1 text-[10px] font-bold bg-accent text-background rounded-full ring-2 ring-background animate-badge-bounce">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         )}
