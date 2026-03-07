@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { ensurePollTables, ensureStatusColumn, ensureLinkPreviewTable } from "@/lib/init-tables";
+import { ensurePollTables, ensureStatusColumn, ensureLinkPreviewTable, ensurePinLabelColumn } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
   await ensureLinkPreviewTable();
   await ensurePollTables();
   await ensureStatusColumn();
+  await ensurePinLabelColumn();
 
   // Update caller's lastActiveAt
   await db

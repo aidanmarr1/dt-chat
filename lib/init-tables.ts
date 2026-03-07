@@ -118,6 +118,18 @@ export async function ensureReminderTable() {
   reminderInitialized = true;
 }
 
+let pinLabelInitialized = false;
+
+export async function ensurePinLabelColumn() {
+  if (pinLabelInitialized) return;
+  try {
+    await client.execute(`ALTER TABLE messages ADD COLUMN pin_label TEXT`);
+  } catch {
+    // Column already exists
+  }
+  pinLabelInitialized = true;
+}
+
 let linkPreviewInitialized = false;
 
 export async function ensureLinkPreviewTable() {
