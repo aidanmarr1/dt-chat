@@ -48,11 +48,11 @@ export async function GET(req: NextRequest) {
 
   await ensureAllTables();
 
-  // Update caller's lastActiveAt
-  await db
-    .update(users)
+  // Update caller's lastActiveAt (fire-and-forget — don't block the response)
+  db.update(users)
     .set({ lastActiveAt: new Date() })
-    .where(eq(users.id, user.id));
+    .where(eq(users.id, user.id))
+    .then(() => {}, () => {});
 
   // Check `since` param for efficient polling — if latest message hasn't changed, skip heavy query
   const since = req.nextUrl.searchParams.get("since");

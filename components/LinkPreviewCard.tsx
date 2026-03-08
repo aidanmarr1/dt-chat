@@ -39,6 +39,8 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
           src={preview.imageUrl!}
           alt=""
           className="w-full h-44 object-cover"
+          loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
         />

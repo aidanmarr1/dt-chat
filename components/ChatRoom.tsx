@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
@@ -380,6 +380,18 @@ export default function ChatRoom() {
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
+  // Throttled scroll handler using rAF — avoids excessive state updates during fast scrolling
+  const scrollRafRef = useRef(0);
+  const handleScroll = useCallback((e: React.UIEvent) => {
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = 0;
+      const el = e.target as HTMLElement;
+      setHeaderShadow(el.scrollTop > 0);
+      setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100);
+    });
+  }, []);
+
   const isNearBottom = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return true;
@@ -437,7 +449,7 @@ export default function ChatRoom() {
         const sinceParam = latestMessageIdRef.current ? `?since=${latestMessageIdRef.current}` : "";
         const res = await fetch(`/api/messages${sinceParam}`);
         if (res.status === 403) { router.push("/"); return; }
-        if (!res.ok) return;
+        if (!res.ok) { setFailedPolls((prev) => prev + 1); return; }
         const data = await res.json();
 
         // Successful poll — clear failed state
@@ -452,9 +464,11 @@ export default function ChatRoom() {
 
         // Lightweight poll — nothing changed, only update online/typing
         if (data.messages === null) {
-          setOnlineCount(data.onlineCount);
-          setOnlineUsers(data.onlineUsers || []);
-          setTypingUsers(data.typingUsers || []);
+          startTransition(() => {
+            setOnlineCount(data.onlineCount);
+            setOnlineUsers(data.onlineUsers || []);
+            setTypingUsers(data.typingUsers || []);
+          });
           return;
         }
 
@@ -468,10 +482,12 @@ export default function ChatRoom() {
           })
         );
 
-        setOnlineCount(data.onlineCount);
-        setOnlineUsers(data.onlineUsers || []);
-        setTypingUsers(data.typingUsers || []);
-        if (typeof data.hasMore === "boolean") setHasOlderMessages(data.hasMore);
+        startTransition(() => {
+          setOnlineCount(data.onlineCount);
+          setOnlineUsers(data.onlineUsers || []);
+          setTypingUsers(data.typingUsers || []);
+          if (typeof data.hasMore === "boolean") setHasOlderMessages(data.hasMore);
+        });
 
         if (newMessages.length > 0) {
           // Mark as loaded after first successful fetch
@@ -544,22 +560,32 @@ export default function ChatRoom() {
     }
 
     fetchMessages();
-    // Adaptive polling: faster when active, slower after failures
+    // Adaptive polling: faster when active, slower after failures, slower when tab hidden
     let pollTimer: ReturnType<typeof setTimeout>;
     let cancelled = false;
     async function poll() {
       if (cancelled) return;
       await fetchMessages();
       if (cancelled) return;
-      // Exponential backoff on failures, cap at 15s
       const fp = failedPollsRef.current;
+      const hidden = document.visibilityState === "hidden";
+      // Base delay: 2s active, 8s hidden; backoff on failures up to 30s
+      const baseDelay = hidden ? 8000 : 2000;
       const delay = fp > 0
-        ? Math.min(2000 * Math.pow(2, fp), 15000)
-        : 2000;
+        ? Math.min(baseDelay * Math.pow(2, fp), 30000)
+        : baseDelay;
       pollTimer = setTimeout(poll, delay);
     }
     pollTimer = setTimeout(poll, 2000);
-    return () => { cancelled = true; clearTimeout(pollTimer); };
+    // Resume fast polling when tab becomes visible again
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
+        clearTimeout(pollTimer);
+        poll();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => { cancelled = true; clearTimeout(pollTimer); document.removeEventListener("visibilitychange", handleVisibility); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isNearBottom, scrollToBottom, soundEnabled, notificationsEnabled]);
 
@@ -580,8 +606,10 @@ export default function ChatRoom() {
     }
   }, [isAtBottom, messages.length]);
 
+  const loadingOlderLockRef = useRef(false);
   async function loadOlderMessages() {
-    if (loadingOlder || messages.length === 0) return;
+    if (loadingOlderLockRef.current || messages.length === 0) return;
+    loadingOlderLockRef.current = true;
     const oldestId = messages[0].id;
     setLoadingOlder(true);
     try {
@@ -604,12 +632,14 @@ export default function ChatRoom() {
         const container = scrollContainerRef.current;
         const prevHeight = container?.scrollHeight || 0;
         setMessages((prev) => [...olderMsgs, ...prev]);
-        // Restore scroll position after render
+        // Restore scroll position after render — double rAF for paint reliability
         requestAnimationFrame(() => {
-          if (container) {
-            const newHeight = container.scrollHeight;
-            container.scrollTop += newHeight - prevHeight;
-          }
+          requestAnimationFrame(() => {
+            if (container) {
+              const newHeight = container.scrollHeight;
+              container.scrollTop += newHeight - prevHeight;
+            }
+          });
         });
       }
       setHasOlderMessages(data.hasMore === true);
@@ -617,6 +647,7 @@ export default function ChatRoom() {
       toast("Failed to load older messages", "error");
     } finally {
       setLoadingOlder(false);
+      loadingOlderLockRef.current = false;
     }
   }
 
@@ -1182,12 +1213,12 @@ export default function ChatRoom() {
     await handleSend(content, undefined, replyToId);
   }
 
-  const reminderMessageIds = new Set(reminders.map((r) => r.messageId));
-  const reminderTimeMap = new Map(reminders.map((r) => [r.messageId, r.reminderTime]));
+  const reminderMessageIds = useMemo(() => new Set(reminders.map((r) => r.messageId)), [reminders]);
+  const reminderTimeMap = useMemo(() => new Map(reminders.map((r) => [r.messageId, r.reminderTime])), [reminders]);
 
-  const pinnedMessages = messages.filter((m) => m.isPinned);
+  const pinnedMessages = useMemo(() => messages.filter((m) => m.isPinned), [messages]);
   const showConnectionIssue = isOffline || failedPolls >= 3;
-  const bookmarkedIds = new Set(bookmarks.map((b) => b.messageId));
+  const bookmarkedIds = useMemo(() => new Set(bookmarks.map((b) => b.messageId)), [bookmarks]);
 
   // Build grouped messages with day separators
   function renderMessages() {
@@ -1552,12 +1583,8 @@ export default function ChatRoom() {
           ref={scrollContainerRef}
           role="log"
           aria-live="polite"
-          className="absolute inset-0 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth"
-          onScroll={(e) => {
-            const el = e.target as HTMLElement;
-            setHeaderShadow(el.scrollTop > 0);
-            setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100);
-          }}
+          className="absolute inset-0 overflow-y-auto px-4 py-4 overscroll-contain scroll-smooth scroll-gpu"
+          onScroll={handleScroll}
         >
           {!messagesLoaded && messages.length === 0 ? (
             /* Skeleton message loaders */

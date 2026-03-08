@@ -158,7 +158,7 @@ function renderInline(text: string, isOwn: boolean, keyPrefix: string) {
     const key = `${keyPrefix}-${i}`;
     if (part.match(/^(https?:\/\/|www\.)/)) {
       if (isTenorUrl(part)) {
-        return <img key={key} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" />;
+        return <img key={key} src={part} alt="GIF" className="max-w-full max-h-64 rounded-lg" loading="lazy" decoding="async" />;
       }
       const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
       return (
@@ -561,7 +561,9 @@ function MessageBubble({
                       <img
                         src={fileUrl}
                         alt={message.fileName || "Image"}
-                        className={`max-w-full max-h-64 rounded-lg cursor-pointer hover:opacity-90 hover:shadow-lg transition-all ${!imageLoaded ? "h-0 overflow-hidden" : ""}`}
+                        loading="lazy"
+                        decoding="async"
+                        className={`max-w-full max-h-64 rounded-lg cursor-pointer hover:opacity-90 hover:shadow-lg transition-all ${!imageLoaded ? "h-0 overflow-hidden" : "animate-fade-in"}`}
                         onClick={() => onImageClick ? onImageClick(fileUrl!) : setLightboxSrc(fileUrl)}
                         onLoad={() => setImageLoaded(true)}
                       />
