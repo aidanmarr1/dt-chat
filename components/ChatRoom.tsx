@@ -1320,7 +1320,7 @@ export default function ChatRoom() {
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Desktop toolbar buttons */}
-          <div className="hidden sm:flex items-center gap-0.5 rounded-xl p-0.5">
+          <div className="hidden sm:flex items-center gap-0.5 rounded-xl p-0.5 bg-surface/50 border border-border/50">
             {/* Search — promoted to first for discoverability */}
             <button
               onClick={() => setShowSearch(true)}

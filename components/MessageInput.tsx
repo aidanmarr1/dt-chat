@@ -860,7 +860,7 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-3.5 py-2.5 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/40 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-3.5 py-2.5 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
               {/* Inline action buttons inside the input area */}
@@ -939,7 +939,7 @@ export default function MessageInput({
             disabled={disabled || uploading || aiChecking || (!value.trim() && !filePreview)}
             className={`p-2.5 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed shrink-0 active:scale-90 ${
               (value.trim() || filePreview) && !disabled
-                ? `bg-accent text-background shadow-sm shadow-accent/25 hover:brightness-110 ${justSent ? "animate-send-fly" : ""}`
+                ? `bg-accent text-background shadow-md shadow-accent/30 hover:brightness-110 hover:shadow-lg hover:shadow-accent/20 ${justSent ? "animate-send-fly" : ""}`
                 : "bg-surface text-muted border border-border"
             }`}
           >

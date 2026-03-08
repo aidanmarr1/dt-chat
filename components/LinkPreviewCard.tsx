@@ -28,10 +28,10 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
       href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block mt-2 max-w-sm rounded-lg border overflow-hidden transition-all hover:opacity-80 ${
+      className={`block mt-2 max-w-sm rounded-xl border overflow-hidden transition-all hover:scale-[0.98] active:scale-[0.97] hover:shadow-lg ${
         isOwn
-          ? "border-background/20 hover:bg-background/10"
-          : "border-border hover:bg-background"
+          ? "border-background/20 hover:bg-background/10 hover:shadow-black/10"
+          : "border-border hover:bg-background hover:shadow-black/5"
       } ${!hasImage ? (isOwn ? "border-l-[3px] border-l-background/40" : "border-l-[3px] border-l-accent") : ""}`}
     >
       {hasImage && (

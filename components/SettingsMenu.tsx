@@ -686,10 +686,10 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                           key={c.id}
                           title={c.label}
                           onClick={() => handleAccentColorChange(c.id)}
-                          className={`w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95 mx-auto ${
+                          className={`w-9 h-9 rounded-full transition-all hover:scale-110 active:scale-95 mx-auto ${
                             accentColor === c.id
-                              ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110"
-                              : "hover:ring-1 hover:ring-border"
+                              ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110 shadow-md"
+                              : "hover:ring-1 hover:ring-border hover:shadow-sm"
                           }`}
                           style={{ backgroundColor: theme === "dark" ? c.dark : c.light }}
                         />

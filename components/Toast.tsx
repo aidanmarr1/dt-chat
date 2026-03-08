@@ -53,26 +53,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             className={`rounded-2xl text-sm font-medium shadow-xl backdrop-blur-xl animate-toast-in pointer-events-auto overflow-hidden ${
               t.type === "success"
-                ? "bg-green-500/90 text-white shadow-green-500/25"
+                ? "bg-green-500/90 text-white shadow-green-500/30"
                 : t.type === "error"
-                ? "bg-red-500/90 text-white shadow-red-500/25"
-                : "bg-surface/95 text-foreground border border-border shadow-black/15"
+                ? "bg-red-500/90 text-white shadow-red-500/30"
+                : "bg-surface/95 text-foreground border border-border shadow-black/20"
             }`}
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               {t.type === "success" && (
-                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 animate-pop-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
               )}
               {t.type === "error" && (
-                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 animate-pop-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </div>
               )}
               {t.type === "info" && (
-                <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                <div className="w-6 h-6 rounded-full bg-accent/15 flex items-center justify-center shrink-0 animate-pop-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
                 </div>
               )}
               {t.message}
@@ -84,9 +84,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   }}
                   className={`ml-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 active:scale-95 ${
                     t.type === "success"
-                      ? "bg-white/20 text-white"
+                      ? "bg-white/25 text-white"
                       : t.type === "error"
-                      ? "bg-white/20 text-white"
+                      ? "bg-white/25 text-white"
                       : "bg-accent/15 text-accent"
                   }`}
                 >
@@ -95,12 +95,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               )}
             </div>
             <div
-              className={`h-0.5 animate-shrink-bar ${
+              className={`h-[3px] animate-shrink-bar rounded-b-full ${
                 t.type === "success"
-                  ? "bg-white/30"
+                  ? "bg-white/35"
                   : t.type === "error"
-                  ? "bg-white/30"
-                  : "bg-accent/30"
+                  ? "bg-white/35"
+                  : "bg-accent/35"
               }`}
               style={{ animationDuration: `${t.duration}ms` }}
             />

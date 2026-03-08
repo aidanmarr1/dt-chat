@@ -122,10 +122,10 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   }
 
   return (
-    <div className="relative group/code my-1.5 rounded-lg overflow-hidden border border-border bg-[#1a1a1a]">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-border/30 text-[10px] text-muted">
+    <div className="relative group/code my-1.5 rounded-xl overflow-hidden border border-border code-block-bg">
+      <div className="flex items-center justify-between px-3 py-1.5 code-block-header text-[10px] text-muted">
         <span className="flex items-center gap-1.5 tracking-wider font-medium">
-          <span className="text-accent/60 font-mono text-[9px]">&lt;/&gt;</span>
+          <span className="text-accent font-mono text-[9px] bg-accent/10 px-1.5 py-0.5 rounded">&lt;/&gt;</span>
           {displayLang}
         </span>
         <button
@@ -546,8 +546,8 @@ function MessageBubble({
             <div
               className={`px-4 py-2.5 rounded-xl ${
                 isOwn
-                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-sm shadow-foreground/10 ${isGrouped ? "rounded-tr-sm" : ""}`
-                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm ${isGrouped ? "rounded-tl-sm" : ""}`
+                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-md shadow-foreground/15 ${isGrouped ? "rounded-tr-sm" : ""}`
+                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-sm shadow-black/[0.04] ${isGrouped ? "rounded-tl-sm" : ""}`
               }`}
             >
               {/* File attachment */}

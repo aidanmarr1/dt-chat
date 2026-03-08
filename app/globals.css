@@ -304,6 +304,24 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
 }
 
 
+/* Notification dot pulse — draws attention to badge dots */
+@keyframes dot-ping {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@utility animate-dot-ping {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: var(--acc);
+    animation: dot-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
 /* Chat font size preferences */
 html[data-font-size="small"] .msg-text { font-size: 0.8125rem; }
 html[data-font-size="large"] .msg-text { font-size: 0.9375rem; }
@@ -728,6 +746,26 @@ html[data-reduce-motion="true"] *::after {
   .collapsible { transition: none; }
 }
 html[data-reduce-motion="true"] .collapsible { transition: none; }
+
+/* === Code block theme-responsive backgrounds === */
+html, html[data-theme="dark"] {
+  .code-block-bg {
+    background: #1a1a1a;
+  }
+  .code-block-header {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+html[data-theme="light"] {
+  .code-block-bg {
+    background: #F5F5F5;
+  }
+  .code-block-header {
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+}
 
 /* === Code Syntax Highlighting (hljs) === */
 /* Dark theme tokens */
