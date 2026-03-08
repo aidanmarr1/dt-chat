@@ -71,6 +71,15 @@ async function runAllMigrations() {
     )
   `);
 
+  // Indexes — idempotent, cheap if they already exist
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_reactions_message_id ON reactions(message_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_link_previews_message_id ON linkPreviews(message_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_poll_votes_poll_id ON pollVotes(poll_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id)`);
+
   // Columns (ALTER TABLE fails if column exists, which is fine)
   const alterStatements = [
     `ALTER TABLE users ADD COLUMN status TEXT`,

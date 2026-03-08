@@ -18,7 +18,14 @@ export async function PATCH(
   }
 
   const { id: messageId } = await params;
-  const { content } = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { content } = body;
 
   if (!content || typeof content !== "string" || !content.trim()) {
     return NextResponse.json({ error: "Content required" }, { status: 400 });

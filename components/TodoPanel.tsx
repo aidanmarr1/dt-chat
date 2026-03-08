@@ -3,23 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSwipeToClose } from "@/lib/hooks/useSwipeToClose";
 import { useToast } from "./Toast";
+import { relativeTime } from "@/lib/time-utils";
 import type { TodoItem } from "@/lib/types";
 
 interface TodoPanelProps {
   onClose: () => void;
   onTodoCountChange?: (count: number) => void;
-}
-
-function relativeTime(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, Math.floor((now - then) / 1000));
-
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  if (diff < 172800) return "yesterday";
-  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps) {

@@ -264,25 +264,45 @@ export async function GET(req: NextRequest) {
 
   if (pollMessageIds.length > 0) {
     try {
-      for (const pollId of pollMessageIds) {
-        const poll = await db.select().from(polls).where(eq(polls.id, pollId)).get();
-        if (!poll) continue;
+      // Batch: fetch all polls, all votes, and all user names in 3 queries (not 3N+1)
+      const allPolls = await db
+        .select()
+        .from(polls)
+        .where(sql`${polls.id} IN (${sql.join(pollMessageIds.map((id) => sql`${id}`), sql`, `)})`);
 
-        const votes = await db.select().from(pollVotes).where(eq(pollVotes.pollId, pollId));
+      const allPollVotes = allPolls.length > 0
+        ? await db
+            .select()
+            .from(pollVotes)
+            .where(sql`${pollVotes.pollId} IN (${sql.join(pollMessageIds.map((id) => sql`${id}`), sql`, `)})`)
+        : [];
+
+      // Collect all user IDs (voters + creators) for a single name lookup
+      const pollUserIds = [
+        ...new Set([
+          ...allPollVotes.map((v) => v.userId),
+          ...allPolls.map((p) => p.createdBy),
+        ]),
+      ];
+      const pollUserNameMap = new Map<string, string>();
+      if (pollUserIds.length > 0) {
+        const pollUsers = await db
+          .select({ id: users.id, displayName: users.displayName })
+          .from(users)
+          .where(sql`${users.id} IN (${sql.join(pollUserIds.map((id) => sql`${id}`), sql`, `)})`);
+        for (const u of pollUsers) pollUserNameMap.set(u.id, u.displayName);
+      }
+
+      // Group votes by poll ID
+      const votesByPoll = new Map<string, typeof allPollVotes>();
+      for (const v of allPollVotes) {
+        if (!votesByPoll.has(v.pollId)) votesByPoll.set(v.pollId, []);
+        votesByPoll.get(v.pollId)!.push(v);
+      }
+
+      for (const poll of allPolls) {
+        const votes = votesByPoll.get(poll.id) || [];
         const pollOptions: { id: string; text: string }[] = JSON.parse(poll.options);
-
-        // Get voter + creator names (batched)
-        const voterIds = [...new Set([...votes.map((v) => v.userId), poll.createdBy])];
-        const voterNameMap = new Map<string, string>();
-        if (voterIds.length > 0) {
-          const voterUsers = await db
-            .select({ id: users.id, displayName: users.displayName })
-            .from(users)
-            .where(sql`${users.id} IN (${sql.join(voterIds.map((id) => sql`${id}`), sql`, `)})`);
-          for (const u of voterUsers) voterNameMap.set(u.id, u.displayName);
-        }
-
-        const creatorUser = { displayName: voterNameMap.get(poll.createdBy) || "Unknown" };
 
         const enrichedOptions = pollOptions.map((o) => {
           const optVotes = votes.filter((v) => v.optionId === o.id);
@@ -291,17 +311,17 @@ export async function GET(req: NextRequest) {
             text: o.text,
             votes: optVotes.length,
             voted: optVotes.some((v) => v.userId === user.id),
-            voterNames: optVotes.map((v) => voterNameMap.get(v.userId) || "Unknown"),
+            voterNames: optVotes.map((v) => pollUserNameMap.get(v.userId) || "Unknown"),
           };
         });
 
-        pollMap.set(pollId, {
-          id: pollId,
+        pollMap.set(poll.id, {
+          id: poll.id,
           question: poll.question,
           options: enrichedOptions,
           totalVotes: votes.length,
           createdBy: poll.createdBy,
-          createdByName: creatorUser?.displayName || "Unknown",
+          createdByName: pollUserNameMap.get(poll.createdBy) || "Unknown",
           createdAt: poll.createdAt instanceof Date ? poll.createdAt.toISOString() : new Date(Number(poll.createdAt) * 1000).toISOString(),
         });
       }
@@ -363,7 +383,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many messages. Please slow down." }, { status: 429 });
   }
 
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const { content, fileName, fileType, filePath, replyToId } = body;
 
   // Validate fileSize is a number (or coerce to null)

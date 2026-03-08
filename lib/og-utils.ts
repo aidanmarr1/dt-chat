@@ -50,6 +50,7 @@ export async function fetchOpenGraph(url: string): Promise<{
 
     let currentUrl = url;
     let res: Response | null = null;
+    const visited = new Set<string>([currentUrl]);
 
     // Follow up to 3 redirects, validating each hop
     for (let i = 0; i < 4; i++) {
@@ -72,6 +73,8 @@ export async function fetchOpenGraph(url: string): Promise<{
         if (!location) break;
         const resolved = new URL(location, currentUrl).href;
         if (!isUrlSafe(resolved)) return null;
+        if (visited.has(resolved)) return null; // redirect cycle
+        visited.add(resolved);
         currentUrl = resolved;
         continue;
       }

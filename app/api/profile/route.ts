@@ -18,7 +18,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
   // Guard against oversized payloads
   if (JSON.stringify(body).length > 10_000) {

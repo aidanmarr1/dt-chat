@@ -9,12 +9,14 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 const libreBaskerville = Libre_Baskerville({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

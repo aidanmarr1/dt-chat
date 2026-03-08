@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import Avatar from "./Avatar";
 import ReactionBar from "./ReactionBar";
 import ReactionPicker from "./ReactionPicker";
@@ -12,6 +12,7 @@ import PollCard from "./PollCard";
 import ReminderPicker from "./ReminderPicker";
 import { useToast } from "./Toast";
 import { formatFileSize } from "@/lib/file-utils";
+import { relativeTime } from "@/lib/time-utils";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import typescript from "highlight.js/lib/languages/typescript";
@@ -60,17 +61,6 @@ interface MessageBubbleProps {
   isNew?: boolean;
   onImageClick?: (src: string) => void;
   isDeleting?: boolean;
-}
-
-function relativeTime(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, Math.floor((now - then) / 1000));
-
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 function emojiOnlyCount(text: string): number | null {
@@ -256,7 +246,7 @@ function FileTypeIcon({ type }: { type: string }) {
   );
 }
 
-export default function MessageBubble({
+function MessageBubble({
   message,
   isOwn,
   isGrouped,
@@ -941,3 +931,20 @@ export default function MessageBubble({
     </>
   );
 }
+
+export default memo(MessageBubble, (prev, next) => {
+  return (
+    prev.message === next.message &&
+    prev.isOwn === next.isOwn &&
+    prev.isGrouped === next.isGrouped &&
+    prev.isBookmarked === next.isBookmarked &&
+    prev.timeFormat === next.timeFormat &&
+    prev.hasReminder === next.hasReminder &&
+    prev.reminderTime === next.reminderTime &&
+    prev.replyCount === next.replyCount &&
+    prev.isNew === next.isNew &&
+    prev.isDeleting === next.isDeleting &&
+    prev.currentDisplayName === next.currentDisplayName &&
+    prev.currentUserId === next.currentUserId
+  );
+});
