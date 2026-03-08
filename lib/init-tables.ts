@@ -79,6 +79,7 @@ async function runAllMigrations() {
   await client.execute(`CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id)`);
   await client.execute(`CREATE INDEX IF NOT EXISTS idx_poll_votes_poll_id ON pollVotes(poll_id)`);
   await client.execute(`CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id)`);
+  await client.execute(`CREATE INDEX IF NOT EXISTS idx_messages_reply_to ON messages(reply_to_id)`);
 
   // Columns (ALTER TABLE fails if column exists, which is fine)
   const alterStatements = [

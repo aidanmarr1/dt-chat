@@ -78,7 +78,17 @@ function flushSettings() {
 // Flush pending changes before page unload so nothing is lost
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", () => {
-    if (Object.keys(pendingUpdates).length > 0) {
+    if (Object.keys(pendingUpdates).length === 0) return;
+    // Use sendBeacon for reliable delivery during page unload
+    if (navigator.sendBeacon) {
+      const updates = { ...pendingUpdates };
+      pendingUpdates = {};
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      navigator.sendBeacon(
+        "/api/settings",
+        new Blob([JSON.stringify(updates)], { type: "application/json" })
+      );
+    } else {
       flushSettings();
     }
   });

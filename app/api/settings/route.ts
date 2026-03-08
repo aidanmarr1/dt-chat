@@ -38,7 +38,16 @@ export async function GET() {
   return NextResponse.json({ settings });
 }
 
+// POST handler for navigator.sendBeacon (page unload) — same logic as PATCH
+export async function POST(req: NextRequest) {
+  return patchSettings(req);
+}
+
 export async function PATCH(req: NextRequest) {
+  return patchSettings(req);
+}
+
+async function patchSettings(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

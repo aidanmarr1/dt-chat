@@ -31,6 +31,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
   }
 
+  // Validate file extension against whitelist
+  const ALLOWED_EXTENSIONS = new Set([
+    "jpg", "jpeg", "png", "gif", "webp", "svg",
+    "pdf", "doc", "docx", "txt", "csv", "xls", "xlsx", "ppt", "pptx",
+    "zip", "rar", "7z", "tar", "gz",
+    "mp3", "wav", "ogg", "m4a", "aac", "flac", "webm",
+  ]);
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  if (ext && !ALLOWED_EXTENSIONS.has(ext)) {
+    return NextResponse.json({ error: "File extension not allowed" }, { status: 400 });
+  }
+
   // Validate magic bytes for image uploads to prevent MIME spoofing
   const IMAGE_MAGIC: Record<string, (bytes: Uint8Array) => boolean> = {
     "image/jpeg": (b) => b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF,
@@ -47,8 +59,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const ext = file.name.split(".").pop() || "";
-  const safeName = `${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
+  const fileExt = file.name.split(".").pop() || "";
+  const safeName = `${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ""}`;
 
   const blob = await put(safeName, file, {
     access: "public",

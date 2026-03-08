@@ -162,7 +162,7 @@ function renderInline(text: string, isOwn: boolean, keyPrefix: string) {
       }
       const displayText = part.length > 50 ? part.slice(0, 30) + "\u2026" + part.slice(-15) : part;
       return (
-        <a key={key} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
+        <a key={key} href={part.match(/^https?:\/\//) ? part : `https://${part}`} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" title={part} className={`underline underline-offset-2 break-all transition-opacity hover:opacity-70 ${isOwn ? "" : "text-accent"}`}>
           {displayText}
         </a>
       );

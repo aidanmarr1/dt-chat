@@ -97,6 +97,7 @@ export default function ChatRoom() {
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
   const [isOffline, setIsOffline] = useState(false);
   const [failedPolls, setFailedPolls] = useState(0);
+  const failedPollsRef = useRef(0);
   // Feature 1: Celebration Effects
   const [reduceMotion, setReduceMotion] = useState(false);
   // Feature 2: Reminders
@@ -135,8 +136,9 @@ export default function ChatRoom() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Keep messagesRef in sync with state (avoids stale closures in polling/intervals)
+  // Keep refs in sync with state (avoids stale closures in polling/intervals)
   messagesRef.current = messages;
+  failedPollsRef.current = failedPolls;
 
   // Track online/offline status
   useEffect(() => {
@@ -542,8 +544,22 @@ export default function ChatRoom() {
     }
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 2000);
-    return () => clearInterval(interval);
+    // Adaptive polling: faster when active, slower after failures
+    let pollTimer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+    async function poll() {
+      if (cancelled) return;
+      await fetchMessages();
+      if (cancelled) return;
+      // Exponential backoff on failures, cap at 15s
+      const fp = failedPollsRef.current;
+      const delay = fp > 0
+        ? Math.min(2000 * Math.pow(2, fp), 15000)
+        : 2000;
+      pollTimer = setTimeout(poll, delay);
+    }
+    pollTimer = setTimeout(poll, 2000);
+    return () => { cancelled = true; clearTimeout(pollTimer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isNearBottom, scrollToBottom, soundEnabled, notificationsEnabled]);
 

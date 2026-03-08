@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import ChatRoom from "@/components/ChatRoom";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { verifyGateCookie } from "../api/gate/route";
 
 export default async function ChatPage() {
@@ -17,5 +18,9 @@ export default async function ChatPage() {
     redirect("/auth");
   }
 
-  return <ChatRoom />;
+  return (
+    <ErrorBoundary>
+      <ChatRoom />
+    </ErrorBoundary>
+  );
 }

@@ -88,7 +88,11 @@ export async function fetchOpenGraph(url: string): Promise<{
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/html")) return null;
 
-    const html = await res.text();
+    // Limit response body to 512KB to prevent memory abuse from huge pages
+    const MAX_BODY = 512 * 1024;
+    const contentLength = parseInt(res.headers.get("content-length") || "0", 10);
+    if (contentLength > MAX_BODY) return null;
+    const html = (await res.text()).slice(0, MAX_BODY);
 
     // Extract all <meta> tags from the full HTML (sites like YouTube put OG tags 600k+ chars deep)
     const metaTags = html.match(/<meta[^>]*(?:property|name|content)=[^>]*>/gi) || [];

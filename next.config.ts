@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
           // Legacy XSS protection for older browsers
           { key: "X-XSS-Protection", value: "1; mode=block" },
+          // Isolate browsing context from cross-origin popups
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },
       {
