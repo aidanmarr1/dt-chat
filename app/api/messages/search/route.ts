@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const escapedQ = q.replace(/[%_\\]/g, "\\$&");
 
   const offsetParam = req.nextUrl.searchParams.get("offset");
-  const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10) || 0) : 0;
+  const offset = Math.min(Math.max(0, parseInt(offsetParam || "0", 10) || 0), 5000);
 
   const results = await db
     .select({

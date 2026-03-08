@@ -73,6 +73,9 @@ export async function PATCH(
   if (!message.pinnedAt) {
     return NextResponse.json({ error: "Message is not pinned" }, { status: 400 });
   }
+  if (message.pinnedBy !== user.id) {
+    return NextResponse.json({ error: "Only the user who pinned can edit the label" }, { status: 403 });
+  }
 
   await db
     .update(messages)

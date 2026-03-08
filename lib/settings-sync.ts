@@ -68,6 +68,10 @@ function flushSettings() {
     keepalive: true,
   }).catch(() => {
     Object.assign(pendingUpdates, updates);
+    // Re-schedule flush so failed updates are retried
+    if (!saveTimer && Object.keys(pendingUpdates).length > 0) {
+      saveTimer = setTimeout(flushSettings, 1000);
+    }
   });
 }
 

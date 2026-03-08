@@ -46,7 +46,7 @@ export async function fetchOpenGraph(url: string): Promise<{
   if (!isUrlSafe(url)) return null;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     let currentUrl = url;
     let res: Response | null = null;

@@ -2,13 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { messages, users, reactions, readReceipts, linkPreviews, polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { ensurePollTables, ensureStatusColumn, ensureLinkPreviewTable, ensurePinLabelColumn } from "@/lib/init-tables";
+import { ensureAllTables } from "@/lib/init-tables";
 import { desc, eq, gt, sql } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { extractUrls, fetchOpenGraph } from "@/lib/og-utils";
 
 const checkMessageRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 const checkPollRateLimit = createRateLimiter({ maxAttempts: 60, windowMs: 60 * 1000 });
+
+async function getPresenceData(currentUserId: string) {
+  // Auto-clear expired statuses
+  const now = new Date();
+  await db
+    .update(users)
+    .set({ status: null, statusSetAt: null, statusExpiresAt: null })
+    .where(sql`${users.statusExpiresAt} IS NOT NULL AND ${users.statusExpiresAt} < ${Math.floor(now.getTime() / 1000)}`);
+
+  const thirtySecondsAgo = new Date(Date.now() - 30_000);
+  const threeSecondsAgo = Date.now() - 3000;
+
+  const [onlineUsers, typingRows] = await Promise.all([
+    db
+      .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId, status: users.status })
+      .from(users)
+      .where(gt(users.lastActiveAt, thirtySecondsAgo)),
+    db
+      .select({ displayName: users.displayName })
+      .from(users)
+      .where(sql`${users.typingAt} > ${threeSecondsAgo} AND ${users.id} != ${currentUserId}`),
+  ]);
+
+  return { onlineUsers, typingUsers: typingRows.map((r) => r.displayName) };
+}
 
 
 export async function GET(req: NextRequest) {
@@ -21,11 +46,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   }
 
-  // Ensure tables exist before querying
-  await ensureLinkPreviewTable();
-  await ensurePollTables();
-  await ensureStatusColumn();
-  await ensurePinLabelColumn();
+  await ensureAllTables();
 
   // Update caller's lastActiveAt
   await db
@@ -47,32 +68,12 @@ export async function GET(req: NextRequest) {
 
     if (latest && latest.id === since) {
       // Nothing changed — return lightweight response
-      // Auto-clear expired statuses
-      const now = new Date();
-      await db
-        .update(users)
-        .set({ status: null, statusSetAt: null, statusExpiresAt: null })
-        .where(sql`${users.statusExpiresAt} IS NOT NULL AND ${users.statusExpiresAt} < ${Math.floor(now.getTime() / 1000)}`);
-
-      const thirtySecondsAgo = new Date(Date.now() - 30_000);
-      const onlineUsers = await db
-        .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId, status: users.status })
-        .from(users)
-        .where(gt(users.lastActiveAt, thirtySecondsAgo));
-
-      const threeSecondsAgo = Date.now() - 3000;
-      const typingRows = await db
-        .select({ displayName: users.displayName })
-        .from(users)
-        .where(
-          sql`${users.typingAt} > ${threeSecondsAgo} AND ${users.id} != ${user.id}`
-        );
-
+      const presence = await getPresenceData(user.id);
       return NextResponse.json({
         messages: null,
-        onlineCount: onlineUsers.length,
-        onlineUsers,
-        typingUsers: typingRows.map((r) => r.displayName),
+        onlineCount: presence.onlineUsers.length,
+        onlineUsers: presence.onlineUsers,
+        typingUsers: presence.typingUsers,
       });
     }
   }
@@ -157,15 +158,17 @@ export async function GET(req: NextRequest) {
         )
       : [];
 
-  // Resolve display names for reaction users (batched)
+  // Batch all user name lookups (reactions + pinners) into a single query
   const reactionUserIds = [...new Set(allReactions.map((r) => r.userId))];
-  const reactionUserNameMap = new Map<string, string>();
-  if (reactionUserIds.length > 0) {
-    const reactionUsers = await db
+  const pinnerIds = [...new Set(rows.filter((r) => r.pinnedBy).map((r) => r.pinnedBy!))];
+  const allUserIds = [...new Set([...reactionUserIds, ...pinnerIds])];
+  const userNameMap = new Map<string, string>();
+  if (allUserIds.length > 0) {
+    const lookedUpUsers = await db
       .select({ id: users.id, displayName: users.displayName })
       .from(users)
-      .where(sql`${users.id} IN (${sql.join(reactionUserIds.map((id) => sql`${id}`), sql`, `)})`);
-    for (const u of reactionUsers) reactionUserNameMap.set(u.id, u.displayName);
+      .where(sql`${users.id} IN (${sql.join(allUserIds.map((id) => sql`${id}`), sql`, `)})`);
+    for (const u of lookedUpUsers) userNameMap.set(u.id, u.displayName);
   }
 
   // Group reactions by messageId + emoji
@@ -179,7 +182,7 @@ export async function GET(req: NextRequest) {
     if (!reactionMap.has(key)) reactionMap.set(key, []);
     const arr = reactionMap.get(key)!;
     const existing = arr.find((a) => a.emoji === r.emoji);
-    const name = reactionUserNameMap.get(r.userId) || "Unknown";
+    const name = userNameMap.get(r.userId) || "Unknown";
     if (existing) {
       existing.count++;
       existing.reactedByNames.push(name);
@@ -189,16 +192,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Look up pinned-by display names (batched)
-  const pinnerIds = [...new Set(rows.filter((r) => r.pinnedBy).map((r) => r.pinnedBy!))];
-  const pinnerMap = new Map<string, string>();
-  if (pinnerIds.length > 0) {
-    const pinnerUsers = await db
-      .select({ id: users.id, displayName: users.displayName })
-      .from(users)
-      .where(sql`${users.id} IN (${sql.join(pinnerIds.map((id) => sql`${id}`), sql`, `)})`);
-    for (const u of pinnerUsers) pinnerMap.set(u.id, u.displayName);
-  }
+  // Reuse userNameMap for pinners (already fetched above)
+  const pinnerMap = userNameMap;
 
   // Get all read receipts with user info
   const allReceipts = await db
@@ -347,35 +342,14 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Auto-clear expired statuses (statusExpiresAt = null means "don't clear")
-  const now = new Date();
-  await db
-    .update(users)
-    .set({ status: null, statusSetAt: null, statusExpiresAt: null })
-    .where(sql`${users.statusExpiresAt} IS NOT NULL AND ${users.statusExpiresAt} < ${Math.floor(now.getTime() / 1000)}`);
-
-  // Get online users (active in last 30s)
-  const thirtySecondsAgo = new Date(Date.now() - 30_000);
-  const onlineUsers = await db
-    .select({ id: users.id, displayName: users.displayName, avatarId: users.avatarId, status: users.status })
-    .from(users)
-    .where(gt(users.lastActiveAt, thirtySecondsAgo));
-
-  // Get typing users (typingAt within last 3s, excluding self)
-  const threeSecondsAgo = Date.now() - 3000;
-  const typingRows = await db
-    .select({ displayName: users.displayName })
-    .from(users)
-    .where(
-      sql`${users.typingAt} > ${threeSecondsAgo} AND ${users.id} != ${user.id}`
-    );
+  const presence = await getPresenceData(user.id);
 
   return NextResponse.json({
     messages: responseMessages,
     hasMore,
-    onlineCount: onlineUsers.length,
-    onlineUsers,
-    typingUsers: typingRows.map((r) => r.displayName),
+    onlineCount: presence.onlineUsers.length,
+    onlineUsers: presence.onlineUsers,
+    typingUsers: presence.typingUsers,
   });
 }
 
@@ -473,40 +447,33 @@ export async function POST(req: NextRequest) {
       .where(eq(users.id, user.id));
   });
 
-  // Fetch link previews synchronously before responding
-  const fetchedPreviews: { id: string; url: string; title: string | null; description: string | null; imageUrl: string | null; siteName: string | null }[] = [];
+  // Fetch link previews in the background — don't block the response
   if (finalContent) {
     const urls = extractUrls(finalContent);
     if (urls.length > 0) {
-      await ensureLinkPreviewTable();
-      for (const url of urls.slice(0, 3)) {
-        try {
-          const og = await fetchOpenGraph(url);
-          if (og) {
-            const previewId = crypto.randomUUID();
-            await db.insert(linkPreviews).values({
-              id: previewId,
-              messageId,
-              url,
-              title: og.title || null,
-              description: og.description || null,
-              imageUrl: og.imageUrl || null,
-              siteName: og.siteName || null,
-              fetchedAt: new Date(),
-            });
-            fetchedPreviews.push({
-              id: previewId,
-              url,
-              title: og.title || null,
-              description: og.description || null,
-              imageUrl: og.imageUrl || null,
-              siteName: og.siteName || null,
-            });
+      // Fire-and-forget: previews will appear on the next poll cycle
+      (async () => {
+        await ensureAllTables();
+        for (const url of urls.slice(0, 3)) {
+          try {
+            const og = await fetchOpenGraph(url);
+            if (og) {
+              await db.insert(linkPreviews).values({
+                id: crypto.randomUUID(),
+                messageId,
+                url,
+                title: og.title || null,
+                description: og.description || null,
+                imageUrl: og.imageUrl || null,
+                siteName: og.siteName || null,
+                fetchedAt: new Date(),
+              });
+            }
+          } catch {
+            // skip failed previews
           }
-        } catch {
-          // skip failed previews
         }
-      }
+      })();
     }
   }
 
@@ -532,7 +499,7 @@ export async function POST(req: NextRequest) {
       pinnedByName: null,
       pinLabel: null,
       readBy: [],
-      linkPreviews: fetchedPreviews,
+      linkPreviews: [],
       poll: null,
     },
   });

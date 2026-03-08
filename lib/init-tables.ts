@@ -1,10 +1,10 @@
 import { client } from "./db";
 
-let initialized = false;
+// Single initialization promise — all tables/columns are ensured once, atomically
+let initPromise: Promise<void> | null = null;
 
-export async function ensurePollTables() {
-  if (initialized) return;
-
+async function runAllMigrations() {
+  // Tables
   await client.execute(`
     CREATE TABLE IF NOT EXISTS polls (
       id TEXT PRIMARY KEY,
@@ -15,7 +15,6 @@ export async function ensurePollTables() {
       message_id TEXT REFERENCES messages(id)
     )
   `);
-
   await client.execute(`
     CREATE TABLE IF NOT EXISTS pollVotes (
       id TEXT PRIMARY KEY,
@@ -25,48 +24,6 @@ export async function ensurePollTables() {
       created_at INTEGER NOT NULL
     )
   `);
-
-  initialized = true;
-}
-
-let statusInitialized = false;
-
-export async function ensureStatusColumn() {
-  if (statusInitialized) return;
-  try {
-    await client.execute(`ALTER TABLE users ADD COLUMN status TEXT`);
-  } catch {
-    // Column already exists
-  }
-  try {
-    await client.execute(`ALTER TABLE users ADD COLUMN status_set_at INTEGER`);
-  } catch {
-    // Column already exists
-  }
-  try {
-    await client.execute(`ALTER TABLE users ADD COLUMN status_expires_at INTEGER`);
-  } catch {
-    // Column already exists
-  }
-  statusInitialized = true;
-}
-
-let settingsInitialized = false;
-
-export async function ensureSettingsColumn() {
-  if (settingsInitialized) return;
-  try {
-    await client.execute(`ALTER TABLE users ADD COLUMN settings TEXT`);
-  } catch {
-    // Column already exists
-  }
-  settingsInitialized = true;
-}
-
-let todoInitialized = false;
-
-export async function ensureTodoTable() {
-  if (todoInitialized) return;
   await client.execute(`
     CREATE TABLE IF NOT EXISTS todos (
       id TEXT PRIMARY KEY,
@@ -79,13 +36,6 @@ export async function ensureTodoTable() {
       position INTEGER NOT NULL DEFAULT 0
     )
   `);
-  todoInitialized = true;
-}
-
-let bookmarkInitialized = false;
-
-export async function ensureBookmarkTable() {
-  if (bookmarkInitialized) return;
   await client.execute(`
     CREATE TABLE IF NOT EXISTS bookmarks (
       id TEXT PRIMARY KEY,
@@ -98,13 +48,6 @@ export async function ensureBookmarkTable() {
       bookmarked_at INTEGER NOT NULL
     )
   `);
-  bookmarkInitialized = true;
-}
-
-let reminderInitialized = false;
-
-export async function ensureReminderTable() {
-  if (reminderInitialized) return;
   await client.execute(`
     CREATE TABLE IF NOT EXISTS reminders (
       id TEXT PRIMARY KEY,
@@ -115,25 +58,6 @@ export async function ensureReminderTable() {
       created_at INTEGER NOT NULL
     )
   `);
-  reminderInitialized = true;
-}
-
-let pinLabelInitialized = false;
-
-export async function ensurePinLabelColumn() {
-  if (pinLabelInitialized) return;
-  try {
-    await client.execute(`ALTER TABLE messages ADD COLUMN pin_label TEXT`);
-  } catch {
-    // Column already exists
-  }
-  pinLabelInitialized = true;
-}
-
-let linkPreviewInitialized = false;
-
-export async function ensureLinkPreviewTable() {
-  if (linkPreviewInitialized) return;
   await client.execute(`
     CREATE TABLE IF NOT EXISTS linkPreviews (
       id TEXT PRIMARY KEY,
@@ -146,5 +70,38 @@ export async function ensureLinkPreviewTable() {
       fetched_at INTEGER NOT NULL
     )
   `);
-  linkPreviewInitialized = true;
+
+  // Columns (ALTER TABLE fails if column exists, which is fine)
+  const alterStatements = [
+    `ALTER TABLE users ADD COLUMN status TEXT`,
+    `ALTER TABLE users ADD COLUMN status_set_at INTEGER`,
+    `ALTER TABLE users ADD COLUMN status_expires_at INTEGER`,
+    `ALTER TABLE users ADD COLUMN settings TEXT`,
+    `ALTER TABLE messages ADD COLUMN pin_label TEXT`,
+  ];
+  for (const stmt of alterStatements) {
+    try { await client.execute(stmt); } catch { /* column already exists */ }
+  }
 }
+
+/** Single entry point — ensures all tables and columns exist. Safe to call from any route. */
+export function ensureAllTables(): Promise<void> {
+  if (!initPromise) {
+    initPromise = runAllMigrations().catch((err) => {
+      // Reset so next request retries instead of caching the failure
+      initPromise = null;
+      throw err;
+    });
+  }
+  return initPromise;
+}
+
+// Legacy named exports — all delegate to the single init for backwards compat
+export const ensurePollTables = ensureAllTables;
+export const ensureStatusColumn = ensureAllTables;
+export const ensureSettingsColumn = ensureAllTables;
+export const ensureTodoTable = ensureAllTables;
+export const ensureBookmarkTable = ensureAllTables;
+export const ensureReminderTable = ensureAllTables;
+export const ensurePinLabelColumn = ensureAllTables;
+export const ensureLinkPreviewTable = ensureAllTables;
