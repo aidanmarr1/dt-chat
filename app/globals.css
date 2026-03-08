@@ -59,11 +59,6 @@ html[data-theme="light"][data-accent="teal"]    { --acc: #0D9488; --acc-rgb: 13,
   transform: translateZ(0);
 }
 
-/* Isolate message bubbles so reflow/repaint doesn't cascade to siblings */
-.msg-bubble {
-  contain: layout style;
-}
-
 /* === Chat density === */
 html[data-density="compact"] .msg-bubble  { padding-top: 0.375rem; padding-bottom: 0.375rem; margin-bottom: 0.125rem; }
 html[data-density="compact"] .msg-bubble-spaced { margin-bottom: 0.375rem; }
