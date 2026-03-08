@@ -824,23 +824,6 @@ export default function MessageInput({
                 ))}
               </div>
             )}
-            {/* Formatting toolbar */}
-            {value.length > 0 && (
-              <div className="absolute -top-8 left-0 hidden sm:flex items-center gap-0.5 bg-surface/95 backdrop-blur-sm border border-border rounded-lg px-1 py-0.5 shadow-sm animate-fade-in z-10">
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Bold (Cmd+B)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
-                </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Italic (Cmd+I)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
-                </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all font-mono text-[10px] font-bold" title="Code">
-                  {"</>"}
-                </button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="p-1 rounded text-muted hover:text-foreground hover:bg-border/50 transition-all" title="Strikethrough">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
-                </button>
-              </div>
-            )}
             {/* contentEditable rich text input */}
             <div className="relative">
               <div
@@ -860,49 +843,67 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-3.5 py-2.5 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-3.5 pt-2.5 pb-8 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
-              {/* Inline action buttons inside the input area */}
-              <div className="absolute right-2 bottom-1.5 flex items-center gap-0.5">
-                <button
-                  ref={emojiToggleRef}
-                  onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
-                  className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
-                  title="Emoji"
-                  aria-label="Insert emoji"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                    <line x1="9" y1="9" x2="9.01" y2="9" />
-                    <line x1="15" y1="9" x2="15.01" y2="9" />
-                  </svg>
-                </button>
-                <button
-                  ref={gifToggleRef}
-                  onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
-                  className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
-                  title="GIF"
-                  aria-label="Insert GIF"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
-                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                    <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
-                  </svg>
-                </button>
-                {onCreatePoll && (
+              {/* Inline toolbar inside the input — formatting left, actions right */}
+              <div className="absolute left-1.5 right-1.5 bottom-1 flex items-center justify-between">
+                {/* Formatting buttons — left side */}
+                <div className="hidden sm:flex items-center gap-0.5">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted/40 hover:text-muted transition-colors" title="Bold (Cmd+B)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
+                  </button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted/40 hover:text-muted transition-colors" title="Italic (Cmd+I)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
+                  </button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="p-1 rounded text-muted/40 hover:text-muted transition-colors font-mono text-[11px] font-bold" title="Code">
+                    {"</>"}
+                  </button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="p-1 rounded text-muted/40 hover:text-muted transition-colors" title="Strikethrough">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
+                  </button>
+                </div>
+                {/* Action buttons — right side */}
+                <div className="flex items-center gap-0.5 ml-auto">
                   <button
-                    onClick={onCreatePoll}
-                    className="p-1.5 text-muted/50 hover:text-muted transition-colors rounded-md"
-                    title="Create poll"
-                    aria-label="Create poll"
+                    ref={emojiToggleRef}
+                    onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
+                    className="p-1.5 text-muted/40 hover:text-muted transition-colors rounded-md"
+                    title="Emoji"
+                    aria-label="Insert emoji"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
-                      <path d="M3 3h18" /><path d="M3 9h18" /><path d="M3 15h12" /><path d="M3 21h6" />
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                      <line x1="9" y1="9" x2="9.01" y2="9" />
+                      <line x1="15" y1="9" x2="15.01" y2="9" />
                     </svg>
                   </button>
-                )}
+                  <button
+                    ref={gifToggleRef}
+                    onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
+                    className="p-1.5 text-muted/40 hover:text-muted transition-colors rounded-md"
+                    title="GIF"
+                    aria-label="Insert GIF"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
+                    </svg>
+                  </button>
+                  {onCreatePoll && (
+                    <button
+                      onClick={onCreatePoll}
+                      className="p-1.5 text-muted/40 hover:text-muted transition-colors rounded-md"
+                      title="Create poll"
+                      aria-label="Create poll"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="block">
+                        <path d="M3 3h18" /><path d="M3 9h18" /><path d="M3 15h12" /><path d="M3 21h6" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             {/* Emoji picker — rendered at outer level to avoid overflow issues */}
