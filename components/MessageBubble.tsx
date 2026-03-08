@@ -452,7 +452,7 @@ function MessageBubble({
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
         } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
-        onMouseLeave={() => { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); setShowMoreMenu(false); }, 150); }}
+        onMouseLeave={() => { if (!showMoreMenu) { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); setShowMoreMenu(false); }, 300); } }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}
         onContextMenu={handleContextMenu}
         onTouchStart={handleTouchStart}
@@ -707,8 +707,8 @@ function MessageBubble({
                 </button>
                 {showMoreMenu && (
                   <>
-                    <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setShowMoreMenu(false); }} />
-                    <div className={`absolute top-full mt-1.5 ${isOwn ? "right-0" : "left-0"} w-44 bg-surface/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl shadow-black/20 z-40 overflow-hidden animate-slide-down py-1`}>
+                    <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setShowMoreMenu(false); }} onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } }} />
+                    <div className={`absolute top-full mt-1.5 ${isOwn ? "right-0" : "left-0"} w-44 bg-surface/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl shadow-black/20 z-40 overflow-hidden animate-slide-down py-1`} onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } }}>
                       <button onClick={() => { onPin(message.id); setShowMoreMenu(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-foreground hover:bg-border/40 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={message.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={message.isPinned ? "text-accent shrink-0" : "text-muted shrink-0"}><line x1="12" y1="17" x2="12" y2="22" /><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" /></svg>
                         {message.isPinned ? "Unpin" : "Pin"}
