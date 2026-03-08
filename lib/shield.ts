@@ -32,7 +32,7 @@ try{document.body.appendChild(d)}catch(e){}}
 if(!document.getElementById(K2)){var s=ce('style');s.id=K2;
 s.textContent='body{pointer-events:none!important;user-select:none!important;-webkit-user-select:none!important;overflow:hidden!important}body *:not(#'+K+'):not(#'+K+' *){visibility:hidden!important}#'+K+'{visibility:visible!important;pointer-events:auto!important}';
 try{document.head.appendChild(s)}catch(e){}}
-rf(function(){st(function(){BP=false;window._bp=false},0)})}
+PK.style.display='flex';rf(function(){rf(function(){st(function(){BP=false;window._bp=false},200)})})}
 function UB(){if(!O){PK.style.display='none';var e=document.getElementById(K);if(e)e.remove();
 var s=document.getElementById(K2);if(s)s.remove();
 try{document.body.style.removeProperty('pointer-events');document.body.style.removeProperty('user-select');
