@@ -401,6 +401,7 @@ function MessageBubble({
       ? message.filePath!
       : `/api/files/${message.filePath}`
     : null;
+  const downloadUrl = hasFile ? `/api/files/${message.filePath}?download=1` : null;
   const isPollMessage = message.content?.startsWith("::poll::");
   const isGifOnly = !hasFile && message.content && !isPollMessage ? isGifOnlyMessage(message.content) : false;
   const emojiCount = !hasFile && message.content && !isGifOnly && !isPollMessage ? emojiOnlyCount(message.content) : null;
@@ -569,7 +570,7 @@ function MessageBubble({
                       />
                     </div>
                   ) : (
-                    <a href={fileUrl} download={message.fileName} className={`flex items-center gap-3 p-2 rounded-lg border transition-colors ${isOwn ? "border-background/20 hover:bg-background/10" : "border-border hover:bg-background"}`}>
+                    <a href={downloadUrl || fileUrl} download={message.fileName} className={`flex items-center gap-3 p-2 rounded-lg border transition-colors ${isOwn ? "border-background/20 hover:bg-background/10" : "border-border hover:bg-background"}`}>
                       <FileTypeIcon type={message.fileType || ""} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{message.fileName}</p>

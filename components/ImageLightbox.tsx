@@ -38,7 +38,11 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(currentSrc);
+      // Route through API proxy to avoid cross-origin and shield issues
+      const downloadUrl = currentSrc.startsWith("http://") || currentSrc.startsWith("https://")
+        ? `/api/files/${currentSrc}?download=1`
+        : `${currentSrc}${currentSrc.includes("?") ? "&" : "?"}download=1`;
+      const res = await fetch(downloadUrl);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

@@ -87,6 +87,10 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
       : `/api/files/${item.filePath}`;
   }
 
+  function getDownloadUrl(item: MediaItem) {
+    return `/api/files/${item.filePath}?download=1`;
+  }
+
   function getFileLabel(type: string) {
     if (type === "application/pdf") return "PDF";
     if (type.includes("word")) return "DOC";
@@ -109,7 +113,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
 
   async function downloadSingle(item: MediaItem) {
     try {
-      const res = await fetch(getFileUrl(item));
+      const res = await fetch(getDownloadUrl(item));
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -144,7 +148,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
         const batch = itemsToDownload.slice(i, i + BATCH_SIZE);
         const results = await Promise.all(
           batch.map(async (item) => {
-            const res = await fetch(getFileUrl(item), { signal: controller.signal });
+            const res = await fetch(getDownloadUrl(item), { signal: controller.signal });
             return { item, blob: await res.blob() };
           })
         );
@@ -359,7 +363,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
               {files.map((file) => (
                 <a
                   key={file.id}
-                  href={getFileUrl(file)}
+                  href={getDownloadUrl(file)}
                   download={file.fileName}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-surface/50 transition-colors"
                 >

@@ -111,11 +111,11 @@ Error.stackTraceLimit=0;
 try{Object.defineProperty(Error,'stackTraceLimit',{value:0,writable:false,configurable:false})}catch(e){}
 
 try{var oXHR=XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open=function(){var u=arguments[1];if(typeof u==='string'&&!u.startsWith(location.origin)&&!u.startsWith('/')&&!u.startsWith('https://'+location.host)){return}return oXHR.apply(this,arguments)};
+XMLHttpRequest.prototype.open=function(){var u=arguments[1];if(typeof u==='string'&&!u.startsWith(location.origin)&&!u.startsWith('/')&&!u.startsWith('https://'+location.host)&&u.indexOf('.blob.vercel-storage.com/')===-1){return}return oXHR.apply(this,arguments)};
 Object.defineProperty(XMLHttpRequest.prototype,'open',{configurable:false,writable:false})}catch(e){}
 
 try{var oFetch=window.fetch;
-window.fetch=function(u){var url=typeof u==='string'?u:(u&&u.url?u.url:'');if(url&&!url.startsWith(location.origin)&&!url.startsWith('/')&&!url.startsWith('https://'+location.host)){return Promise.reject(new Error(''))}return oFetch.apply(window,arguments)};
+window.fetch=function(u){var url=typeof u==='string'?u:(u&&u.url?u.url:'');if(url&&!url.startsWith(location.origin)&&!url.startsWith('/')&&!url.startsWith('https://'+location.host)&&url.indexOf('.blob.vercel-storage.com/')===-1){return Promise.reject(new Error(''))}return oFetch.apply(window,arguments)};
 Object.defineProperty(window,'fetch',{configurable:false,writable:false})}catch(e){}
 
 try{var oSEA=EventTarget.prototype.addEventListener;
