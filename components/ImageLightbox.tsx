@@ -14,6 +14,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
   const [loaded, setLoaded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const hasMultiple = images && images.length > 1;
   const currentSrc = hasMultiple ? images[currentIndex].src : src;
@@ -32,6 +33,27 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
     setZoom(false);
     setCurrentIndex((i) => (i - 1 + images.length) % images.length);
   }, [hasMultiple, images?.length]);
+
+  const handleDownload = useCallback(async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(currentSrc);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = currentAlt || "image";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently fail
+    } finally {
+      setDownloading(false);
+    }
+  }, [currentSrc, currentAlt, downloading]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -89,15 +111,34 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
           onClick={(e) => { e.stopPropagation(); setZoom(!zoom); }}
           onLoad={() => setLoaded(true)}
         />
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 sm:-top-3 sm:-right-3 w-10 h-10 sm:w-8 sm:h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 shadow-lg cursor-pointer z-10"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+
+        {/* Top-right buttons */}
+        <div className="absolute top-2 right-2 sm:-top-3 sm:-right-3 flex items-center gap-1.5 z-10">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+            disabled={downloading}
+            className="w-10 h-10 sm:w-8 sm:h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 shadow-lg cursor-pointer disabled:opacity-50"
+          >
+            {downloading ? (
+              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 sm:w-8 sm:h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 shadow-lg cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
 
         {/* Image counter + filename */}
         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3">
