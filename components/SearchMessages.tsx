@@ -37,30 +37,27 @@ function contextSnippet(text: string, query: string, contextChars = 40) {
   );
 }
 
-function relativeDate(dateStr: string): string {
+function dateDiffDays(dateStr: string): number {
   const date = new Date(dateStr);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-  if (diffDays === 0) {
-    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  }
+function relativeDate(dateStr: string): string {
+  const diffDays = dateDiffDays(dateStr);
+  const date = new Date(dateStr);
+  if (diffDays === 0) return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 function getDateGroup(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
+  const diffDays = dateDiffDays(dateStr);
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return "This week";
-  return date.toLocaleDateString([], { month: "long", year: "numeric" });
+  return new Date(dateStr).toLocaleDateString([], { month: "long", year: "numeric" });
 }
 
 export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesProps) {

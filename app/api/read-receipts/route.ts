@@ -17,7 +17,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const { lastReadMessageId } = await req.json();
+  let body: { lastReadMessageId?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { lastReadMessageId } = body;
   if (!lastReadMessageId || typeof lastReadMessageId !== "string") {
     return NextResponse.json({ error: "lastReadMessageId required" }, { status: 400 });
   }

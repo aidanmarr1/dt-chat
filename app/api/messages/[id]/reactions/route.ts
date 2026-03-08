@@ -28,7 +28,14 @@ export async function POST(
     return NextResponse.json({ error: "Message not found" }, { status: 404 });
   }
 
-  const { emoji } = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { emoji } = body;
 
   if (!emoji || typeof emoji !== "string" || emoji.length > 32) {
     return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });

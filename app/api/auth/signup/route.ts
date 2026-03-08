@@ -16,7 +16,14 @@ export async function POST(req: NextRequest) {
       { status: 429 }
     );
   }
-  const { email, displayName, password, confirmPassword } = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { email, displayName, password, confirmPassword } = body;
 
   if (!email || !displayName || !password || !confirmPassword) {
     return NextResponse.json(

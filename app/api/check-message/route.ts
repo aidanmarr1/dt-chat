@@ -14,7 +14,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }); // Silently skip if rate limited
   }
 
-  const { message } = await req.json();
+  let body: { message?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { message } = body;
   if (!message || typeof message !== "string" || !message.trim()) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }

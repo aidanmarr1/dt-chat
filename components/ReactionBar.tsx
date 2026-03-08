@@ -21,6 +21,7 @@ export default function ReactionBar({ reactions, onToggle }: ReactionBarProps) {
             onClick={() => onToggle(r.emoji)}
             onMouseEnter={() => setHoveredEmoji(r.emoji)}
             onMouseLeave={() => setHoveredEmoji(null)}
+            aria-label={`${r.reacted ? "Remove" : "React with"} ${r.emoji} (${r.count})`}
             className={`inline-flex items-center gap-1 px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full text-xs border transition-all active:scale-90 hover:shadow-sm animate-reaction-pop ${
               r.reacted
                 ? "bg-accent/10 border-accent/40 text-foreground shadow-sm shadow-accent/10"

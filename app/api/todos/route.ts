@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { todos, users } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureTodoTable } from "@/lib/init-tables";
-import { eq, asc, desc } from "drizzle-orm";
+import { eq, asc, desc, sql } from "drizzle-orm";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 const checkTodoRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
@@ -31,12 +31,15 @@ export async function GET() {
     .orderBy(asc(todos.position), asc(todos.createdAt))
     .limit(200);
 
-  // Get display names
+  // Batch-fetch all display names in a single query (avoids N+1)
   const userIds = [...new Set([...rows.map((r) => r.createdBy), ...rows.filter((r) => r.completedBy).map((r) => r.completedBy!)])];
   const nameMap = new Map<string, string>();
-  for (const uid of userIds) {
-    const u = await db.select({ displayName: users.displayName }).from(users).where(eq(users.id, uid)).get();
-    if (u) nameMap.set(uid, u.displayName);
+  if (userIds.length > 0) {
+    const lookedUp = await db
+      .select({ id: users.id, displayName: users.displayName })
+      .from(users)
+      .where(sql`${users.id} IN (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)})`);
+    for (const u of lookedUp) nameMap.set(u.id, u.displayName);
   }
 
   const items = rows.map((r) => ({
@@ -61,12 +64,18 @@ export async function POST(req: NextRequest) {
 
   await ensureTodoTable();
 
-  const body = await req.json();
-  const { text } = body;
-
   if (!(await checkTodoRateLimit(user.id))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { text } = body;
 
   if (!text || typeof text !== "string" || !text.trim()) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });

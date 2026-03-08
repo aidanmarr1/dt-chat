@@ -20,7 +20,13 @@ export async function PATCH(req: NextRequest) {
 
   await ensureStatusColumn();
 
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const { status, expiresIn } = body;
 
   if (status !== null && status !== undefined) {

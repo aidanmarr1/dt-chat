@@ -63,7 +63,13 @@ export async function PATCH(
   }
 
   const { id: messageId } = await params;
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const label = typeof body.label === "string" ? body.label.trim().slice(0, 100) : null;
 
   const message = await db.select().from(messages).where(eq(messages.id, messageId)).get();

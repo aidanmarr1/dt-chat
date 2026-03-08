@@ -4,6 +4,9 @@ import { polls, pollVotes } from "@/lib/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { ensurePollTables } from "@/lib/init-tables";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+const checkVoteRateLimit = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 1000 });
 
 export async function POST(
   req: NextRequest,
@@ -14,8 +17,18 @@ export async function POST(
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  if (!(await checkVoteRateLimit(user.id))) {
+    return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
+  }
+
   const { id: pollId } = await params;
-  const body = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const { optionId } = body;
 
   if (!optionId) {

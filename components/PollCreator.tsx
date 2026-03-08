@@ -39,6 +39,8 @@ export default function PollCreator({ onClose, onCreate }: PollCreatorProps) {
     try {
       onCreate(trimmedQ, trimmedOpts);
     } catch {
+      // fall through
+    } finally {
       setSubmitting(false);
     }
   }
