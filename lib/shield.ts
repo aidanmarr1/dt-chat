@@ -3,18 +3,18 @@
 
 const LINES = [
   "(function(){'use strict';",
-  "var B=false,CC=0,HC=0,OT='',W=String.fromCharCode(9888),OID='_s'+Math.random().toString(36).slice(2,8);",
+  "var B=false,CC=0,HC=0,OT='',W=String.fromCharCode(9888),OID='_s'+Math.random().toString(36).slice(2,8),_dpH=false,_drC=0;",
   "var CL=console.log,CR=console.clear,CE=document.createElement.bind(document);",
   "var AD='%cAccess Denied',AS='color:red;font-weight:bold;font-size:14px';",
 
-  // DP: Image getter probe — fires only when DevTools renders the logged object
-  "function DP(){var h=false;try{var e=new Image();Object.defineProperty(e,'id',{get:function(){h=true;return''},configurable:true});CL.call(console,e);CR.call(console)}catch(x){}return h}",
+  // FIRE_DP: Image getter probe — sets _dpH=true when DevTools formats the object (async in Chrome 145+)
+  "function FIRE_DP(){try{var e=new Image();Object.defineProperty(e,'id',{get:function(){_dpH=true;return''},configurable:true});CL.call(console,e)}catch(x){}}",
 
-  // DR: Regex toString probe — called >1 time only when DevTools formats it
-  "function DR(){var c=0;try{var r=/x/;r.toString=function(){c++;return'x'};CL.call(console,r);CR.call(console)}catch(x){}return c>1}",
+  // FIRE_DR: Regex toString probe — increments _drC when DevTools calls toString (async in Chrome 145+)
+  "function FIRE_DR(){try{var r=/x/;r.toString=function(){_drC++;return'x'};CL.call(console,r)}catch(x){}}",
 
-  // CHK: combined check
-  "function CHK(){return DP()||DR()}",
+  // CHK: read and reset flags from previous cycle's probes
+  "function CHK(){var h=_dpH,c=_drC;_dpH=false;_drC=0;return h||c>1}",
 
   // BL: show overlay, lock body, set title
   "function BL(){if(B)return;B=true;CC=0;if(!OT)OT=document.title||'D&T Chat';",
@@ -31,12 +31,16 @@ const LINES = [
   "function UB(){if(!B)return;B=false;var el=document.getElementById(OID);if(el)el.style.display='none';",
   "var s=document.getElementById(OID+'_c');if(s)s.remove();if(document.body)document.body.style.overflow='';document.title=OT}",
 
-  // Main polling — 750ms interval; require 2 consecutive hits before blocking (false-positive safety)
-  "var MI=setInterval(function(){if(CHK()){HC++;if(HC>=2){BL();debugger}CC=0}else{HC=0;if(B){CC++;if(CC>=4)UB()}}},750);",
+  // Main polling — 750ms: check previous results, process HC/BL/UB, then fire new probes
+  "var MI=setInterval(function(){if(CHK()){HC++;if(HC>=2){BL();debugger}CC=0}else{HC=0;if(B){CC++;if(CC>=4)UB()}}FIRE_DP();FIRE_DR()},750);",
+  // Fire initial probes immediately so first CHK at 750ms has data
+  "FIRE_DP();FIRE_DR();",
   // Backup: re-create overlay if removed from DOM while blocked
   "var MI2=setInterval(function(){if(B){var el=document.getElementById(OID);if(!el){B=false;BL()}}},2000);",
-  // Secondary: catch DevTools opened between main polls (also requires HC>=2)
-  "var MI3=setInterval(function(){if(CHK()){HC++;if(HC>=2&&!B)BL()}else{HC=0}},3000);",
+  // Secondary: reinforce debugger when blocked
+  "var MI3=setInterval(function(){if(B){debugger}},3000);",
+  // Console clear timer — prevents probe messages from accumulating (2s gives probes >=750ms)
+  "var MI4=setInterval(function(){CR.call(console)},2000);",
 
   // Console method overrides (clear + "Access Denied")
   "['log','warn','error','info','debug','table','dir','dirxml','trace','group','groupCollapsed','groupEnd','profile','profileEnd','time','timeEnd','timeLog','timeStamp','count','countReset','assert'].forEach(function(m){try{console[m]=function(){CR.call(console);CL.call(console,AD,AS)}}catch(e){}});",
@@ -64,8 +68,8 @@ const LINES = [
 
   // clearInterval/clearTimeout protection — can't clear detection intervals
   "var oci=window.clearInterval,oct=window.clearTimeout;",
-  "window.clearInterval=function(id){if(id===MI||id===MI2||id===MI3)return;return oci.call(window,id)};",
-  "window.clearTimeout=function(id){if(id===MI||id===MI2||id===MI3)return;return oct.call(window,id)};",
+  "window.clearInterval=function(id){if(id===MI||id===MI2||id===MI3||id===MI4)return;return oci.call(window,id)};",
+  "window.clearTimeout=function(id){if(id===MI||id===MI2||id===MI3||id===MI4)return;return oct.call(window,id)};",
 
   // window.open blocked
   "window.open=function(){return null};try{Object.defineProperty(window,'open',{configurable:false,writable:false,value:function(){return null}})}catch(e){}",
