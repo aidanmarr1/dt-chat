@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { DM_Sans, Libre_Baskerville } from "next/font/google";
 import ThemeProvider from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/Toast";
-import { SHIELD_SCRIPT } from "@/lib/shield";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -43,7 +42,6 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('dt-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark')}var fs=localStorage.getItem('dt-font-size');if(fs==='small'||fs==='large'){document.documentElement.setAttribute('data-font-size',fs)}var ac=localStorage.getItem('dt-accent');if(ac&&/^(blue|green|purple|red|pink|teal)$/.test(ac)){document.documentElement.setAttribute('data-accent',ac)}var dn=localStorage.getItem('dt-density');if(dn==='compact'||dn==='comfortable'){document.documentElement.setAttribute('data-density',dn)}var bs=localStorage.getItem('dt-bubble-style');if(bs==='minimal'||bs==='classic'){document.documentElement.setAttribute('data-bubble-style',bs)}var rm=localStorage.getItem('dt-reduce-motion');if(rm==='true'){document.documentElement.setAttribute('data-reduce-motion','true')}}catch(e){}})()`,
           }}
         />
-        <script dangerouslySetInnerHTML={{ __html: SHIELD_SCRIPT }} />
         <script
           dangerouslySetInnerHTML={{
             __html: [
