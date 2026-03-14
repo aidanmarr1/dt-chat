@@ -1406,7 +1406,7 @@ export default function ChatRoom() {
             {/* Search — promoted to first for discoverability */}
             <button
               onClick={() => setShowSearch(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95"
+              className={`p-2 rounded-lg transition-all active:scale-95 ${showSearch ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-surface"}`}
               title="Search (Ctrl+F)"
               aria-label="Search messages"
             >
@@ -1418,7 +1418,7 @@ export default function ChatRoom() {
             {/* Media gallery */}
             <button
               onClick={() => setShowMediaGallery(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95"
+              className={`p-2 rounded-lg transition-all active:scale-95 ${showMediaGallery ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-surface"}`}
               title="Media gallery"
               aria-label="Media gallery"
             >
@@ -1429,35 +1429,35 @@ export default function ChatRoom() {
             {/* Bookmarks */}
             <button
               onClick={() => setShowBookmarks(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
+              className={`p-2 rounded-lg transition-all active:scale-95 relative ${showBookmarks ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-surface"}`}
               title="Bookmarks"
               aria-label="Bookmarks"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
-              {bookmarks.length > 0 && (
+              {bookmarks.length > 0 && !showBookmarks && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
             {/* To-Do */}
             <button
               onClick={() => setShowTodos(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
+              className={`p-2 rounded-lg transition-all active:scale-95 relative ${showTodos ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-surface"}`}
               title="To-do list"
               aria-label="To-do list"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
               </svg>
-              {todoCount > 0 && (
+              {todoCount > 0 && !showTodos && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
             {/* Reminders */}
             <button
               onClick={() => setShowReminders(true)}
-              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all active:scale-95 relative"
+              className={`p-2 rounded-lg transition-all active:scale-95 relative ${showReminders ? "text-accent bg-accent/10" : "text-muted hover:text-foreground hover:bg-surface"}`}
               title="Reminders"
               aria-label="Reminders"
             >
@@ -1465,7 +1465,7 @@ export default function ChatRoom() {
                 <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
               </svg>
-              {reminders.length > 0 && (
+              {reminders.length > 0 && !showReminders && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full ring-2 ring-background" />
               )}
             </button>
