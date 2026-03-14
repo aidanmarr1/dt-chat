@@ -1356,7 +1356,6 @@ export default function ChatRoom() {
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/[0.04] blur-3xl animate-float-slow" />
         <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-accent/[0.03] blur-3xl animate-float-slower" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full bg-accent/[0.025] blur-3xl animate-float-slow [animation-delay:4s]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.03),transparent_70%)]" />
       </div>
       {/* Connection status banner */}
       {showConnectionIssue && (
