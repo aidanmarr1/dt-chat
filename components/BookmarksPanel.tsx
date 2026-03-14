@@ -47,7 +47,7 @@ export default function BookmarksPanel({
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
-      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background glass-panel border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2 pb-0 sm:hidden">
           <div className="w-8 h-1 rounded-full bg-border" />
@@ -96,7 +96,7 @@ export default function BookmarksPanel({
         <div className="flex-1 overflow-y-auto">
           {bookmarks.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-muted px-6">
-              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float shadow-lg shadow-accent/10">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                   <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                 </svg>
@@ -114,7 +114,7 @@ export default function BookmarksPanel({
               {filtered.map((bm, i) => (
                 <div
                   key={bm.messageId}
-                  className="px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group animate-fade-in"
+                  className="px-4 py-3 hover:bg-surface/50 transition-all cursor-pointer group animate-fade-in border-l-2 border-l-transparent hover:border-l-accent hover:shadow-sm hover:-translate-y-px"
                   style={{ animationDelay: `${i * 50}ms` }}
                   onClick={() => {
                     onScrollTo(bm.messageId);

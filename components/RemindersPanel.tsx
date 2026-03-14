@@ -81,8 +81,8 @@ export default function RemindersPanel({
     return (
       <div
         key={r.id}
-        className={`px-4 py-3 hover:bg-surface/50 transition-colors cursor-pointer group animate-fade-in ${
-          isOverdue ? "border-l-2 border-l-red-400/60" : ""
+        className={`px-4 py-3 hover:bg-surface/50 cursor-pointer group animate-fade-in hover:-translate-y-px transition-all ${
+          isOverdue ? "border-l-2 border-l-red-400/60 shadow-sm shadow-red-500/10" : "border-l-2 border-l-transparent hover:border-l-accent/30"
         }`}
         style={{ animationDelay: `${i * 50}ms` }}
         onClick={() => {
@@ -126,7 +126,7 @@ export default function RemindersPanel({
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
-      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background glass-panel border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2 pb-0 sm:hidden">
           <div className="w-8 h-1 rounded-full bg-border" />
@@ -170,7 +170,7 @@ export default function RemindersPanel({
                 <div>
                   <div className="px-4 py-2 bg-red-500/5 border-b border-border">
                     <p className="text-[11px] font-medium text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                       </svg>
                       Overdue ({overdue.length})
@@ -187,7 +187,7 @@ export default function RemindersPanel({
                 <div>
                   <div className="px-4 py-2 bg-accent/5 border-b border-border">
                     <p className="text-[11px] font-medium text-accent uppercase tracking-wider flex items-center gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                       </svg>
                       Upcoming ({upcoming.length})
