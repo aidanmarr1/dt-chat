@@ -63,8 +63,9 @@ export default function PollCard({ poll, onVote, isOwn }: PollCardProps) {
                   <span className={`text-sm truncate ${isOwn ? "text-background" : "text-foreground"}`}>{opt.text}</span>
                 </div>
                 {hasVoted && (
-                  <span className={`text-xs font-medium shrink-0 ml-2 ${isOwn ? "text-background/70" : "text-muted"}`}>
-                    {pct}%
+                  <span className={`text-xs font-medium shrink-0 ml-2 flex items-center gap-1.5 ${isOwn ? "text-background/70" : "text-muted"}`}>
+                    <span className="tabular-nums">{pct}%</span>
+                    <span className={`text-[10px] ${isOwn ? "text-background/40" : "text-muted/50"}`}>({opt.votes})</span>
                   </span>
                 )}
               </div>
@@ -74,10 +75,17 @@ export default function PollCard({ poll, onVote, isOwn }: PollCardProps) {
       </div>
 
       {/* Footer */}
-      <p className={`text-[10px] mt-2 ${isOwn ? "text-background/50" : "text-muted"}`}>
-        {poll.totalVotes} vote{poll.totalVotes !== 1 ? "s" : ""}
-        {hasVoted && " \u00b7 Tap to change vote"}
-      </p>
+      <div className={`flex items-center justify-between mt-2 ${isOwn ? "text-background/50" : "text-muted"}`}>
+        <p className="text-[10px]">
+          {poll.totalVotes} vote{poll.totalVotes !== 1 ? "s" : ""}
+          {hasVoted && " \u00b7 Tap to change vote"}
+        </p>
+        {hasVoted && poll.totalVotes > 0 && (
+          <p className={`text-[10px] font-medium ${isOwn ? "text-background/70" : "text-accent"}`}>
+            {poll.options.reduce((max, opt) => opt.votes > max.votes ? opt : max, poll.options[0]).text.slice(0, 20)}{poll.options.reduce((max, opt) => opt.votes > max.votes ? opt : max, poll.options[0]).text.length > 20 ? "..." : ""} leading
+          </p>
+        )}
+      </div>
     </div>
   );
 }
