@@ -1367,6 +1367,9 @@ export default function ChatRoom() {
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
+            {messages.length > 0 && (
+              <span className="text-[10px] text-muted/50 hidden sm:inline">{messages.length.toLocaleString()} messages</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
@@ -1635,7 +1638,7 @@ export default function ChatRoom() {
                   <button
                     onClick={loadOlderMessages}
                     disabled={loadingOlder}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-surface border border-border rounded-full hover:border-accent transition-all active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-gradient-to-b from-surface to-background border border-border rounded-full hover:border-accent hover:from-accent/5 hover:to-accent/10 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {loadingOlder ? (
                       <>

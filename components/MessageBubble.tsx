@@ -562,8 +562,8 @@ function MessageBubble({
             <div
               className={`px-4 py-2.5 rounded-xl ${
                 isOwn
-                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-md shadow-foreground/15 ${isGrouped ? "rounded-tr-sm" : ""}`
-                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-sm shadow-black/[0.04] ${isGrouped ? "rounded-tl-sm" : ""}`
+                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-[0_2px_8px_rgba(var(--acc-rgb),0.12)] ${isGrouped ? "rounded-tr-sm" : ""}`
+                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-sm shadow-black/[0.06] ${isGrouped ? "rounded-tl-sm" : ""}`
               }`}
             >
               {/* File attachment */}
@@ -680,14 +680,14 @@ function MessageBubble({
               ? new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: timeFormat !== "24h" })
               : relativeTime(message.createdAt)}
             {isOwn && (
-              <span className={`inline-flex ${message.readBy && message.readBy.length > 0 ? "text-accent" : "text-muted"}`} title={message.readBy && message.readBy.length > 0 ? "Seen" : "Sent"}>
+              <span className={`inline-flex ${message.readBy && message.readBy.length > 0 ? "text-accent drop-shadow-[0_0_3px_rgba(var(--acc-rgb),0.4)]" : "text-muted/70"}`} title={message.readBy && message.readBy.length > 0 ? "Seen" : "Sent"}>
                 {message.readBy && message.readBy.length > 0 ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="1 8 6 13 14 3" />
                     <polyline points="8 8 13 13 21 3" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}

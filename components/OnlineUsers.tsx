@@ -16,8 +16,10 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
   const [open, setOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [recentJoins, setRecentJoins] = useState<Set<string>>(new Set());
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const prevUserIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -35,6 +37,27 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
       searchRef.current.focus();
     }
   }, [open, users.length]);
+
+  // Track newly joined users
+  useEffect(() => {
+    const currentIds = new Set(users.map((u) => u.id));
+    const prevIds = prevUserIdsRef.current;
+    if (prevIds.size > 0) {
+      const newIds = [...currentIds].filter((id) => !prevIds.has(id));
+      if (newIds.length > 0) {
+        setRecentJoins((prev) => new Set([...prev, ...newIds]));
+        const timer = setTimeout(() => {
+          setRecentJoins((prev) => {
+            const next = new Set(prev);
+            newIds.forEach((id) => next.delete(id));
+            return next;
+          });
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevUserIdsRef.current = currentIds;
+  }, [users]);
 
   if (count === 0) {
     return (
@@ -62,7 +85,7 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
         <div className="flex items-center -space-x-1.5">
           <span className="relative w-2 h-2 rounded-full bg-green-500 glow-green mr-1 animate-online-ring" />
           {previewUsers.map((u, i) => (
-            <div key={u.id} className="ring-2 ring-background rounded-full transition-transform group-hover:translate-x-0" style={{ zIndex: 3 - i }}>
+            <div key={u.id} className="ring-2 ring-background rounded-full transition-transform group-hover:translate-x-0 animate-pop-in" style={{ zIndex: 3 - i, animationDelay: `${i * 75}ms` }}>
               <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
             </div>
           ))}
@@ -139,6 +162,8 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
                           ))}
                         </span>
                       </span>
+                    ) : recentJoins.has(u.id) ? (
+                      <span className="text-[10px] text-green-500 truncate block animate-fade-in">Just joined</span>
                     ) : u.status ? (
                       <span className="text-[10px] text-muted truncate block">{u.status}</span>
                     ) : null}
