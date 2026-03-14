@@ -84,7 +84,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
       {hasMultiple && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 hover:scale-105 hover:shadow-lg active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
           aria-label="Previous image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -97,7 +97,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
       {hasMultiple && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext(); }}
-          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 hover:scale-105 hover:shadow-lg active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
           aria-label="Next image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,7 +124,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
             onClick={(e) => { e.stopPropagation(); handleDownload(); }}
             disabled={downloading}
             aria-label="Download image"
-            className="w-10 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer disabled:opacity-60"
+            className="w-10 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 hover:shadow-lg active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer disabled:opacity-60"
           >
             {downloading ? (
               <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -168,7 +168,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
                 key={i}
                 onClick={(e) => { e.stopPropagation(); setLoaded(false); setZoom(false); setCurrentIndex(i); }}
                 className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                  i === currentIndex ? "border-white scale-110 shadow-lg" : "border-white/20 opacity-50 hover:opacity-80"
+                  i === currentIndex ? "border-white scale-110 shadow-lg shadow-white/20" : "border-white/20 opacity-50 hover:opacity-80"
                 }`}
               >
                 <img src={img.src} alt="" className="w-full h-full object-cover" loading="lazy" />

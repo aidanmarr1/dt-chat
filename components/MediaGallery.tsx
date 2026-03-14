@@ -194,7 +194,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
-      <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+      <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background glass-panel border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2 pb-0 sm:hidden">
           <div className="w-8 h-1 rounded-full bg-border" />
@@ -285,7 +285,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto relative">
+        <div className="flex-1 overflow-y-auto relative" key={tab}>
           {/* Download progress overlay */}
           {downloadProgress && (
             <div className="absolute inset-0 z-10 bg-background/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-8">
@@ -329,12 +329,14 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-1 p-2">
-                {images.map((img) => (
+                {images.map((img, i) => (
                   <div
                     key={img.id}
-                    className="aspect-square relative rounded-lg overflow-hidden cursor-pointer group"
+                    className="aspect-square relative rounded-lg overflow-hidden cursor-pointer group animate-fade-scale"
+                    style={{ animationDelay: `${i * 30}ms` }}
                     onClick={() => setLightboxSrc(getFileUrl(img))}
                   >
+                    <div className="absolute inset-0 animate-shimmer" />
                     <img
                       src={getFileUrl(img)}
                       alt={img.fileName}
