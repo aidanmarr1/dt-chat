@@ -173,8 +173,11 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Search messages..."
-            className="flex-1 bg-transparent text-foreground placeholder:text-muted text-base sm:text-sm focus:outline-none focus:shadow-none"
+            className="flex-1 bg-transparent text-foreground placeholder:text-muted text-base sm:text-sm focus:outline-none"
           />
+          {loading && (
+            <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin shrink-0" />
+          )}
           {query && (
             <button
               onClick={() => { setQuery(""); setResults([]); setSearched(false); setHasMore(false); inputRef.current?.focus(); }}
@@ -191,7 +194,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
         {/* Results */}
         <div className="flex-1 overflow-y-auto" ref={resultsRef}>
           {/* Loading */}
-          {loading && (
+          {loading && results.length === 0 && (
             <div className="flex items-center gap-2 px-4 py-6 justify-center">
               <div className="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
               <span className="text-xs text-muted">Searching...</span>
@@ -203,10 +206,13 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
             let lastGroup = "";
             return (
               <>
-                <div className="px-4 pt-2.5 pb-1.5 animate-fade-in">
+                <div className="px-4 pt-2.5 pb-1.5 animate-fade-in flex items-center justify-between">
                   <span className="text-[11px] font-medium text-muted">
-                    {results.length} result{results.length !== 1 ? "s" : ""}
+                    {results.length}{hasMore ? "+" : ""} result{results.length !== 1 ? "s" : ""}
                   </span>
+                  {selectedIndex >= 0 && (
+                    <span className="text-[10px] text-muted/50">{selectedIndex + 1} of {results.length}</span>
+                  )}
                 </div>
                 {results.map((r, i) => {
                   const group = getDateGroup(r.createdAt);
