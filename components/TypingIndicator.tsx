@@ -11,7 +11,9 @@ interface TypingIndicatorProps {
 export default function TypingIndicator({ users, onlineUsers = [] }: TypingIndicatorProps) {
   if (users.length === 0) return null;
 
-  const firstUser = onlineUsers.find((u) => u.displayName === users[0]);
+  const typingOnlineUsers = users
+    .map((name) => onlineUsers.find((u) => u.displayName === name))
+    .filter(Boolean) as OnlineUser[];
 
   const text =
     users.length === 1
@@ -23,12 +25,20 @@ export default function TypingIndicator({ users, onlineUsers = [] }: TypingIndic
   return (
     <div className="px-4 py-1.5 animate-fade-in">
       <div className="flex items-end gap-2">
-        {firstUser && (
-          <div className="shrink-0 mb-0.5">
-            <Avatar displayName={firstUser.displayName} userId={firstUser.id} avatarId={firstUser.avatarId} size="sm" />
-          </div>
-        )}
-        {!firstUser && <div className="w-6 shrink-0" />}
+        {/* Avatar stack for typing users */}
+        <div className="flex items-center shrink-0 mb-0.5">
+          {typingOnlineUsers.length > 0 ? (
+            <div className="flex -space-x-1.5">
+              {typingOnlineUsers.slice(0, 3).map((u, i) => (
+                <div key={u.id} className="ring-2 ring-background rounded-full animate-pop-in" style={{ zIndex: 3 - i, animationDelay: `${i * 50}ms` }}>
+                  <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="w-6" />
+          )}
+        </div>
         <div>
           <p className="text-[10px] text-muted mb-0.5 px-1 font-medium">{text}</p>
           <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl rounded-bl-sm shadow-sm shadow-accent/5 bg-surface/80 backdrop-blur-sm border border-accent/15" style={{ boxShadow: "0 0 12px rgba(var(--acc-rgb), 0.06), 0 1px 3px rgba(0,0,0,0.05)" }}>

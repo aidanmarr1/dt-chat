@@ -736,6 +736,55 @@ html[data-reduce-motion="true"] *::after {
   animation: badge-bounce 0.3s ease-out;
 }
 
+/* Online presence dot for message avatars */
+@utility msg-online-dot {
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: #22C55E;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
+  }
+}
+
+/* Toolbar slide-up entrance */
+@keyframes toolbar-pop {
+  0% { opacity: 0; transform: translateY(4px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@utility animate-toolbar-pop {
+  animation: toolbar-pop 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Reaction emoji hover bounce */
+@keyframes emoji-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@utility animate-emoji-bounce {
+  &:hover {
+    animation: emoji-bounce 0.25s ease-out;
+  }
+}
+
+/* Sticky date separator */
+@utility date-sep-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+  padding-top: 0.25rem;
+  padding-bottom: 0.5rem;
+}
+
 /* Lightbox navigation button hover effect */
 @keyframes nav-pulse {
   0%, 100% { background-color: rgba(255, 255, 255, 0.1); }

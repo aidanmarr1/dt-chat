@@ -61,6 +61,7 @@ interface MessageBubbleProps {
   isNew?: boolean;
   onImageClick?: (src: string) => void;
   isDeleting?: boolean;
+  onlineUserIds?: Set<string>;
 }
 
 function emojiOnlyCount(text: string): number | null {
@@ -269,6 +270,7 @@ function MessageBubble({
   isNew,
   onImageClick,
   isDeleting,
+  onlineUserIds,
 }: MessageBubbleProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -468,8 +470,11 @@ function MessageBubble({
       >
         {/* Avatar for others */}
         {!isOwn && !isGrouped && (
-          <div className="mr-2 mt-1 cursor-pointer" onClick={() => setShowProfile(true)}>
+          <div className="mr-2 mt-1 cursor-pointer relative" onClick={() => setShowProfile(true)}>
             <Avatar displayName={message.displayName} userId={message.userId} avatarId={message.avatarId} size="sm" />
+            {onlineUserIds?.has(message.userId) && (
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-background glow-green" />
+            )}
           </div>
         )}
         {!isOwn && isGrouped && <div className="w-6 mr-2" />}
@@ -697,14 +702,14 @@ function MessageBubble({
 
           {/* Compact action toolbar — desktop only */}
           {(hovered || showReactionPicker || showMoreMenu) && !showActions && !editing && (
-            <div className={`absolute -top-10 ${isOwn ? "right-0" : "left-8"} hidden sm:flex items-center bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-lg z-10 animate-fade-scale`}>
+            <div className={`absolute -top-10 ${isOwn ? "right-0" : "left-8"} hidden sm:flex items-center bg-surface/95 backdrop-blur-md border border-border rounded-xl shadow-lg z-10 animate-toolbar-pop`}>
               {/* Quick reaction emojis */}
               <div className="flex items-center px-0.5">
-                {["👍", "❤️", "😂"].map((emoji) => (
+                {["👍", "❤️", "😂", "🔥", "👀"].map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => onReaction(message.id, emoji)}
-                    className="w-7 h-7 flex items-center justify-center text-sm rounded-lg hover:bg-border/50 active:scale-90 transition-all"
+                    className="w-7 h-7 flex items-center justify-center text-sm rounded-lg hover:bg-border/50 active:scale-90 transition-all hover:scale-110"
                   >
                     {emoji}
                   </button>
@@ -715,6 +720,15 @@ function MessageBubble({
               <button onClick={() => onReply(message)} className="p-1.5 mx-0.5 text-muted hover:text-foreground hover:bg-border/50 transition-all active:scale-90 rounded-lg" title="Reply" aria-label="Reply">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" /></svg>
               </button>
+              {/* Thread */}
+              {replyCount > 0 && onViewThread && (
+                <>
+                  <button onClick={() => onViewThread(message.id)} className="p-1.5 mx-0.5 text-muted hover:text-accent hover:bg-accent/10 transition-all active:scale-90 rounded-lg flex items-center gap-1" title={`View thread (${replyCount})`} aria-label="View thread">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                    <span className="text-[10px] font-semibold">{replyCount}</span>
+                  </button>
+                </>
+              )}
               <div className="w-px h-5 bg-border/50" />
               {/* More menu */}
               <div className="relative">
@@ -962,6 +976,7 @@ export default memo(MessageBubble, (prev, next) => {
     prev.replyCount === next.replyCount &&
     prev.isNew === next.isNew &&
     prev.isDeleting === next.isDeleting &&
+    prev.onlineUserIds === next.onlineUserIds &&
     prev.currentDisplayName === next.currentDisplayName &&
     prev.currentUserId === next.currentUserId
   );

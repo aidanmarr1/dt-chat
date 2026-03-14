@@ -26,7 +26,7 @@ export default function DateSeparator({ date }: DateSeparatorProps) {
   const isToday = label === "Today";
 
   return (
-    <div className="flex items-center gap-4 my-5 animate-fade-in" role="separator" aria-label={label}>
+    <div className="flex items-center gap-4 my-5 animate-fade-in date-sep-sticky" role="separator" aria-label={label}>
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/40 to-border/60" />
       <span className={`text-[11px] font-medium px-3.5 py-1 rounded-full border transition-colors font-heading select-none flex items-center gap-1.5 ${
         isToday

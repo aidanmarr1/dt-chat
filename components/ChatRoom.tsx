@@ -140,6 +140,26 @@ export default function ChatRoom() {
   messagesRef.current = messages;
   failedPollsRef.current = failedPolls;
 
+  // Compute online user IDs for message avatar presence dots
+  const onlineUserIds = useMemo(() => new Set(onlineUsers.map(u => u.id)), [onlineUsers]);
+
+  // Update browser tab title with unread count
+  useEffect(() => {
+    function updateTitle() {
+      if (unreadCount > 0 && (document.visibilityState === "hidden" || !isAtBottom)) {
+        document.title = `(${unreadCount}) D&T Chat`;
+      } else {
+        document.title = "D&T Chat";
+      }
+    }
+    updateTitle();
+    document.addEventListener("visibilitychange", updateTitle);
+    return () => {
+      document.removeEventListener("visibilitychange", updateTitle);
+      document.title = "D&T Chat";
+    };
+  }, [unreadCount, isAtBottom]);
+
   // Track online/offline status
   useEffect(() => {
     function goOffline() { setIsOffline(true); }
@@ -1282,6 +1302,7 @@ export default function ChatRoom() {
           isNew={isNew}
           onImageClick={openLightbox}
           isDeleting={deletingIds.has(msg.id)}
+          onlineUserIds={onlineUserIds}
         />
       );
     }
