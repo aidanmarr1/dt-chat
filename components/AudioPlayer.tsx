@@ -70,7 +70,8 @@ export default function AudioPlayer({ src, isOwn }: AudioPlayerProps) {
       {/* Play/Pause button */}
       <button
         onClick={togglePlay}
-        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 ${
+        aria-label={playing ? "Pause" : "Play"}
+        className={`w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 active:scale-90 cursor-pointer ${
           isOwn
             ? "bg-background/20 hover:bg-background/30 text-background"
             : "bg-accent/15 hover:bg-accent/25 text-accent"

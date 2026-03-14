@@ -28,7 +28,7 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
       href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block mt-2 max-w-sm rounded-xl border overflow-hidden transition-all hover:scale-[0.98] active:scale-[0.97] hover:shadow-lg ${
+      className={`block mt-2 max-w-sm rounded-xl border overflow-hidden transition-all duration-200 hover:brightness-[1.02] active:scale-[0.99] hover:shadow-md ${
         isOwn
           ? "border-background/20 hover:bg-background/10 hover:shadow-black/10"
           : "border-border hover:bg-background hover:shadow-black/5"

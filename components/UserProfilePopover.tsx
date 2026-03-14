@@ -96,8 +96,16 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
             </svg>
           </button>
           {loading ? (
-            <div className="p-8 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <div className="p-5 flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full animate-shimmer" />
+              <div className="space-y-2 w-full flex flex-col items-center">
+                <div className="h-4 w-28 rounded-md animate-shimmer" />
+                <div className="h-3 w-36 rounded-md animate-shimmer" style={{ animationDelay: "0.1s" }} />
+              </div>
+              <div className="w-full border-t border-border pt-3 mt-1 space-y-2">
+                <div className="h-3 w-full rounded-md animate-shimmer" style={{ animationDelay: "0.15s" }} />
+                <div className="h-3 w-3/4 rounded-md animate-shimmer" style={{ animationDelay: "0.2s" }} />
+              </div>
             </div>
           ) : error ? (
             <div className="p-8 flex flex-col items-center gap-3 text-center">

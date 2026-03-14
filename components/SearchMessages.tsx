@@ -160,7 +160,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
       />
 
       {/* Modal */}
-      <div className="relative w-[calc(100vw-2rem)] max-w-md bg-surface border border-border rounded-2xl shadow-2xl shadow-black/30 animate-fade-scale overflow-hidden flex flex-col max-h-[70vh]">
+      <div className="relative w-[calc(100vw-2rem)] max-w-md bg-surface border border-border rounded-2xl shadow-2xl shadow-black/30 animate-fade-scale overflow-hidden flex flex-col max-h-[70vh]" role="dialog" aria-label="Search messages">
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-colors ${hasQuery ? "text-accent" : "text-muted"}`}>

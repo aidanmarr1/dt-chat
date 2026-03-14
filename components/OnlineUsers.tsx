@@ -36,6 +36,15 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
     }
   }, [open, users.length]);
 
+  if (count === 0) {
+    return (
+      <span className="text-xs text-muted/60 flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-muted/40" />
+        No one online
+      </span>
+    );
+  }
+
   const previewUsers = users.slice(0, 3);
   const extraCount = Math.max(0, count - 3);
 

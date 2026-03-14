@@ -82,7 +82,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
               <button
                 key={p.text}
                 onClick={() => { onSet(`${p.emoji} ${p.text}`, resolveExpiresIn()); handleClose(); }}
-                className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
+                className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-surface active:bg-border/40 transition-all duration-150 flex items-center gap-2.5 active:scale-[0.99]"
               >
                 <span className="text-base">{p.emoji}</span>
                 {p.text}

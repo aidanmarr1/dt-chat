@@ -50,7 +50,7 @@ export default function ReactionPicker({ onSelect, onClose }: ReactionPickerProp
               onSelect(emoji);
               onClose();
             }}
-            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center text-xl sm:text-lg rounded-lg hover:bg-border hover:scale-125 active:scale-95 transition-all animate-pop-in"
+            className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center text-xl sm:text-lg rounded-lg hover:bg-border hover:scale-125 active:scale-95 transition-all duration-150 cursor-pointer animate-pop-in"
             style={{ animationDelay: `${i * 25}ms` }}
           >
             {emoji}

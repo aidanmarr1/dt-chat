@@ -26,16 +26,16 @@ export default function DateSeparator({ date }: DateSeparatorProps) {
   const isToday = label === "Today";
 
   return (
-    <div className="flex items-center gap-4 my-5 animate-fade-in">
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border/60" />
-      <span className={`text-[11px] font-medium px-3 py-1 rounded-full border transition-colors font-heading ${
+    <div className="flex items-center gap-4 my-5 animate-fade-in" role="separator" aria-label={label}>
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/40 to-border/60" />
+      <span className={`text-[11px] font-medium px-3.5 py-1 rounded-full border transition-colors font-heading select-none ${
         isToday
-          ? "text-accent bg-accent/5 border-accent/20"
-          : "text-muted bg-surface border-border"
+          ? "text-accent bg-accent/8 border-accent/20"
+          : "text-muted bg-surface/80 border-border"
       }`}>
         {label}
       </span>
-      <div className="flex-1 h-px bg-gradient-to-l from-transparent to-border/60" />
+      <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border/40 to-border/60" />
     </div>
   );
 }

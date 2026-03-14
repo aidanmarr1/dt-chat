@@ -30,15 +30,15 @@ export default function PollCard({ poll, onVote, isOwn }: PollCardProps) {
             <button
               key={opt.id}
               onClick={() => onVote(poll.id, opt.id)}
-              className={`w-full relative overflow-hidden rounded-lg text-left transition-all active:scale-[0.99] ${
+              className={`w-full relative overflow-hidden rounded-lg text-left transition-all duration-200 active:scale-[0.99] cursor-pointer ${
                 opt.voted
                   ? isOwn ? "ring-1 ring-background/40" : "ring-1 ring-accent/40"
-                  : ""
+                  : isOwn ? "hover:bg-background/10" : "hover:bg-surface"
               }`}
             >
               {/* Fill bar */}
               <div
-                className={`absolute inset-y-0 left-0 transition-all duration-500 ease-out ${
+                className={`absolute inset-y-0 left-0 rounded-r-sm transition-all duration-500 ease-out ${
                   opt.voted
                     ? isOwn ? "bg-background/25" : "bg-accent/15"
                     : isOwn ? "bg-background/10" : "bg-surface"

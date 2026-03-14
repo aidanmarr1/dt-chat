@@ -84,7 +84,8 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
       {hasMultiple && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev(); }}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 transition-all active:scale-90 shadow-lg cursor-pointer"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
+          aria-label="Previous image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
@@ -96,7 +97,8 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
       {hasMultiple && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext(); }}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 transition-all active:scale-90 shadow-lg cursor-pointer"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
+          aria-label="Next image"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
@@ -111,31 +113,33 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
         <img
           src={currentSrc}
           alt={currentAlt}
-          className={`max-w-full object-contain rounded-xl cursor-default shadow-2xl transition-all duration-300 ${loaded ? "opacity-100" : "opacity-0 absolute"} ${zoom ? "max-h-[95vh] scale-110" : "max-h-[85vh]"}`}
+          className={`max-w-full object-contain rounded-xl shadow-2xl transition-all duration-300 ${loaded ? "opacity-100" : "opacity-0 absolute"} ${zoom ? "max-h-[95vh] scale-110 cursor-zoom-out" : "max-h-[85vh] cursor-zoom-in"}`}
           onClick={(e) => { e.stopPropagation(); setZoom(!zoom); }}
           onLoad={() => setLoaded(true)}
         />
 
         {/* Top-right buttons */}
-        <div className="absolute top-2 right-2 sm:-top-3 sm:-right-3 flex items-center gap-1.5 z-10">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1.5 z-10">
           <button
             onClick={(e) => { e.stopPropagation(); handleDownload(); }}
             disabled={downloading}
-            className="w-10 h-10 sm:w-8 sm:h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 shadow-lg cursor-pointer disabled:opacity-50"
+            aria-label="Download image"
+            className="w-10 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer disabled:opacity-60"
           >
             {downloading ? (
-              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             )}
           </button>
           <button
             onClick={onClose}
-            className="w-10 h-10 sm:w-8 sm:h-8 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 shadow-lg cursor-pointer"
+            aria-label="Close lightbox"
+            className="w-10 h-10 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/25 active:bg-white/30 transition-all duration-200 active:scale-90 shadow-lg cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -152,7 +156,7 @@ export default function ImageLightbox({ src, alt, onClose, images, initialIndex 
             </span>
           )}
           {currentAlt && (
-            <span className="text-xs text-white/40 whitespace-nowrap max-w-[200px] truncate">{currentAlt}</span>
+            <span className="text-xs text-white/60 whitespace-nowrap max-w-[200px] truncate">{currentAlt}</span>
           )}
         </div>
 
