@@ -58,7 +58,7 @@ export default function ReminderPicker({ onSet, onClose }: ReminderPickerProps) 
             <button
               key={p.label}
               onClick={() => onSet(p.absolute ?? Date.now() + p.ms!)}
-              className="w-full text-left px-3 py-2 text-sm text-foreground rounded-lg hover:bg-background/60 transition-colors"
+              className="w-full text-left px-3 py-2 text-sm text-foreground rounded-lg hover:bg-accent/10 transition-colors"
             >
               {p.label}
             </button>
@@ -70,18 +70,18 @@ export default function ReminderPicker({ onSet, onClose }: ReminderPickerProps) 
               type="date"
               value={customDate}
               onChange={(e) => setCustomDate(e.target.value)}
-              className="w-full text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground"
+              className="w-full text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-shadow"
             />
             <input
               type="time"
               value={customTime}
               onChange={(e) => setCustomTime(e.target.value)}
-              className="w-full text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground"
+              className="w-full text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-shadow"
             />
             <button
               onClick={handleCustom}
               disabled={!customDate || !customTime}
-              className="w-full text-xs font-medium py-1.5 rounded-lg bg-accent text-background disabled:opacity-40 hover:opacity-90 transition-opacity"
+              className="w-full text-xs font-medium py-1.5 rounded-lg bg-accent text-background disabled:opacity-40 hover:brightness-110 transition-all shadow-sm shadow-accent/20"
             >
               Set reminder
             </button>

@@ -78,13 +78,14 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
           </div>
 
           <div className="p-3 space-y-1.5">
-            {PRESETS.map((p) => (
+            {PRESETS.map((p, i) => (
               <button
                 key={p.text}
                 onClick={() => { onSet(`${p.emoji} ${p.text}`, resolveExpiresIn()); handleClose(); }}
-                className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-surface active:bg-border/40 transition-all duration-150 flex items-center gap-2.5 active:scale-[0.99]"
+                className="w-full text-left px-3 py-2.5 text-sm text-foreground rounded-xl hover:bg-accent/10 border border-transparent hover:border-accent/20 active:bg-border/40 transition-all duration-150 flex items-center gap-2.5 active:scale-[0.99] group animate-fade-in"
+                style={{ animationDelay: `${i * 40}ms` }}
               >
-                <span className="text-base">{p.emoji}</span>
+                <span className="text-xl group-hover:scale-125 transition-transform">{p.emoji}</span>
                 {p.text}
               </button>
             ))}
@@ -99,7 +100,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
                 value={custom}
                 onChange={(e) => setCustom(e.target.value.slice(0, 100))}
                 placeholder="Custom status..."
-                className="flex-1 text-sm bg-surface border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+                className="flex-1 text-sm bg-surface border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-shadow"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && custom.trim()) {
                     onSet(custom.trim(), resolveExpiresIn());
@@ -110,7 +111,7 @@ export default function StatusPicker({ currentStatus, onSet, onClose }: StatusPi
               <button
                 onClick={() => { if (custom.trim()) { onSet(custom.trim(), resolveExpiresIn()); handleClose(); } }}
                 disabled={!custom.trim()}
-                className="px-3 py-2 text-sm font-medium rounded-lg bg-accent text-background disabled:opacity-40 hover:opacity-90 transition-opacity"
+                className="px-3 py-2 text-sm font-medium rounded-lg bg-accent text-background disabled:opacity-40 hover:brightness-110 transition-all shadow-sm shadow-accent/20"
               >
                 Set
               </button>
