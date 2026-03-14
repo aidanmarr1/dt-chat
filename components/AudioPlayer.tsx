@@ -73,8 +73,8 @@ export default function AudioPlayer({ src, isOwn }: AudioPlayerProps) {
         aria-label={playing ? "Pause" : "Play"}
         className={`w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 active:scale-90 cursor-pointer ${
           isOwn
-            ? `bg-background/20 hover:bg-background/30 text-background ${playing ? "shadow-[0_0_10px_rgba(255,255,255,0.15)]" : ""}`
-            : `bg-accent/15 hover:bg-accent/25 text-accent ${playing ? "shadow-[0_0_10px_rgba(var(--acc-rgb),0.2)]" : ""}`
+            ? `bg-background/20 hover:bg-background/30 text-background ${playing ? "shadow-[0_0_12px_rgba(255,255,255,0.2)] scale-105" : ""}`
+            : `bg-accent/15 hover:bg-accent/25 text-accent ${playing ? "shadow-[0_0_12px_rgba(var(--acc-rgb),0.25)] scale-105" : ""}`
         }`}
       >
         {playing ? (
@@ -115,11 +115,20 @@ export default function AudioPlayer({ src, isOwn }: AudioPlayerProps) {
       </div>
 
       {/* Time */}
-      <span className={`text-[11px] font-mono shrink-0 ${
-        isOwn ? "text-background/60" : "text-muted"
-      }`}>
-        {playing || currentTime > 0 ? formatTime(currentTime) : formatTime(duration)}
-      </span>
+      <div className="flex flex-col items-end shrink-0">
+        <span className={`text-[11px] font-mono ${
+          isOwn ? "text-background/60" : "text-muted"
+        }`}>
+          {playing || currentTime > 0 ? formatTime(currentTime) : formatTime(duration)}
+        </span>
+        {duration > 0 && (
+          <span className={`text-[9px] font-mono ${
+            isOwn ? "text-background/40" : "text-muted/50"
+          }`}>
+            {formatTime(duration)}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

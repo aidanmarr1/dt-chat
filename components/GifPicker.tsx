@@ -126,6 +126,21 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
         </div>
       </div>
 
+      {/* Trending categories */}
+      {!search && (
+        <div className="px-2 pt-1.5 pb-1 flex gap-1 overflow-x-auto border-b border-border">
+          {["Reactions", "Happy", "Sad", "Love", "Thumbs Up", "Applause", "Dance", "Facepalm"].map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSearch(tag)}
+              className="px-2.5 py-1 text-[11px] font-medium text-muted hover:text-accent bg-background hover:bg-accent/10 border border-border hover:border-accent/20 rounded-full whitespace-nowrap transition-all active:scale-95 shrink-0"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* GIF grid */}
       <div className="p-2 h-64 max-h-[50vh] overflow-y-auto">
         {loading ? (
