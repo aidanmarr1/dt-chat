@@ -171,7 +171,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
-      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background glass-panel border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2 pb-0 sm:hidden">
           <div className="w-8 h-1 rounded-full bg-border" />

@@ -179,6 +179,7 @@ html, body {
 
 body {
   background: var(--bg);
+  background-image: linear-gradient(180deg, rgba(var(--acc-rgb), 0.02) 0%, transparent 30%);
   color: var(--fg);
   font-family: var(--font-sans), system-ui, sans-serif;
   /* Safe area insets for notched devices */
@@ -209,6 +210,10 @@ html[data-theme="dark"] ::-webkit-scrollbar,
 html:not([data-theme]) ::-webkit-scrollbar {
   width: 5px;
 }
+html[data-theme="dark"] ::-webkit-scrollbar:hover,
+html:not([data-theme]) ::-webkit-scrollbar:hover {
+  width: 6px;
+}
 html[data-theme="dark"] ::-webkit-scrollbar-track,
 html:not([data-theme]) ::-webkit-scrollbar-track {
   background: transparent;
@@ -217,16 +222,19 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb,
 html:not([data-theme]) ::-webkit-scrollbar-thumb {
   background: #2C2C2C;
   border-radius: 9999px;
-  transition: background 0.2s ease;
+  transition: background 0.3s ease;
 }
 html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
 html:not([data-theme]) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--acc-rgb), 0.4);
+  background: rgba(var(--acc-rgb), 0.5);
 }
 
 /* Light theme scrollbar */
 html[data-theme="light"] ::-webkit-scrollbar {
   width: 5px;
+}
+html[data-theme="light"] ::-webkit-scrollbar:hover {
+  width: 6px;
 }
 html[data-theme="light"] ::-webkit-scrollbar-track {
   background: transparent;
@@ -234,7 +242,7 @@ html[data-theme="light"] ::-webkit-scrollbar-track {
 html[data-theme="light"] ::-webkit-scrollbar-thumb {
   background: #D4D4D4;
   border-radius: 9999px;
-  transition: background 0.2s ease;
+  transition: background 0.3s ease;
 }
 html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--acc-rgb), 0.5);
@@ -523,6 +531,47 @@ html[data-reduce-motion="true"] *::after {
   animation: float-slow 8s ease-in-out infinite;
 }
 
+/* Slower float for ambient orbs */
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-12px, 8px) scale(1.01); }
+  50% { transform: translate(8px, -12px) scale(0.99); }
+  75% { transform: translate(5px, 14px) scale(1.02); }
+}
+
+@utility animate-float-slower {
+  animation: float-slower 12s ease-in-out infinite;
+}
+
+/* Message entrance animations */
+@keyframes msg-enter-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes msg-enter-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@utility animate-msg-enter-right {
+  animation: msg-enter-right 0.3s ease-out both;
+}
+
+@utility animate-msg-enter-left {
+  animation: msg-enter-left 0.3s ease-out both;
+}
+
+/* Typing waveform bar animation */
+@keyframes typing-wave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+@utility animate-typing-wave {
+  animation: typing-wave 1.2s ease-in-out infinite;
+}
+
 /* Smooth collapse/expand for form sections */
 @keyframes collapse-fade-in {
   from { opacity: 0; transform: translateY(-4px); }
@@ -616,7 +665,15 @@ html[data-reduce-motion="true"] *::after {
   background: color-mix(in srgb, var(--bg) 80%, transparent);
   backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Glass panel for side panels */
+@utility glass-panel {
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), -1px 0 0 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Header accent underline — subtle gradient at bottom */

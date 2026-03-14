@@ -32,14 +32,15 @@ export default function TypingIndicator({ users, onlineUsers = [] }: TypingIndic
         <div>
           <p className="text-[10px] text-muted mb-0.5 px-1 font-medium">{text}</p>
           <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl rounded-bl-sm shadow-sm shadow-accent/5 bg-surface/80 backdrop-blur-sm border border-accent/15" style={{ boxShadow: "0 0 12px rgba(var(--acc-rgb), 0.06), 0 1px 3px rgba(0,0,0,0.05)" }}>
-            <div className="flex gap-[5px]">
-              {[0, 1, 2].map((i) => (
+            <div className="flex items-end gap-[3px] h-[18px]">
+              {[0, 1, 2, 3, 4].map((i) => (
                 <span
                   key={i}
-                  className="w-[6px] h-[6px] bg-accent rounded-full inline-block"
+                  className="w-[3px] rounded-full bg-accent inline-block"
                   style={{
-                    animation: "pulse-dot 1.4s infinite ease-in-out",
-                    animationDelay: `${i * 0.2}s`,
+                    animation: "typing-wave 1.2s ease-in-out infinite",
+                    animationDelay: `${i * 0.12}s`,
+                    height: "4px",
                   }}
                 />
               ))}

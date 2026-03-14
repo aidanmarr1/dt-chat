@@ -173,7 +173,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Search messages..."
-            className="flex-1 bg-transparent text-foreground placeholder:text-muted text-base sm:text-sm focus:outline-none"
+            className="flex-1 bg-transparent text-foreground placeholder:text-muted text-base sm:text-sm focus:outline-none focus:shadow-none"
           />
           {query && (
             <button
@@ -221,14 +221,14 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
                       )}
                       <button
                         onClick={() => handleResultClick(r.id)}
-                        className={`w-full text-left px-4 py-2.5 transition-colors flex items-start gap-3 animate-fade-in ${
+                        className={`w-full text-left px-4 py-2.5 transition-all flex items-start gap-3 animate-fade-in ${
                           activeResultId === r.id
                             ? "bg-accent/15 border-l-2 border-accent"
                             : selectedIndex === i
-                            ? "bg-accent/10"
+                            ? "bg-accent/10 shadow-[inset_0_0_0_1px_rgba(var(--acc-rgb),0.15)]"
                             : "hover:bg-background active:bg-border/30"
                         }`}
-                        style={{ animationDelay: `${i * 50}ms` }}
+                        style={{ animationDelay: `${i * 40}ms` }}
                       >
                         <div className="shrink-0 mt-0.5">
                           <Avatar displayName={r.displayName} userId={r.userId} avatarId={r.avatarId} size="sm" />
@@ -256,7 +256,7 @@ export default function SearchMessages({ onClose, onScrollTo }: SearchMessagesPr
               <button
                 onClick={() => search(query, results.length)}
                 disabled={loadingMore}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-background border border-border rounded-full hover:border-accent transition-all active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-muted hover:text-foreground bg-gradient-to-b from-surface to-background border border-border rounded-full hover:border-accent hover:from-accent/5 hover:to-accent/10 transition-all active:scale-95 disabled:opacity-50"
               >
                 {loadingMore ? (
                   <>

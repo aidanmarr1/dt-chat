@@ -1246,8 +1246,8 @@ export default function ChatRoom() {
         const newCount = messages.length - i;
         elements.push(
           <div key="unread-sep" className="flex items-center gap-3 my-4 animate-fade-in">
-            <div className="flex-1 h-[1.5px] bg-accent/50" />
-            <span className="text-[11px] font-semibold text-background bg-accent px-3 py-0.5 rounded-full shadow-sm">
+            <div className="flex-1 h-[1.5px] bg-accent/50 shadow-[0_0_6px_rgba(var(--acc-rgb),0.3)]" />
+            <span className="text-[11px] font-semibold text-background bg-accent px-3 py-0.5 rounded-full shadow-sm shadow-accent/30">
               {newCount > 0 ? `${newCount} new message${newCount === 1 ? "" : "s"}` : "New messages"}
             </span>
             <div className="flex-1 h-[1.5px] bg-accent/50" />
@@ -1329,7 +1329,14 @@ export default function ChatRoom() {
   }
 
   return (
-    <div className="flex flex-col h-dvh" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="flex flex-col h-dvh relative" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      {/* Ambient background orbs */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/[0.04] blur-3xl animate-float-slow" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-accent/[0.03] blur-3xl animate-float-slower" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full bg-accent/[0.025] blur-3xl animate-float-slow [animation-delay:4s]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.03),transparent_70%)]" />
+      </div>
       {/* Connection status banner */}
       {showConnectionIssue && (
         <div className="flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-500 text-xs font-medium animate-slide-down-banner">
@@ -1582,6 +1589,15 @@ export default function ChatRoom() {
 
       {/* Messages */}
       <div className="flex-1 relative overflow-hidden">
+        {/* Floating new-message pill */}
+        {showNewMessages && !isAtBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-4 py-1.5 text-xs font-semibold bg-accent text-background rounded-full shadow-lg shadow-accent/25 animate-slide-down animate-glow-pulse hover:shadow-accent/40 transition-shadow cursor-pointer"
+          >
+            {unreadCount > 0 ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}` : "New messages"} ↓
+          </button>
+        )}
         {/* Scroll shadow: top */}
         <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent z-[5] pointer-events-none transition-opacity duration-200 ${headerShadow ? "opacity-100" : "opacity-0"}`} />
         {/* Scroll shadow: bottom */}

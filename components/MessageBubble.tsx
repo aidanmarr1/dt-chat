@@ -456,7 +456,7 @@ function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
-        } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-slide-up" : "animate-fade-in") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
+        } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-msg-enter-right" : "animate-msg-enter-left") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
         onMouseLeave={() => { if (!showMoreMenu) { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); setShowMoreMenu(false); }, 300); } }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}

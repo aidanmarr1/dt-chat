@@ -53,7 +53,7 @@ export default function ConfirmDialog({
             onClick={onConfirm}
             className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 active:scale-[0.98] animate-fade-in ${
               destructive
-                ? "bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-500/25 hover:shadow-lg hover:shadow-red-500/30"
+                ? "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/35"
                 : "bg-accent text-background hover:brightness-110 shadow-md shadow-accent/25 hover:shadow-lg hover:shadow-accent/30"
             }`}
             style={{ animationDelay: "0.1s" }}

@@ -83,7 +83,7 @@ function SegmentedControl({ value, options, onChange }: { value: string; options
   return (
     <div className="relative flex rounded-lg bg-background border border-border p-0.5 overflow-hidden">
       <div
-        className="absolute top-[2px] bottom-[2px] rounded-md bg-accent/15 shadow-sm"
+        className="absolute top-[2px] bottom-[2px] rounded-md bg-accent/20 shadow-sm"
         style={{
           width: `${100 / count}%`,
           transform: `translateX(${activeIndex * 100}%)`,
@@ -454,8 +454,8 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${
                   tab === t.id
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted hover:text-foreground hover:bg-surface"
+                    ? "bg-accent/10 text-accent border-l-2 border-l-accent"
+                    : "text-muted hover:text-foreground hover:bg-surface border-l-2 border-l-transparent"
                 }`}
               >
                 {t.icon}
@@ -589,7 +589,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       onClick={() => handleThemePreferenceChange("dark")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "dark"
-                          ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
+                          ? "border-accent shadow-[0_0_16px_rgba(var(--acc-rgb),0.2)]"
                           : "border-border hover:border-muted"
                       }`}
                     >
@@ -617,7 +617,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       onClick={() => handleThemePreferenceChange("light")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "light"
-                          ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
+                          ? "border-accent shadow-[0_0_16px_rgba(var(--acc-rgb),0.2)]"
                           : "border-border hover:border-muted"
                       }`}
                     >
@@ -645,7 +645,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                       onClick={() => handleThemePreferenceChange("system")}
                       className={`relative rounded-xl border-2 p-2.5 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                         themePreference === "system"
-                          ? "border-accent shadow-[0_0_12px_rgba(var(--acc-rgb),0.15)]"
+                          ? "border-accent shadow-[0_0_16px_rgba(var(--acc-rgb),0.2)]"
                           : "border-border hover:border-muted"
                       }`}
                     >
@@ -691,7 +691,12 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                               ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110 shadow-md"
                               : "hover:ring-1 hover:ring-border hover:shadow-sm"
                           }`}
-                          style={{ backgroundColor: theme === "dark" ? c.dark : c.light }}
+                          style={{
+                            backgroundColor: theme === "dark" ? c.dark : c.light,
+                            boxShadow: accentColor === c.id
+                              ? `0 0 12px ${theme === "dark" ? c.dark : c.light}40`
+                              : undefined,
+                          }}
                         />
                       ))}
                     </div>
@@ -717,7 +722,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         <button
                           onClick={() => handleBubbleStyleChange("modern")}
                           className={`rounded-lg border-2 p-2.5 transition-all ${
-                            bubbleStyle === "modern" ? "border-accent bg-accent/5" : "border-border hover:border-muted"
+                            bubbleStyle === "modern" ? "border-accent bg-accent/5 shadow-sm shadow-accent/15" : "border-border hover:border-muted"
                           }`}
                         >
                           <div className="space-y-1 mb-1.5">
@@ -730,7 +735,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         <button
                           onClick={() => handleBubbleStyleChange("minimal")}
                           className={`rounded-lg border-2 p-2.5 transition-all ${
-                            bubbleStyle === "minimal" ? "border-accent bg-accent/5" : "border-border hover:border-muted"
+                            bubbleStyle === "minimal" ? "border-accent bg-accent/5 shadow-sm shadow-accent/15" : "border-border hover:border-muted"
                           }`}
                         >
                           <div className="space-y-1 mb-1.5">
@@ -743,7 +748,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                         <button
                           onClick={() => handleBubbleStyleChange("classic")}
                           className={`rounded-lg border-2 p-2.5 transition-all ${
-                            bubbleStyle === "classic" ? "border-accent bg-accent/5" : "border-border hover:border-muted"
+                            bubbleStyle === "classic" ? "border-accent bg-accent/5 shadow-sm shadow-accent/15" : "border-border hover:border-muted"
                           }`}
                         >
                           <div className="space-y-1 mb-1.5">
