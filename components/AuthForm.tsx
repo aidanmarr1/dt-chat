@@ -103,7 +103,6 @@ export default function AuthForm() {
         <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-float-slow" />
         <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
         <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/4 blur-3xl animate-float-slow [animation-delay:5s]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(var(--acc-rgb),0.04)_0%,transparent_70%)]" />
         {/* Dot grid texture */}
         <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(var(--acc-rgb),0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
       </div>
