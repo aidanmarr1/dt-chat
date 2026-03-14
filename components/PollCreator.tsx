@@ -78,7 +78,7 @@ export default function PollCreator({ onClose, onCreate }: PollCreatorProps) {
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ask a question..."
                 maxLength={200}
-                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-shadow"
                 autoFocus
               />
             </div>
@@ -89,14 +89,14 @@ export default function PollCreator({ onClose, onCreate }: PollCreatorProps) {
               <div className="space-y-2">
                 {options.map((opt, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-border shrink-0" />
+                    <div className="w-5 h-5 rounded-full border-2 border-border shrink-0 flex items-center justify-center text-[9px] font-bold text-muted">{i + 1}</div>
                     <input
                       type="text"
                       value={opt}
                       onChange={(e) => updateOption(i, e.target.value)}
                       placeholder={`Option ${i + 1}`}
                       maxLength={100}
-                      className="flex-1 px-3 py-1.5 bg-surface border border-border rounded-lg text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                      className="flex-1 px-3 py-1.5 bg-surface border border-border rounded-lg text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-shadow"
                     />
                     {options.length > 2 && (
                       <button onClick={() => removeOption(i)} className="p-1 rounded text-muted hover:text-red-400 transition-colors">
@@ -127,7 +127,7 @@ export default function PollCreator({ onClose, onCreate }: PollCreatorProps) {
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || submitting}
-              className="px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+              className="px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-sm shadow-accent/20"
             >
               {submitting ? "Creating..." : "Create Poll"}
             </button>

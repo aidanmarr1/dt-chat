@@ -166,7 +166,7 @@ export default function ThreadPanel({
   return (
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
-      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+      <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background glass-panel border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2 pb-0 sm:hidden">
           <div className="w-8 h-1 rounded-full bg-border" />
@@ -198,8 +198,8 @@ export default function ThreadPanel({
             return (
               <div
                 key={msg.id}
-                className={`${isParent ? "pb-3 border-b border-border mb-3" : "animate-fade-in"}`}
-                style={!isParent ? { animationDelay: `${(i - 1) * 50}ms` } : undefined}
+                className={`${isParent ? "pb-3 border-b border-border mb-3 border-l-2 border-l-accent pl-3" : "animate-fade-in"}`}
+                style={!isParent ? { animationDelay: `${(i - 1) * 40}ms` } : undefined}
               >
                 <div className="flex items-start gap-2">
                   <Avatar displayName={msg.displayName} userId={msg.userId} avatarId={msg.avatarId} size="sm" />
@@ -245,13 +245,13 @@ export default function ThreadPanel({
               onChange={(e) => setReplyText(e.target.value.slice(0, MAX_REPLY_LENGTH))}
               onKeyDown={handleKeyDown}
               placeholder={`Reply as ${currentDisplayName}...`}
-              className="flex-1 text-sm bg-surface border border-border rounded-xl px-3 py-2 text-foreground placeholder:text-muted resize-none focus:border-accent focus:outline-none max-h-24"
+              className="flex-1 text-sm bg-surface border border-border rounded-xl px-3 py-2 text-foreground placeholder:text-muted resize-none focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] max-h-24 transition-shadow"
               rows={1}
             />
             <button
               onClick={handleSend}
               disabled={!replyText.trim()}
-              className="p-2 rounded-xl bg-accent text-background disabled:opacity-40 hover:opacity-90 transition-opacity active:scale-95 shrink-0"
+              className="p-2 rounded-xl bg-accent text-background disabled:opacity-40 hover:brightness-110 transition-all active:scale-95 shrink-0 shadow-sm shadow-accent/20"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
