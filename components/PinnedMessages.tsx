@@ -90,24 +90,27 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin, onUpdate
   }
 
   return (
-    <div className="border-b border-border bg-accent/10 border-l-2 border-l-accent">
+    <div className="border-b border-border bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border-l-2 border-l-accent">
       {/* Collapsed: show latest pinned */}
       <button
         onClick={() => messages.length > 1 ? setExpanded(!expanded) : onScrollTo(latest.id)}
         onKeyDown={handleBarKeyDown}
-        className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-accent/15 transition-colors group/pin"
+        className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-accent/10 transition-colors group/pin"
         tabIndex={0}
         role="button"
         aria-expanded={messages.length > 1 ? expanded : undefined}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0 group-hover/pin:animate-wiggle">
-          <line x1="12" y1="17" x2="12" y2="22" />
-          <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-        </svg>
+        <div className="w-7 h-7 rounded-lg bg-accent/15 border border-accent/20 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-accent group-hover/pin:animate-wiggle">
+            <line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" strokeWidth="2" />
+            <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+          </svg>
+        </div>
         <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-accent font-semibold mb-0.5">Pinned Message</p>
           <p className="text-xs text-foreground truncate">
-            <span className="font-medium text-accent">{latest.displayName}</span>
-            {": "}
+            <span className="font-medium">{latest.displayName}</span>
+            <span className="text-muted"> — </span>
             {latestDisplay}
           </p>
         </div>

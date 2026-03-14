@@ -848,17 +848,17 @@ export default function MessageInput({
               {/* Inline toolbar inside the input — formatting left, actions right */}
               <div className="absolute left-1.5 right-1.5 bottom-1 flex items-center justify-between">
                 {/* Formatting buttons — left side */}
-                <div className="hidden sm:flex items-center gap-0.5">
+                <div className="flex items-center gap-0.5">
                   <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Bold (Cmd+B)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
                   </button>
                   <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Italic (Cmd+I)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
                   </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors font-mono text-[11px] font-bold" title="Code">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="hidden sm:inline-flex p-1 rounded text-muted/40 hover:text-accent transition-colors font-mono text-[11px] font-bold" title="Code">
                     {"</>"}
                   </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Strikethrough">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="hidden sm:inline-flex p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Strikethrough">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
                   </button>
                 </div>
