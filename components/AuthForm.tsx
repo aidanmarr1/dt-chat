@@ -239,7 +239,7 @@ export default function AuthForm() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={tab === "signup" ? "At least 6 characters" : "Enter your password"}
+                  placeholder={tab === "signup" ? "At least 8 characters" : "Enter your password"}
                   className="w-full pl-11 pr-11 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
                   required
                   disabled={success}

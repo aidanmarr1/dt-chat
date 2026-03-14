@@ -317,7 +317,12 @@ function MessageBubble({
     // Only on desktop (no touch)
     if ("ontouchstart" in window) return;
     e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY });
+    // Clamp position to prevent overflow past viewport edges
+    const menuWidth = 180;
+    const menuHeight = 260;
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8);
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8);
+    setContextMenu({ x: Math.max(8, x), y: Math.max(8, y) });
   }
 
   // Swipe-to-reply on mobile
@@ -536,6 +541,16 @@ function MessageBubble({
                 <button onClick={() => setEditing(false)} className="text-[10px] text-muted hover:text-foreground">Cancel</button>
                 <span className="text-muted text-[10px] ml-auto">Enter to save, Esc to cancel</span>
               </div>
+            </div>
+          ) : isGifOnly ? (
+            <div className="rounded-xl overflow-hidden max-w-[280px]">
+              <img
+                src={message.content!.trim()}
+                alt="GIF"
+                className="max-w-full max-h-64 rounded-xl"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           ) : isLargeEmoji ? (
             <p className={`py-1 leading-none ${

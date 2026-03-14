@@ -15,6 +15,8 @@ const shortcuts = [
   { keys: ["Esc"], description: "Close panel / cancel" },
   { keys: ["Enter"], description: "Send message" },
   { keys: ["Shift", "Enter"], description: "New line in message" },
+  { keys: ["Ctrl", "B"], description: "Bold text (in input)" },
+  { keys: ["Ctrl", "I"], description: "Italic text (in input)" },
   { keys: ["↑", "↓"], description: "Navigate search results" },
   { keys: ["Double-click"], description: "Edit own message" },
 ];

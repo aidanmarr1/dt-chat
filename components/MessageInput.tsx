@@ -265,9 +265,8 @@ export default function MessageInput({
         return;
       }
       if (e.key === "u") {
-        // We use strikethrough instead of underline
+        // Prevent underline (not supported in markdown output)
         e.preventDefault();
-        document.execCommand("strikeThrough");
         return;
       }
     }
@@ -557,8 +556,8 @@ export default function MessageInput({
   function handleFileSelect(files: FileList | null) {
     if (!files || files.length === 0) return;
     const file = files[0];
-    if (file.size > 10 * 1024 * 1024) {
-      setFileError("File must be under 10 MB");
+    if (file.size > 50 * 1024 * 1024) {
+      setFileError("File must be under 50 MB");
       setTimeout(() => setFileError(""), 3000);
       return;
     }

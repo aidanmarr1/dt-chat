@@ -343,6 +343,8 @@ export default function ChatRoom() {
         setShowNewMessages(false);
         setUnreadCount(0);
         document.title = "D&T Chat";
+        // Auto-scroll to bottom when returning to tab if user was at bottom
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }
     }
     document.addEventListener("visibilitychange", handleVisibility);
@@ -357,7 +359,8 @@ export default function ChatRoom() {
       if (tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable) return;
       if (e.key === "/") {
         e.preventDefault();
-        document.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+        // The input is a contentEditable div, not a textarea
+        document.querySelector<HTMLDivElement>('[role="textbox"][contenteditable]')?.focus();
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "f") {
         e.preventDefault();
@@ -384,9 +387,10 @@ export default function ChatRoom() {
   const scrollRafRef = useRef(0);
   const handleScroll = useCallback((e: React.UIEvent) => {
     if (scrollRafRef.current) return;
+    // Capture target before entering rAF to avoid stale event reference
+    const el = e.target as HTMLElement;
     scrollRafRef.current = requestAnimationFrame(() => {
       scrollRafRef.current = 0;
-      const el = e.target as HTMLElement;
       setHeaderShadow(el.scrollTop > 0);
       setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 100);
     });
@@ -1088,7 +1092,7 @@ export default function ChatRoom() {
     };
     // Optimistic: remove old, add snoozed
     const prev = reminders;
-    setReminders((r) => [...r, snoozed]);
+    setReminders((r) => [...r.filter((x) => x.id !== reminder.id), snoozed]);
     toast(`Snoozed for ${minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`}`);
     // Delete old + create new via API
     fetch(`/api/reminders/${reminder.id}`, { method: "DELETE" }).catch(() => {});
@@ -1338,7 +1342,7 @@ export default function ChatRoom() {
             <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
             <line x1="12" y1="20" x2="12.01" y2="20" />
           </svg>
-          {isOffline ? "You're offline" : "Reconnecting..."}
+          {isOffline ? "You're offline -- check your connection" : "Connection lost -- reconnecting..."}
         </div>
       )}
 
