@@ -22,10 +22,10 @@ export default function ReactionBar({ reactions, onToggle }: ReactionBarProps) {
             onMouseEnter={() => setHoveredEmoji(r.emoji)}
             onMouseLeave={() => setHoveredEmoji(null)}
             aria-label={`${r.reacted ? "Remove" : "React with"} ${r.emoji} (${r.count})`}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full text-xs border transition-all duration-200 active:scale-90 hover:shadow-sm cursor-pointer animate-reaction-pop ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full text-xs border transition-all duration-200 active:scale-90 cursor-pointer animate-reaction-pop ${
               r.reacted
-                ? "bg-accent/10 border-accent/40 text-foreground shadow-sm shadow-accent/10 hover:bg-accent/15"
-                : "bg-surface border-border text-muted hover:border-accent/30 hover:bg-accent/5"
+                ? "bg-accent/10 border-accent/40 text-foreground shadow-sm shadow-accent/10 hover:bg-accent/20 hover:shadow-md hover:shadow-accent/15"
+                : "bg-surface border-border text-muted hover:border-accent/30 hover:bg-accent/5 hover:shadow-sm hover:scale-105"
             }`}
           >
             <span className={`text-sm leading-none ${r.reacted ? "animate-bounce-once" : ""}`}>{r.emoji}</span>

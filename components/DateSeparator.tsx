@@ -28,11 +28,16 @@ export default function DateSeparator({ date }: DateSeparatorProps) {
   return (
     <div className="flex items-center gap-4 my-5 animate-fade-in" role="separator" aria-label={label}>
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border/40 to-border/60" />
-      <span className={`text-[11px] font-medium px-3.5 py-1 rounded-full border transition-colors font-heading select-none ${
+      <span className={`text-[11px] font-medium px-3.5 py-1 rounded-full border transition-colors font-heading select-none flex items-center gap-1.5 ${
         isToday
-          ? "text-accent bg-accent/8 border-accent/20"
+          ? "text-accent bg-accent/8 border-accent/20 shadow-sm shadow-accent/10"
           : "text-muted bg-surface/80 border-border"
       }`}>
+        {isToday && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+            <circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+          </svg>
+        )}
         {label}
       </span>
       <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border/40 to-border/60" />

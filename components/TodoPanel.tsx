@@ -210,13 +210,13 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
               onChange={(e) => setNewText(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
               placeholder="Add a task..."
-              className="flex-1 text-sm bg-surface border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none"
+              className="flex-1 text-sm bg-surface border border-border rounded-lg px-3 py-2 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] transition-all"
               maxLength={500}
             />
             <button
               onClick={handleAdd}
               disabled={!newText.trim()}
-              className="px-3 py-2 text-sm font-medium rounded-lg bg-accent text-background disabled:opacity-40 hover:opacity-90 transition-opacity active:scale-95"
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-accent text-background disabled:opacity-40 hover:brightness-110 hover:shadow-md hover:shadow-accent/20 transition-all active:scale-95"
             >
               Add
             </button>
@@ -251,7 +251,7 @@ export default function TodoPanel({ onClose, onTodoCountChange }: TodoPanelProps
                   >
                     <button
                       onClick={() => handleToggle(todo.id)}
-                      className={`mt-0.5 w-5 h-5 rounded-md border-2 border-border hover:border-accent transition-all shrink-0 flex items-center justify-center active:scale-90 ${animatingIds.has(todo.id) ? "animate-pop-in" : ""}`}
+                      className={`mt-0.5 w-5 h-5 rounded-md border-2 border-border hover:border-accent hover:bg-accent/5 transition-all shrink-0 flex items-center justify-center active:scale-90 ${animatingIds.has(todo.id) ? "animate-pop-in" : ""}`}
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-foreground break-words">{todo.text}</p>

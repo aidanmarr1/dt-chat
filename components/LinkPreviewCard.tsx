@@ -28,17 +28,17 @@ export default function LinkPreviewCard({ preview, isOwn }: LinkPreviewCardProps
       href={safeUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block mt-2 max-w-sm rounded-xl border overflow-hidden transition-all duration-200 hover:brightness-[1.02] active:scale-[0.99] hover:shadow-md ${
+      className={`block mt-2 max-w-sm rounded-xl border overflow-hidden transition-all duration-200 hover:brightness-[1.02] active:scale-[0.99] hover:shadow-lg hover:-translate-y-0.5 ${
         isOwn
-          ? "border-background/20 hover:bg-background/10 hover:shadow-black/10"
-          : "border-border hover:bg-background hover:shadow-black/5"
+          ? "border-background/20 hover:bg-background/10 hover:shadow-black/15"
+          : "border-border hover:bg-background hover:shadow-accent/10"
       } ${!hasImage ? (isOwn ? "border-l-[3px] border-l-background/40" : "border-l-[3px] border-l-accent") : ""}`}
     >
       {hasImage && (
         <img
           src={preview.imageUrl!}
           alt=""
-          className="w-full h-44 object-cover"
+          className="w-full h-44 object-cover animate-fade-in"
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"

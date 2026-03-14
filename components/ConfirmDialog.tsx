@@ -44,17 +44,19 @@ export default function ConfirmDialog({
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-background border border-border rounded-xl hover:bg-border/50 transition-all duration-200 active:scale-[0.98]"
+            className="flex-1 px-4 py-2.5 text-sm font-medium text-foreground bg-background border border-border rounded-xl hover:bg-border/50 transition-all duration-200 active:scale-[0.98] animate-fade-in"
+            style={{ animationDelay: "0.05s" }}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 active:scale-[0.98] ${
+            className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 active:scale-[0.98] animate-fade-in ${
               destructive
-                ? "bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-500/20"
-                : "bg-accent text-background hover:brightness-110 shadow-sm shadow-accent/20"
+                ? "bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-500/25 hover:shadow-lg hover:shadow-red-500/30"
+                : "bg-accent text-background hover:brightness-110 shadow-md shadow-accent/25 hover:shadow-lg hover:shadow-accent/30"
             }`}
+            style={{ animationDelay: "0.1s" }}
           >
             {confirmLabel}
           </button>

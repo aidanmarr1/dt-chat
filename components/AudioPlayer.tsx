@@ -73,8 +73,8 @@ export default function AudioPlayer({ src, isOwn }: AudioPlayerProps) {
         aria-label={playing ? "Pause" : "Play"}
         className={`w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 active:scale-90 cursor-pointer ${
           isOwn
-            ? "bg-background/20 hover:bg-background/30 text-background"
-            : "bg-accent/15 hover:bg-accent/25 text-accent"
+            ? `bg-background/20 hover:bg-background/30 text-background ${playing ? "shadow-[0_0_10px_rgba(255,255,255,0.15)]" : ""}`
+            : `bg-accent/15 hover:bg-accent/25 text-accent ${playing ? "shadow-[0_0_10px_rgba(var(--acc-rgb),0.2)]" : ""}`
         }`}
       >
         {playing ? (
@@ -93,15 +93,21 @@ export default function AudioPlayer({ src, isOwn }: AudioPlayerProps) {
       <div className="flex items-center gap-[2px] flex-1 h-8 cursor-pointer">
         {barHeights.map((height, i) => {
           const filled = i / BAR_COUNT < progress;
+          const animatedHeight = playing && !filled
+            ? height + Math.sin((Date.now() / 200) + i * 0.7) * 8
+            : height;
           return (
             <div
               key={i}
-              className={`flex-1 rounded-full min-w-[2px] transition-colors duration-100 ${
+              className={`flex-1 rounded-full min-w-[2px] transition-all duration-150 ${
                 filled
                   ? isOwn ? "bg-background" : "bg-accent"
-                  : isOwn ? "bg-background/30" : "bg-border"
+                  : isOwn ? "bg-background/30 hover:bg-background/50" : "bg-border hover:bg-accent/30"
               }`}
-              style={{ height: `${height}%` }}
+              style={{
+                height: `${Math.min(100, Math.max(20, animatedHeight))}%`,
+                transition: playing ? "height 0.15s ease, background-color 0.1s" : "background-color 0.1s",
+              }}
               onClick={() => handleBarClick(i)}
             />
           );

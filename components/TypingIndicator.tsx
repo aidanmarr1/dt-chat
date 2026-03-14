@@ -31,7 +31,7 @@ export default function TypingIndicator({ users, onlineUsers = [] }: TypingIndic
         {!firstUser && <div className="w-6 shrink-0" />}
         <div>
           <p className="text-[10px] text-muted mb-0.5 px-1 font-medium">{text}</p>
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface border border-border rounded-bl-sm shadow-sm">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl rounded-bl-sm shadow-sm shadow-accent/5 bg-surface/80 backdrop-blur-sm border border-accent/15" style={{ boxShadow: "0 0 12px rgba(var(--acc-rgb), 0.06), 0 1px 3px rgba(0,0,0,0.05)" }}>
             <div className="flex gap-[5px]">
               {[0, 1, 2].map((i) => (
                 <span

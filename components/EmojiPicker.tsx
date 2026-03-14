@@ -121,7 +121,7 @@ export default function EmojiPicker({ onSelect, onClose, toggleRef }: EmojiPicke
                 onSelect(emoji);
                 onClose();
               }}
-              className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-xl sm:text-lg rounded-lg hover:bg-border hover:scale-110 active:scale-95 transition-all duration-150 cursor-pointer"
+              className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-xl sm:text-lg rounded-lg hover:bg-accent/10 hover:scale-110 active:scale-95 transition-all duration-150 cursor-pointer"
             >
               {emoji}
             </button>

@@ -129,8 +129,10 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
       {/* GIF grid */}
       <div className="p-2 h-64 max-h-[50vh] overflow-y-auto">
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <div className="columns-2 gap-1.5">
+            {[80, 56, 64, 48, 72, 56].map((h, i) => (
+              <div key={i} className="mb-1.5 rounded-lg animate-shimmer break-inside-avoid" style={{ height: `${h}px`, animationDelay: `${i * 100}ms` }} />
+            ))}
           </div>
         ) : gifs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-muted">
@@ -150,7 +152,8 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
                   onSelect(gif.url);
                   onClose();
                 }}
-                className="w-full mb-1.5 rounded-lg overflow-hidden hover:opacity-80 hover:scale-[1.02] active:scale-95 transition-all duration-150 break-inside-avoid"
+                className="w-full mb-1.5 rounded-lg overflow-hidden hover:opacity-80 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent/10 active:scale-95 transition-all duration-150 break-inside-avoid animate-fade-in"
+                style={{ animationDelay: `${gifs.indexOf(gif) * 30}ms` }}
               >
                 <img
                   src={gif.preview}
