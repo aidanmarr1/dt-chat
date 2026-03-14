@@ -62,7 +62,7 @@ export default function GateForm() {
         }`}>
           {/* Lock icon */}
           <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-spring-in shadow-lg shadow-accent/10">
+            <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center animate-spring-in shadow-lg shadow-accent/10">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -95,7 +95,7 @@ export default function GateForm() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 px-3 py-2.5 mt-3 bg-red-400/10 border border-red-400/20 rounded-xl animate-shake">
+              <div className="flex items-center gap-2 px-3 py-2.5 mt-3 bg-red-400/15 border border-red-400/30 rounded-xl animate-shake">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400 shrink-0"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                 <p className="text-red-400 text-sm">{error}</p>
               </div>

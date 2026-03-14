@@ -145,7 +145,7 @@ export default function AuthForm() {
           {/* Tab Toggle with sliding indicator (same animation as settings SegmentedControl) */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
             <div
-              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-sm"
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-accent rounded-lg shadow-md shadow-accent/20"
               style={{
                 left: "4px",
                 transform: tab === "login" ? "translateX(0)" : "translateX(100%)",
@@ -269,7 +269,7 @@ export default function AuthForm() {
                 <div className="mt-2 animate-fade-in">
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((level) => (
-                      <div key={level} className={`h-1 flex-1 rounded-full transition-all duration-300 ${passwordStrength >= level ? strengthColor : "bg-border"}`} />
+                      <div key={level} className={`h-1 flex-1 rounded-full transition-all duration-300 ${passwordStrength >= level ? `${strengthColor} shadow-sm` : "bg-border"}`} />
                     ))}
                   </div>
                   <div className="flex items-center justify-between mt-1.5">
@@ -335,7 +335,7 @@ export default function AuthForm() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 px-3 py-2.5 bg-red-400/10 border border-red-400/20 rounded-xl animate-shake">
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-red-400/15 border border-red-400/30 rounded-xl animate-shake">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400 shrink-0"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
