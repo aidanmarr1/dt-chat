@@ -1664,10 +1664,10 @@ export default function ChatRoom() {
           <div className="absolute bottom-4 right-4 z-10 animate-fab-in">
             <button
               onClick={scrollToBottom}
-              className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
+              className={`relative w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg ${
                 showNewMessages
-                  ? "bg-accent text-background shadow-accent/25"
-                  : "bg-surface/90 backdrop-blur-sm border border-border text-muted hover:text-foreground hover:border-accent"
+                  ? "bg-accent text-background shadow-accent/25 hover:shadow-accent/40 hover:shadow-xl animate-glow-pulse"
+                  : "bg-surface/90 backdrop-blur-sm border border-border text-muted hover:text-foreground hover:border-accent hover:shadow-md"
               }`}
               aria-label={showNewMessages ? `${unreadCount} new messages` : "Scroll to bottom"}
             >

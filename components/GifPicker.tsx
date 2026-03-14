@@ -133,8 +133,13 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
             <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : gifs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-xs text-muted">
-            {search ? "No GIFs found" : "No GIFs available"}
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">GIF</text>
+            </svg>
+            <p className="text-xs">{search ? "No GIFs found" : "No GIFs available"}</p>
+            {search && <p className="text-[10px] text-muted/50">Try a different search term</p>}
           </div>
         ) : (
           <div className="columns-2 gap-1.5">
@@ -160,8 +165,11 @@ export default function GifPicker({ onSelect, onClose, toggleRef }: GifPickerPro
       </div>
 
       {/* Footer */}
-      <div className="px-2.5 py-1.5 border-t border-border">
-        <p className="text-[9px] text-muted text-center">D&T GIFs</p>
+      <div className="px-2.5 py-1.5 border-t border-border flex items-center justify-between">
+        <p className="text-[9px] text-muted">D&T GIFs</p>
+        {!loading && gifs.length > 0 && (
+          <p className="text-[9px] text-muted/60">{gifs.length} result{gifs.length !== 1 ? "s" : ""}</p>
+        )}
       </div>
     </div>
   );

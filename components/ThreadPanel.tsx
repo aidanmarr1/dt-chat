@@ -167,6 +167,10 @@ export default function ThreadPanel({
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
       <div ref={panelRef} className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-2 pb-0 sm:hidden">
+          <div className="w-8 h-1 rounded-full bg-border" />
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -254,7 +258,11 @@ export default function ThreadPanel({
               </svg>
             </button>
           </div>
-          <p className="text-[10px] text-muted text-right mt-1">{replyText.length}/{MAX_REPLY_LENGTH}</p>
+          {replyText.length > 1500 && (
+            <p className={`text-[10px] text-right mt-1 ${replyText.length > 1900 ? "text-red-400" : replyText.length > 1800 ? "text-orange-400" : "text-muted"}`}>
+              {replyText.length}/{MAX_REPLY_LENGTH}
+            </p>
+          )}
         </div>
       </div>
     </>

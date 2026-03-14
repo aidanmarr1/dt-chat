@@ -195,6 +195,10 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
     <>
       <div className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm ${isClosing ? "animate-fade-out" : ""}`} onClick={handleClose} />
       <div className={`fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background border-l border-border shadow-2xl flex flex-col ${isClosing ? "animate-slide-out-right" : "animate-slide-in-right"}`}>
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-2 pb-0 sm:hidden">
+          <div className="w-8 h-1 rounded-full bg-border" />
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -314,11 +318,14 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
             </div>
           ) : tab === "images" ? (
             images.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-muted gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40">
-                  <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                </svg>
-                <p className="text-sm">No images shared yet</p>
+              <div className="flex flex-col items-center justify-center h-64 text-muted gap-3">
+                <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-foreground">No images shared yet</p>
+                <p className="text-xs text-muted/60">Images shared in the chat will appear here</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-1 p-2">
@@ -331,8 +338,10 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
                     <img
                       src={getFileUrl(img)}
                       alt={img.fileName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
+                      onLoad={(e) => (e.currentTarget.style.opacity = "1")}
+                      style={{ opacity: 0, transition: "opacity 0.3s ease" }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                     <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -352,11 +361,14 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
               </div>
             )
           ) : files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-muted gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="opacity-40">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" />
-              </svg>
-              <p className="text-sm">No files shared yet</p>
+            <div className="flex flex-col items-center justify-center h-64 text-muted gap-3">
+              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center animate-gentle-float">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-foreground">No files shared yet</p>
+              <p className="text-xs text-muted/60">Files shared in the chat will appear here</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
