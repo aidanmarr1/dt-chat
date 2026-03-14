@@ -5,6 +5,7 @@ export interface User {
   avatarId?: string | null;
   bio?: string | null;
   status?: string | null;
+  createdAt?: string | null;
 }
 
 export interface UserProfile {

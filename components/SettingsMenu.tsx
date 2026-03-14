@@ -24,18 +24,35 @@ const ACCENT_COLORS: { id: AccentColor; label: string; dark: string; light: stri
   { id: "teal",   label: "Teal",   dark: "#14B8A6", light: "#0D9488" },
 ];
 
-const SHORTCUTS: { keys: string[]; description: string }[] = [
-  { keys: ["Enter"], description: "Send message" },
-  { keys: ["Shift", "Enter"], description: "New line in message" },
-  { keys: ["Esc"], description: "Close modal / Cancel reply" },
-  { keys: ["@"], description: "Mention a user" },
-  { keys: ["Cmd", "F"], description: "Search messages" },
-  { keys: ["Cmd", "K"], description: "Search messages (alt)" },
-  { keys: ["Cmd", "B"], description: "Toggle bookmarks" },
-  { keys: ["Cmd", "V"], description: "Paste image to attach" },
-  { keys: ["/"], description: "Focus message input" },
-  { keys: ["Double-click"], description: "Quick react with thumbs up" },
-  { keys: ["Long press"], description: "Open message actions (mobile)" },
+const SHORTCUT_GROUPS: { group: string; shortcuts: { keys: string[]; description: string }[] }[] = [
+  {
+    group: "Messaging",
+    shortcuts: [
+      { keys: ["Enter"], description: "Send message" },
+      { keys: ["Shift", "Enter"], description: "New line in message" },
+      { keys: ["/"], description: "Focus message input" },
+      { keys: ["@"], description: "Mention a user" },
+      { keys: ["Cmd", "V"], description: "Paste image to attach" },
+    ],
+  },
+  {
+    group: "Navigation",
+    shortcuts: [
+      { keys: ["Cmd", "F"], description: "Search messages" },
+      { keys: ["Cmd", "K"], description: "Search messages (alt)" },
+      { keys: ["Cmd", "B"], description: "Toggle bookmarks" },
+      { keys: ["Esc"], description: "Close modal / Cancel reply" },
+    ],
+  },
+  {
+    group: "Interactions",
+    shortcuts: [
+      { keys: ["Double-click"], description: "Quick react with heart" },
+      { keys: ["Long press"], description: "Open message actions (mobile)" },
+      { keys: ["Cmd", "B"], description: "Bold text" },
+      { keys: ["Cmd", "I"], description: "Italic text" },
+    ],
+  },
 ];
 
 function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
@@ -477,7 +494,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
               </svg>
               Log out
             </button>
-            <p className="text-[10px] text-muted/50 text-center mt-2">D&T Chat v1.0</p>
+            <p className="text-[10px] text-muted/50 text-center mt-2">D&T Chat v2.0</p>
           </div>
         </div>
 
@@ -502,6 +519,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 <div className="pt-8 pb-4 px-4">
                   <p className="text-sm font-semibold text-foreground font-heading">{user.displayName}</p>
                   <p className="text-xs text-muted">{user.email}</p>
+                  <p className="text-[10px] text-muted/50 mt-1">Member since {new Date(user.createdAt || Date.now()).toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
                 </div>
               </div>
 
@@ -532,7 +550,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                     onChange={(e) => handleBioChange(e.target.value)}
                     placeholder="Tell others about yourself..."
                     rows={2}
-                    className="mt-1.5 w-full text-sm text-foreground px-3 py-2 rounded-lg bg-background border border-border placeholder:text-muted/50 focus:outline-none focus:border-accent resize-none"
+                    className="mt-1.5 w-full text-sm text-foreground px-3 py-2 rounded-lg bg-background border border-border placeholder:text-muted/50 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] resize-none transition-all"
                   />
                 </div>
               </div>
@@ -686,18 +704,25 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                           key={c.id}
                           title={c.label}
                           onClick={() => handleAccentColorChange(c.id)}
-                          className={`w-9 h-9 rounded-full transition-all hover:scale-110 active:scale-95 mx-auto ${
-                            accentColor === c.id
-                              ? "ring-2 ring-offset-2 ring-accent ring-offset-background scale-110 shadow-md"
-                              : "hover:ring-1 hover:ring-border hover:shadow-sm"
+                          className={`flex flex-col items-center gap-1 transition-all hover:scale-105 active:scale-95 ${
+                            accentColor === c.id ? "scale-105" : ""
                           }`}
-                          style={{
-                            backgroundColor: theme === "dark" ? c.dark : c.light,
-                            boxShadow: accentColor === c.id
-                              ? `0 0 12px ${theme === "dark" ? c.dark : c.light}40`
-                              : undefined,
-                          }}
-                        />
+                        >
+                          <div
+                            className={`w-9 h-9 rounded-full mx-auto ${
+                              accentColor === c.id
+                                ? "ring-2 ring-offset-2 ring-accent ring-offset-background shadow-md"
+                                : "hover:ring-1 hover:ring-border hover:shadow-sm"
+                            }`}
+                            style={{
+                              backgroundColor: theme === "dark" ? c.dark : c.light,
+                              boxShadow: accentColor === c.id
+                                ? `0 0 12px ${theme === "dark" ? c.dark : c.light}40`
+                                : undefined,
+                            }}
+                          />
+                          <span className={`text-[9px] font-medium ${accentColor === c.id ? "text-accent" : "text-muted/50"}`}>{c.label}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -876,21 +901,55 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
 
               <div className="space-y-3">
                 {/* Sound */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(0)}>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">Sounds</p>
-                    <p className="text-[11px] text-muted">{soundEnabled ? "Play sounds for new messages" : "Sounds disabled"}</p>
+                <div className="p-3 rounded-xl bg-background border border-border animate-settings-item" style={stagger(0)}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${soundEnabled ? "bg-accent/10" : "bg-surface"}`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={soundEnabled ? "text-accent" : "text-muted"}>
+                            {soundEnabled ? (
+                              <><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></>
+                            ) : (
+                              <><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></>
+                            )}
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Sounds</p>
+                          <p className="text-[11px] text-muted">{soundEnabled ? "Play sounds for new messages" : "Sounds disabled"}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <ToggleSwitch on={soundEnabled} onToggle={onSoundToggle} />
                   </div>
-                  <ToggleSwitch on={soundEnabled} onToggle={onSoundToggle} />
                 </div>
 
                 {/* Browser notifications */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border gap-3 animate-settings-item" style={stagger(1)}>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">Browser notifications</p>
-                    <p className="text-[11px] text-muted">{notificationsEnabled ? "Get notified when away" : "Notifications disabled"}</p>
+                <div className="p-3 rounded-xl bg-background border border-border animate-settings-item" style={stagger(1)}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${notificationsEnabled ? "bg-accent/10" : "bg-surface"}`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={notificationsEnabled ? "text-accent" : "text-muted"}>
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Browser notifications</p>
+                          <p className="text-[11px] text-muted">{notificationsEnabled ? "Get notified when tab is hidden" : "Desktop notifications disabled"}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <ToggleSwitch on={notificationsEnabled} onToggle={onNotificationsToggle} />
                   </div>
-                  <ToggleSwitch on={notificationsEnabled} onToggle={onNotificationsToggle} />
+                </div>
+
+                {/* Info card */}
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-accent/5 border border-accent/10 animate-settings-item" style={stagger(2)}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0 mt-0.5">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <p className="text-[11px] text-muted leading-relaxed">Browser notifications require permission. You'll be prompted when you enable them. Notifications only fire when the tab is hidden.</p>
                 </div>
               </div>
             </div>
@@ -904,22 +963,28 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
               <h3 className="text-base font-semibold text-foreground mb-1 font-heading">Keyboard Shortcuts</h3>
               <p className="text-xs text-muted mb-4">Quick actions for power users</p>
 
-              <div className="space-y-1">
-                {SHORTCUTS.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-background transition-colors animate-settings-item"
-                    style={stagger(i)}
-                  >
-                    <span className="text-sm text-foreground">{s.description}</span>
-                    <div className="flex items-center gap-1">
-                      {s.keys.map((k, j) => (
-                        <span key={j} className="flex items-center gap-1">
-                          {j > 0 && <span className="text-[10px] text-muted">+</span>}
-                          <kbd className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-md bg-background border border-border text-[11px] font-mono font-medium text-muted shadow-sm">
-                            {k}
-                          </kbd>
-                        </span>
+              <div className="space-y-4">
+                {SHORTCUT_GROUPS.map((group, gi) => (
+                  <div key={group.group} className="animate-settings-item" style={stagger(gi)}>
+                    <p className="text-[10px] font-semibold text-muted/70 uppercase tracking-wider mb-1.5 px-3">{group.group}</p>
+                    <div className="rounded-xl bg-background border border-border overflow-hidden divide-y divide-border">
+                      {group.shortcuts.map((s, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between px-3 py-2.5 hover:bg-surface/50 transition-colors"
+                        >
+                          <span className="text-sm text-foreground">{s.description}</span>
+                          <div className="flex items-center gap-1">
+                            {s.keys.map((k, j) => (
+                              <span key={j} className="flex items-center gap-1">
+                                {j > 0 && <span className="text-[10px] text-muted">+</span>}
+                                <kbd className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-1 rounded-md bg-gradient-to-b from-surface to-background border border-border text-[11px] font-mono font-medium text-muted shadow-[0_2px_0_0_var(--bdr),0_3px_1px_rgba(0,0,0,0.1)]">
+                                  {k}
+                                </kbd>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
