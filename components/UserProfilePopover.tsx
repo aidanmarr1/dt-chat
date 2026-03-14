@@ -118,17 +118,24 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
             </div>
           ) : profile ? (
             <>
-              {/* Header */}
-              <div className="p-5 pb-3 flex flex-col items-center gap-3 border-b border-border">
-                <Avatar displayName={profile.displayName} userId={profile.id} avatarId={profile.avatarId} size="lg" />
+              {/* Banner header */}
+              <div className="h-20 bg-gradient-to-br from-accent/30 via-accent/15 to-transparent relative">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(var(--acc-rgb),0.15),transparent_70%)]" />
+              </div>
+              {/* Avatar + Info */}
+              <div className="px-5 pb-3 flex flex-col items-center gap-2 -mt-9 relative z-10">
+                <div className="ring-4 ring-surface rounded-full shadow-lg">
+                  <Avatar displayName={profile.displayName} userId={profile.id} avatarId={profile.avatarId} size="lg" />
+                </div>
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-foreground font-heading">{profile.displayName}</h3>
                   <p className="text-xs text-muted">{profile.email}</p>
                   {profile.status && (
-                    <p className="text-xs text-foreground/70 mt-1 px-2 py-0.5 rounded-full bg-surface inline-block">{profile.status}</p>
+                    <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs text-accent bg-accent/10 border border-accent/20">{profile.status}</span>
                   )}
                 </div>
               </div>
+              <div className="h-px bg-border mx-5" />
 
               {/* Bio */}
               <div className="px-5 py-3 border-b border-border">
@@ -141,7 +148,7 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
                       onChange={(e) => {
                         if (e.target.value.length <= 200) setBioValue(e.target.value);
                       }}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent resize-none"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.08)] resize-none transition-shadow"
                       rows={3}
                       placeholder="Tell people about yourself..."
                     />
@@ -173,16 +180,16 @@ export default function UserProfilePopover({ userId, currentUserId, onClose }: U
               </div>
 
               {/* Stats */}
-              <div className="px-5 py-3 flex gap-6">
-                <div>
+              <div className="px-5 py-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-surface border border-border p-3 text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted font-semibold">Joined</p>
-                  <p className="text-sm text-foreground">
+                  <p className="text-sm font-medium text-foreground mt-0.5">
                     {new Date(profile.createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <div>
+                <div className="rounded-xl bg-surface border border-border p-3 text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted font-semibold">Messages</p>
-                  <p className="text-sm text-foreground">{profile.messageCount.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-accent mt-0.5">{profile.messageCount.toLocaleString()}</p>
                 </div>
               </div>
             </>
