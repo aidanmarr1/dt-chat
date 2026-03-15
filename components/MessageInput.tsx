@@ -716,7 +716,7 @@ export default function MessageInput({
               </p>
             </div>
             {uploading && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-border">
+              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-full bg-border">
                 <div
                   className="h-full bg-accent transition-all duration-200 ease-out"
                   style={{ width: `${uploadProgress}%` }}
@@ -764,7 +764,7 @@ export default function MessageInput({
       )}
 
       {/* Input row */}
-        <div className="flex items-end gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="flex items-end gap-1.5 px-3 sm:px-4 py-3">
           {/* Left action buttons — collapsed into a tight group */}
           <div className="flex items-center shrink-0">
             <button
@@ -847,23 +847,23 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-3.5 pt-2.5 pb-8 bg-background border border-border rounded-2xl text-foreground focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-3.5 pt-2.5 pb-8 bg-background border border-border rounded-2xl text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
               {/* Inline toolbar inside the input — formatting left, actions right */}
               <div className="absolute left-1.5 right-1.5 bottom-1 flex items-center justify-between">
                 {/* Formatting buttons — left side */}
                 <div className="flex items-center gap-0.5">
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Bold (Cmd+B)">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("bold"); }} className="p-1 rounded text-muted/60 hover:text-accent transition-colors" title="Bold (Cmd+B)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>
                   </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Italic (Cmd+I)">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("italic"); }} className="p-1 rounded text-muted/60 hover:text-accent transition-colors" title="Italic (Cmd+I)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4" /><line x1="14" y1="20" x2="5" y2="20" /><line x1="15" y1="4" x2="9" y2="20" /></svg>
                   </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="hidden sm:inline-flex p-1 rounded text-muted/40 hover:text-accent transition-colors font-mono text-[11px] font-bold" title="Code">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("code"); }} className="hidden sm:inline-flex p-1 rounded text-muted/60 hover:text-accent transition-colors font-mono text-[11px] font-bold" title="Code">
                     {"</>"}
                   </button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="hidden sm:inline-flex p-1 rounded text-muted/40 hover:text-accent transition-colors" title="Strikethrough">
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); applyFormat("strikeThrough"); }} className="hidden sm:inline-flex p-1 rounded text-muted/60 hover:text-accent transition-colors" title="Strikethrough">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4" /><path d="M14 12a4 4 0 0 1 0 8H6" /><line x1="4" y1="12" x2="20" y2="12" /></svg>
                   </button>
                 </div>
@@ -872,7 +872,7 @@ export default function MessageInput({
                   <button
                     ref={emojiToggleRef}
                     onClick={() => { setShowEmoji(!showEmoji); setShowGif(false); }}
-                    className={`p-1.5 transition-colors rounded-md ${showEmoji ? "text-accent" : "text-muted/40 hover:text-muted"}`}
+                    className={`p-1.5 transition-colors rounded-md ${showEmoji ? "text-accent" : "text-muted/60 hover:text-muted"}`}
                     title="Emoji"
                     aria-label="Insert emoji"
                   >
@@ -886,7 +886,7 @@ export default function MessageInput({
                   <button
                     ref={gifToggleRef}
                     onClick={() => { setShowGif(!showGif); setShowEmoji(false); }}
-                    className={`p-1.5 transition-colors rounded-md ${showGif ? "text-accent" : "text-muted/40 hover:text-muted"}`}
+                    className={`p-1.5 transition-colors rounded-md ${showGif ? "text-accent" : "text-muted/60 hover:text-muted"}`}
                     title="GIF"
                     aria-label="Insert GIF"
                   >
@@ -898,7 +898,7 @@ export default function MessageInput({
                   {onCreatePoll && (
                     <button
                       onClick={onCreatePoll}
-                      className="p-1.5 text-muted/40 hover:text-muted transition-colors rounded-md"
+                      className="p-1.5 text-muted/60 hover:text-muted transition-colors rounded-md"
                       title="Create poll"
                       aria-label="Create poll"
                     >
@@ -927,7 +927,7 @@ export default function MessageInput({
               />
             )}
             {value.length > 500 && (
-              <span className={`absolute bottom-1 right-24 text-[10px] pointer-events-none animate-fade-in flex items-center gap-1.5 ${
+              <span className={`absolute bottom-1 right-24 text-[11px] pointer-events-none animate-fade-in flex items-center gap-1.5 ${
                 value.length > 1950 ? "text-red-400 font-medium"
                 : value.length > 1800 ? "text-orange-400"
                 : value.length > 1500 ? "text-yellow-500/70"
@@ -943,7 +943,7 @@ export default function MessageInput({
           <button
             onClick={handleSend}
             disabled={disabled || uploading || aiChecking || (!value.trim() && !filePreview)}
-            className={`p-2.5 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed shrink-0 active:scale-90 ${
+            className={`p-2.5 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 ${
               (value.trim() || filePreview) && !disabled
                 ? `bg-accent text-background shadow-md shadow-accent/30 hover:brightness-110 hover:shadow-lg hover:shadow-accent/20 ${justSent ? "animate-send-fly" : ""}`
                 : "bg-surface text-muted border border-border"

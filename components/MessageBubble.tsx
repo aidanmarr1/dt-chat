@@ -458,7 +458,7 @@ function MessageBubble({
         id={message.id}
         className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
           isGrouped ? "mb-0.5 msg-bubble" : "mb-3 msg-bubble-spaced"
-        } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-msg-enter-right" : "animate-msg-enter-left") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.02] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
+        } ${isDeleting ? "animate-message-exit pointer-events-none" : isNew ? (isOwn ? "animate-msg-enter-right" : "animate-msg-enter-left") : "animate-fade-in"} group rounded-lg px-2 py-0.5 hover:bg-accent/[0.06] msg-hover-accent transition-colors ${isMentioned ? "ring-1 ring-accent/30 bg-accent/[0.04]" : ""}`}
         onMouseEnter={() => { if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; } setHovered(true); }}
         onMouseLeave={() => { if (!showMoreMenu) { hoverTimeoutRef.current = setTimeout(() => { setHovered(false); setShowActions(false); setShowMoreMenu(false); }, 300); } }}
         onDoubleClick={() => { if (canEdit) startEdit(); }}
@@ -501,7 +501,7 @@ function MessageBubble({
           {/* Reply quote */}
           {message.replyToId && message.replyDisplayName && (
             <div
-              className="flex items-start gap-2 px-3 py-1.5 mb-1 rounded-lg bg-background border-l-2 border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
+              className="flex items-start gap-2 px-3 py-1.5 mb-1 rounded-lg bg-accent/[0.04] border-l-[3px] border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
               onClick={() => {
                 if (onViewThread) {
                   onViewThread(message.replyToId!);
@@ -541,9 +541,9 @@ function MessageBubble({
                 rows={Math.min(editValue.split("\n").length + 1, 5)}
               />
               <div className="flex items-center gap-1.5 mt-1">
-                <button onClick={saveEdit} className="text-[10px] text-accent hover:underline">Save</button>
-                <span className="text-muted text-[10px]">|</span>
-                <button onClick={() => setEditing(false)} className="text-[10px] text-muted hover:text-foreground">Cancel</button>
+                <button onClick={saveEdit} className="text-[11px] text-accent hover:underline">Save</button>
+                <span className="text-muted text-[11px]">|</span>
+                <button onClick={() => setEditing(false)} className="text-[11px] text-muted hover:text-foreground">Cancel</button>
                 <span className="text-muted text-[10px] ml-auto">Enter to save, Esc to cancel</span>
               </div>
             </div>
@@ -567,8 +567,8 @@ function MessageBubble({
             <div
               className={`px-4 py-2.5 rounded-xl ${
                 isOwn
-                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-[0_2px_8px_rgba(var(--acc-rgb),0.12)] ${isGrouped ? "rounded-tr-sm" : ""}`
-                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-sm shadow-black/[0.06] ${isGrouped ? "rounded-tl-sm" : ""}`
+                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-[0_2px_8px_rgba(var(--acc-rgb),0.18),0_1px_3px_rgba(0,0,0,0.06)] ${isGrouped ? "rounded-tr-sm" : ""}`
+                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-[0_1px_4px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] ${isGrouped ? "rounded-tl-sm" : ""}`
               }`}
             >
               {/* File attachment */}
@@ -677,7 +677,7 @@ function MessageBubble({
 
           {/* Timestamp */}
           <p
-            className={`text-[10px] text-muted px-1 cursor-pointer hover:text-foreground flex items-center ${isOwn ? "justify-end" : "justify-start"} gap-1 ${isGrouped ? "mt-0.5 h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-150 overflow-hidden" : "mt-1"}`}
+            className={`text-muted px-1 cursor-pointer hover:text-foreground flex items-center ${isOwn ? "justify-end" : "justify-start"} gap-1 ${isGrouped ? "text-[10px] mt-0.5 h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-150 overflow-hidden" : "text-[11px] mt-1"}`}
             title={new Date(message.createdAt).toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " at " + new Date(message.createdAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: timeFormat !== "24h" })}
             onClick={() => setShowAbsoluteTime((v) => !v)}
           >
@@ -685,7 +685,7 @@ function MessageBubble({
               ? new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: timeFormat !== "24h" })
               : relativeTime(message.createdAt)}
             {isOwn && (
-              <span className={`inline-flex ${message.readBy && message.readBy.length > 0 ? "text-accent drop-shadow-[0_0_3px_rgba(var(--acc-rgb),0.4)]" : "text-muted/70"}`} title={message.readBy && message.readBy.length > 0 ? "Seen" : "Sent"}>
+              <span className={`inline-flex ${message.readBy && message.readBy.length > 0 ? "text-accent drop-shadow-[0_0_3px_rgba(var(--acc-rgb),0.4)]" : "text-muted"}`} title={message.readBy && message.readBy.length > 0 ? "Seen" : "Sent"}>
                 {message.readBy && message.readBy.length > 0 ? (
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="1 8 6 13 14 3" />

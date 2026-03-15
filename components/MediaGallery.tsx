@@ -333,7 +333,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
                   <div
                     key={img.id}
                     className="aspect-square relative rounded-lg overflow-hidden cursor-pointer group animate-fade-scale"
-                    style={{ animationDelay: `${i * 30}ms` }}
+                    style={{ animationDelay: `${i * 40}ms` }}
                     onClick={() => setLightboxSrc(getFileUrl(img))}
                   >
                     <div className="absolute inset-0 animate-shimmer" />
@@ -352,7 +352,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
                     {/* Per-image download button */}
                     <button
                       onClick={(e) => { e.stopPropagation(); downloadSingle(img); }}
-                      className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70 active:scale-90 z-10 cursor-pointer"
+                      className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:bg-black/70 active:scale-90 z-10 cursor-pointer"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
@@ -386,7 +386,7 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{file.fileName}</p>
-                    <p className="text-[10px] text-muted">
+                    <p className="text-[11px] text-muted">
                       {file.displayName} &middot; {formatFileSize(file.fileSize)} &middot; {new Date(file.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </p>
                   </div>

@@ -62,7 +62,7 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
   if (count === 0) {
     return (
       <span className="text-xs text-muted/60 flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-muted/40" />
+        <span className="w-2.5 h-2.5 rounded-full bg-muted/40" />
         No one online
       </span>
     );
@@ -140,7 +140,7 @@ export default function OnlineUsers({ users, count, currentUserId, typingUsers =
                   key={u.id}
                   onClick={() => setProfileUserId(u.id)}
                   className="w-full flex items-center gap-2.5 px-2.5 py-2.5 sm:py-2 rounded-lg hover:bg-background/60 transition-colors animate-fade-in text-left"
-                  style={{ animationDelay: `${i * 30}ms` }}
+                  style={{ animationDelay: `${i * 40}ms` }}
                 >
                   <div className="relative">
                     <Avatar displayName={u.displayName} userId={u.id} avatarId={u.avatarId} size="sm" />

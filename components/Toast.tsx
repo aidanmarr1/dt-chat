@@ -13,6 +13,7 @@ interface ToastItem {
   type: "success" | "info" | "error";
   action?: ToastAction;
   duration: number;
+  dismissing?: boolean;
 }
 
 interface ToastContextValue {
@@ -31,7 +32,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const dismiss = useCallback((id: number) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => prev.map((t) => t.id === id ? { ...t, dismissing: true } : t));
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 200);
   }, []);
 
   const toast = useCallback((message: string, type: "success" | "info" | "error" = "success", action?: ToastAction) => {
@@ -39,7 +43,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const duration = action ? 4000 : 2500;
     setToasts((prev) => [...prev.slice(-2), { id, message, type, action, duration }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+      setToasts((prev) => prev.map((t) => t.id === id ? { ...t, dismissing: true } : t));
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 200);
     }, duration);
   }, []);
 
@@ -51,7 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`rounded-2xl text-sm font-medium shadow-xl backdrop-blur-xl animate-toast-in pointer-events-auto overflow-hidden ${
+            className={`rounded-2xl text-sm font-medium shadow-xl backdrop-blur-xl ${t.dismissing ? "animate-toast-out" : "animate-toast-in"} pointer-events-auto overflow-hidden ${
               t.type === "success"
                 ? "bg-green-500/90 text-white shadow-green-500/30"
                 : t.type === "error"

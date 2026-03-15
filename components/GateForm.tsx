@@ -94,7 +94,7 @@ export default function GateForm() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 px-3 py-2.5 mt-3 bg-red-400/15 border border-red-400/30 rounded-xl animate-shake">
+              <div className="flex items-center gap-2 px-3 py-2.5 mt-3 bg-red-400/15 border border-red-400/30 rounded-xl animate-fade-in">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400 shrink-0"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                 <p className="text-red-400 text-sm">{error}</p>
               </div>

@@ -115,7 +115,7 @@ export default function BookmarksPanel({
                 <div
                   key={bm.messageId}
                   className="px-4 py-3 hover:bg-surface/50 transition-all cursor-pointer group animate-fade-in border-l-2 border-l-transparent hover:border-l-accent hover:shadow-sm hover:-translate-y-px"
-                  style={{ animationDelay: `${i * 50}ms` }}
+                  style={{ animationDelay: `${i * 40}ms` }}
                   onClick={() => {
                     onScrollTo(bm.messageId);
                     handleClose();

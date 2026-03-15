@@ -131,7 +131,7 @@ export default function PinnedMessages({ messages, onScrollTo, onUnpin, onUpdate
             <div
               key={msg.id}
               className="flex items-center gap-2 px-4 py-2 hover:bg-accent/10 transition-colors group animate-fade-in"
-              style={{ animationDelay: `${i * 50}ms` }}
+              style={{ animationDelay: `${i * 40}ms` }}
             >
               <button
                 onClick={() => onScrollTo(msg.id)}

@@ -1374,12 +1374,12 @@ export default function ChatRoom() {
       )}
 
       {/* Header */}
-      <div className={`sticky top-0 z-20 flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
+      <div className={`sticky top-0 z-20 flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-3">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
-              <span className={`relative w-1.5 h-1.5 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500 animate-online-ring"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
+              <span className={`relative w-2 h-2 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500 animate-online-ring"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
             </div>
             <button
               onClick={() => setShowStatusPicker(true)}
@@ -1395,13 +1395,13 @@ export default function ChatRoom() {
           <div className="flex items-center gap-2 mt-0.5">
             <OnlineUsers users={onlineUsers} count={onlineCount} currentUserId={user?.id} typingUsers={typingUsers} />
             {messages.length > 0 && (
-              <span className="text-[10px] text-muted/50 hidden sm:inline">{messages.length.toLocaleString()} messages</span>
+              <span className="text-[11px] text-muted/50 hidden sm:inline">{messages.length.toLocaleString()} messages</span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Desktop toolbar buttons */}
-          <div className="hidden sm:flex items-center gap-0.5 rounded-xl p-0.5 bg-surface/50 border border-border/50">
+          <div className="hidden sm:flex items-center gap-1 rounded-xl p-0.5 bg-surface/50 border border-border/50">
             {/* Search — promoted to first for discoverability */}
             <button
               onClick={() => setShowSearch(true)}
@@ -1488,14 +1488,25 @@ export default function ChatRoom() {
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowMobileMenu(false)} />
                 <div className="absolute right-0 top-full mt-1.5 w-52 bg-surface/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl shadow-black/20 z-40 overflow-hidden animate-slide-down p-1.5">
+                  <p className="text-[9px] uppercase tracking-wider text-muted/60 font-semibold px-3 pt-2 pb-0.5">Browse</p>
                   {[
                     { label: "Search", icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>, action: () => { setShowSearch(true); setShowMobileMenu(false); } },
                     { label: "Media", icon: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></>, action: () => { setShowMediaGallery(true); setShowMobileMenu(false); } },
+                  ].map((item, i) => (
+                    <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-foreground hover:bg-border/40 active:bg-border/60 transition-colors rounded-lg animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
+                        {item.icon}
+                      </svg>
+                      <span className="flex-1 text-left">{item.label}</span>
+                    </button>
+                  ))}
+                  <p className="text-[9px] uppercase tracking-wider text-muted/60 font-semibold px-3 pt-2 pb-0.5">Saved</p>
+                  {[
                     { label: "Bookmarks", badge: bookmarks.length, icon: <><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></>, action: () => { setShowBookmarks(true); setShowMobileMenu(false); } },
                     { label: "To-Do", badge: todoCount, icon: <><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></>, action: () => { setShowTodos(true); setShowMobileMenu(false); } },
                     { label: "Reminders", badge: reminders.length, icon: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>, action: () => { setShowReminders(true); setShowMobileMenu(false); } },
                   ].map((item, i) => (
-                    <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-foreground hover:bg-border/40 active:bg-border/60 transition-colors rounded-lg animate-fade-in" style={{ animationDelay: `${i * 30}ms` }}>
+                    <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-foreground hover:bg-border/40 active:bg-border/60 transition-colors rounded-lg animate-fade-in" style={{ animationDelay: `${(i + 2) * 40}ms` }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0">
                         {item.icon}
                       </svg>
