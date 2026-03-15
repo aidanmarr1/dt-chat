@@ -100,11 +100,12 @@ export default function AuthForm() {
     <div className="min-h-dvh flex items-center justify-center px-4 relative">
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/8 blur-3xl animate-float-slow" />
-        <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:2.5s]" />
-        <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/4 blur-3xl animate-float-slow [animation-delay:5s]" />
+        <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-accent/10 blur-3xl animate-float-slow" />
+        <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-accent/8 blur-3xl animate-float-slow [animation-delay:2.5s]" />
+        <div className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-accent/6 blur-3xl animate-float-slow [animation-delay:5s]" />
+        <div className="absolute bottom-1/3 left-1/4 w-44 h-44 rounded-full bg-accent/4 blur-3xl animate-float-slower [animation-delay:7s]" />
         {/* Dot grid texture */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(var(--acc-rgb),0.04)_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(var(--acc-rgb),0.06)_1px,transparent_1px)] [background-size:24px_24px]" />
       </div>
 
       <div className="absolute top-4 right-4 z-10">
@@ -114,7 +115,7 @@ export default function AuthForm() {
       <div className="w-full max-w-sm animate-fade-scale relative z-10">
         {/* Logo — above the card */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-lg shadow-accent/10 animate-spring-in">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden shadow-xl shadow-accent/15 ring-1 ring-accent/10 animate-spring-in">
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 512 512">
               <defs>
                 <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -126,7 +127,7 @@ export default function AuthForm() {
               <path d="M256 112c-88.4 0-160 60.3-160 134.6 0 42.1 22.9 79.8 58.8 105.2l-14.8 54.2 62.4-31.2c16.8 5.2 35 8 54 8 88.4 0 160-60.3 160-134.6S344.4 112 256 112z" fill="url(#fg)"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+          <h1 className="text-2xl font-semibold tracking-tight font-heading">D&T <span className="text-accent" style={{ textShadow: '0 0 16px rgba(var(--acc-rgb), 0.25)' }}>Chat</span></h1>
           <div className="relative h-5 mt-1">
             <p className={`text-sm text-muted font-heading transition-all duration-300 absolute inset-x-0 ${tab === "login" ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1 pointer-events-none"}`}>
               Welcome back
@@ -138,8 +139,8 @@ export default function AuthForm() {
         </div>
 
         {/* Glassmorphic card */}
-        <div className={`bg-surface/60 backdrop-blur-xl border rounded-2xl shadow-2xl shadow-black/10 p-6 sm:p-8 transition-all hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] ${
-          success ? "border-green-500/40" : "border-border/60"
+        <div className={`bg-surface/50 backdrop-blur-2xl border rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] p-6 sm:p-8 transition-all hover:border-border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04),0_25px_50px_-12px_rgba(0,0,0,0.25)] ${
+          success ? "border-green-500/40" : "border-border/50"
         }`}>
           {/* Tab Toggle with sliding indicator (same animation as settings SegmentedControl) */}
           <div className="relative flex mb-6 bg-surface rounded-xl p-1 border border-border">
@@ -198,7 +199,7 @@ export default function AuthForm() {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="How others will see you"
-                      className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.15),0_0_20px_rgba(var(--acc-rgb),0.06)] focus:shadow-md transition-all shadow-sm"
                       required={tab === "signup"}
                       disabled={success}
                       tabIndex={tab === "signup" ? 0 : -1}
@@ -220,7 +221,7 @@ export default function AuthForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.15),0_0_20px_rgba(var(--acc-rgb),0.06)] focus:shadow-md transition-all shadow-sm"
                   required
                   disabled={success}
                 />
@@ -239,7 +240,7 @@ export default function AuthForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={tab === "signup" ? "At least 8 characters" : "Enter your password"}
-                  className="w-full pl-11 pr-11 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm"
+                  className="w-full pl-11 pr-11 py-3 bg-surface border border-border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.15),0_0_20px_rgba(var(--acc-rgb),0.06)] focus:shadow-md transition-all shadow-sm"
                   required
                   disabled={success}
                 />
@@ -308,7 +309,7 @@ export default function AuthForm() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Type it again"
-                      className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.12)] focus:shadow-md transition-all shadow-sm ${
+                      className={`w-full pl-11 pr-11 py-3 bg-surface border rounded-xl text-base text-foreground placeholder:text-muted/60 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.15),0_0_20px_rgba(var(--acc-rgb),0.06)] focus:shadow-md transition-all shadow-sm ${
                         confirmPassword && confirmPassword !== password
                           ? "border-red-400/50"
                           : confirmPassword && confirmPassword === password

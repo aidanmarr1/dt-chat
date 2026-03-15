@@ -1342,7 +1342,7 @@ export default function ChatRoom() {
             </div>
           ))}
         </div>
-        <div className="border-t border-border px-4 py-4 glass">
+        <div className="border-t border-border px-4 py-4 glass-premium">
           <div className="h-11 rounded-xl animate-shimmer" />
         </div>
       </div>
@@ -1353,9 +1353,10 @@ export default function ChatRoom() {
     <div className="flex flex-col h-dvh relative" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* Ambient background orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/[0.04] blur-3xl animate-float-slow" />
-        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-accent/[0.03] blur-3xl animate-float-slower" />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full bg-accent/[0.025] blur-3xl animate-float-slow [animation-delay:4s]" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-accent/[0.05] blur-3xl animate-float-slow" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-accent/[0.04] blur-3xl animate-float-slower" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full bg-accent/[0.03] blur-3xl animate-float-slow [animation-delay:4s]" />
+        <div className="absolute bottom-1/4 left-1/3 w-48 h-48 rounded-full bg-accent/[0.025] blur-3xl animate-float-slower [animation-delay:6s]" />
       </div>
       {/* Connection status banner */}
       {showConnectionIssue && (
@@ -1374,11 +1375,11 @@ export default function ChatRoom() {
       )}
 
       {/* Header */}
-      <div className={`sticky top-0 z-20 flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 border-b border-border glass header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
+      <div className={`sticky top-0 z-20 flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 border-b border-border glass-premium header-gradient header-accent-line transition-shadow ${headerShadow ? "shadow-lg shadow-background/50" : ""}`}>
         <div className="min-w-0 mr-3">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
-              <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent">Chat</span></h1>
+              <h1 className="text-base sm:text-lg font-semibold tracking-tight font-heading">D&T <span className="text-accent" style={{ textShadow: '0 0 12px rgba(var(--acc-rgb), 0.3)' }}>Chat</span></h1>
               <span className={`relative w-2 h-2 rounded-full transition-colors ${showConnectionIssue ? "bg-yellow-500 animate-online-pulse" : "bg-green-500 animate-online-ring"}`} title={showConnectionIssue ? "Connection issue" : "Connected"} />
             </div>
             <button
@@ -1401,7 +1402,7 @@ export default function ChatRoom() {
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Desktop toolbar buttons */}
-          <div className="hidden sm:flex items-center gap-1 rounded-xl p-0.5 bg-surface/50 border border-border/50">
+          <div className="hidden sm:flex items-center gap-1 rounded-xl p-0.5 bg-surface/40 border border-border/30 shadow-inner shadow-black/5">
             {/* Search — promoted to first for discoverability */}
             <button
               onClick={() => setShowSearch(true)}
@@ -1648,8 +1649,11 @@ export default function ChatRoom() {
                   {i % 2 !== 1 && <div className="w-7 h-7 rounded-full animate-shimmer mr-2.5 mt-1 shrink-0" />}
                   <div className="space-y-1.5" style={{ width: `${w * 55}%` }}>
                     {i % 2 !== 1 && <div className="h-3 w-16 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 30}ms` }} />}
-                    <div className={`rounded-2xl animate-shimmer ${i % 2 === 1 ? "h-10" : "h-14"}`} style={{ animationDelay: `${i * 80 + 60}ms` }} />
-                    <div className="h-2.5 w-12 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 90}ms` }} />
+                    <div className={`rounded-2xl animate-shimmer ${i % 3 === 0 ? "h-20" : i % 2 === 1 ? "h-10" : "h-14"}`} style={{ animationDelay: `${i * 80 + 60}ms` }} />
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-12 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 90}ms` }} />
+                      <div className="h-2 w-10 rounded-md animate-shimmer" style={{ animationDelay: `${i * 80 + 110}ms` }} />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1657,25 +1661,26 @@ export default function ChatRoom() {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-5">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center animate-gentle-float shadow-lg shadow-accent/5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+                <div className="w-24 h-24 rounded-2xl bg-accent/10 border border-accent/20 ring-1 ring-accent/20 flex items-center justify-center animate-gentle-float shadow-xl shadow-accent/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                 </div>
                 <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center animate-spring-in" style={{ animationDelay: "0.5s" }}>
                   <span className="text-xs">✨</span>
                 </div>
+                <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center animate-spring-in" style={{ animationDelay: "0.7s" }}>
+                  <span className="text-[10px]">💬</span>
+                </div>
               </div>
               <div className="text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
-                <p className="text-lg text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
+                <p className="text-xl text-foreground font-medium mb-1 font-heading">{getGreeting()}, {user.displayName}!</p>
                 <p className="text-muted text-sm">No messages yet — start the conversation!</p>
               </div>
-              <div className="flex items-center gap-3 text-muted/50 text-xs animate-fade-in" style={{ animationDelay: "0.4s" }}>
-                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">/</kbd> focus</span>
-                <span className="w-px h-3 bg-border" />
-                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">@</kbd> mention</span>
-                <span className="w-px h-3 bg-border" />
-                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-muted text-[10px] font-mono">?</kbd> shortcuts</span>
+              <div className="flex flex-wrap justify-center items-center gap-2 text-muted/50 text-xs animate-fade-in" style={{ animationDelay: "0.4s" }}>
+                <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface/60 border border-border/50 backdrop-blur-sm"><kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-muted text-[10px] font-mono">/</kbd> focus</span>
+                <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface/60 border border-border/50 backdrop-blur-sm"><kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-muted text-[10px] font-mono">@</kbd> mention</span>
+                <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface/60 border border-border/50 backdrop-blur-sm"><kbd className="px-1.5 py-0.5 rounded bg-background border border-border text-muted text-[10px] font-mono">?</kbd> shortcuts</span>
               </div>
             </div>
           ) : (
@@ -1714,10 +1719,10 @@ export default function ChatRoom() {
           <div className="absolute bottom-4 right-4 z-10 animate-fab-in">
             <button
               onClick={scrollToBottom}
-              className={`relative w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 shadow-lg ${
+              className={`relative w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 ${
                 showNewMessages
-                  ? "bg-accent text-background shadow-accent/25 hover:shadow-accent/40 hover:shadow-xl animate-glow-pulse"
-                  : "bg-surface/90 backdrop-blur-sm border border-border text-muted hover:text-foreground hover:border-accent hover:shadow-md"
+                  ? "bg-gradient-to-b from-accent to-accent/85 text-background shadow-xl shadow-accent/30 hover:shadow-accent/40 hover:shadow-2xl animate-fab-pulse"
+                  : "bg-surface/90 backdrop-blur-sm border border-border text-muted hover:text-foreground hover:border-accent hover:shadow-md shadow-lg"
               }`}
               aria-label={showNewMessages ? `${unreadCount} new messages` : "Scroll to bottom"}
             >

@@ -417,7 +417,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
       />
 
       {/* Mobile: full-screen sheet from bottom. Desktop: centered modal */}
-      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[860px] sm:h-[min(38rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border sm:rounded-2xl shadow-2xl shadow-black/30 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div className="relative w-full h-full sm:w-[calc(100vw-2rem)] sm:max-w-[860px] sm:h-[min(38rem,calc(100dvh-4rem))] bg-surface sm:border sm:border-border/60 sm:rounded-2xl shadow-2xl shadow-black/40 overflow-hidden flex flex-col sm:flex-row animate-fade-scale" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
 
         {/* === MOBILE HEADER === */}
         <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-border sm:hidden relative">
@@ -453,7 +453,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
         </div>
 
         {/* === DESKTOP SIDEBAR === */}
-        <div className="hidden sm:flex sm:w-48 shrink-0 sm:border-r border-border bg-background/50 flex-col">
+        <div className="hidden sm:flex sm:w-48 shrink-0 sm:border-r border-border bg-gradient-to-b from-background/60 to-background/40 flex-col">
           <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
             <Avatar displayName={user.displayName} userId={user.id} avatarId={user.avatarId} size="md" />
             <div className="min-w-0 flex-1">
@@ -471,7 +471,7 @@ export default function SettingsMenu({ user, onAvatarChange, onBioChange, onLogo
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${
                   tab === t.id
-                    ? "bg-accent/10 text-accent border-l-2 border-l-accent"
+                    ? "bg-accent/10 text-accent border-l-2 border-l-accent shadow-[inset_0_0_12px_rgba(var(--acc-rgb),0.06)]"
                     : "text-muted hover:text-foreground hover:bg-surface border-l-2 border-l-transparent"
                 }`}
               >

@@ -123,7 +123,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   }
 
   return (
-    <div className="relative group/code my-1.5 rounded-xl overflow-hidden border border-border code-block-bg">
+    <div className="relative group/code my-1.5 rounded-xl overflow-hidden border border-border code-block-bg shadow-md">
       <div className="flex items-center justify-between px-3 py-1.5 code-block-header text-[10px] text-muted">
         <span className="flex items-center gap-1.5 tracking-wider font-medium">
           <span className="text-accent font-mono text-[9px] bg-accent/10 px-1.5 py-0.5 rounded">&lt;/&gt;</span>
@@ -501,7 +501,7 @@ function MessageBubble({
           {/* Reply quote */}
           {message.replyToId && message.replyDisplayName && (
             <div
-              className="flex items-start gap-2 px-3 py-1.5 mb-1 rounded-lg bg-accent/[0.04] border-l-[3px] border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all"
+              className="flex items-start gap-2 px-3 py-1.5 mb-1 rounded-lg bg-accent/[0.06] border-l-[3px] border-accent text-xs cursor-pointer hover:bg-border/30 active:scale-[0.99] transition-all shadow-sm"
               onClick={() => {
                 if (onViewThread) {
                   onViewThread(message.replyToId!);
@@ -567,8 +567,8 @@ function MessageBubble({
             <div
               className={`px-4 py-2.5 rounded-xl ${
                 isOwn
-                  ? `msg-bubble-sent bg-foreground text-background rounded-br-sm shadow-[0_2px_8px_rgba(var(--acc-rgb),0.18),0_1px_3px_rgba(0,0,0,0.06)] ${isGrouped ? "rounded-tr-sm" : ""}`
-                  : `msg-bubble-content bg-surface border border-border text-foreground rounded-bl-sm shadow-[0_1px_4px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] ${isGrouped ? "rounded-tl-sm" : ""}`
+                  ? `msg-bubble-sent bg-gradient-to-br from-foreground to-foreground/90 text-background rounded-br-sm shadow-[0_2px_12px_rgba(var(--acc-rgb),0.22),0_1px_4px_rgba(0,0,0,0.1)] ${isGrouped ? "rounded-tr-sm" : ""}`
+                  : `msg-bubble-content bg-surface border border-border/80 text-foreground rounded-bl-sm shadow-[0_2px_8px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.08)] ${isGrouped ? "rounded-tl-sm" : ""}`
               }`}
             >
               {/* File attachment */}

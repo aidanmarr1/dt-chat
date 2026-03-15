@@ -642,7 +642,7 @@ export default function MessageInput({
 
   return (
     <div
-      className={`border-t border-border glass input-accent-line-focus ${
+      className={`border-t border-border/60 glass-premium input-accent-line-focus ${
         dragOver ? "ring-2 ring-accent ring-inset" : ""
       }`}
       onDragOver={handleDragOver}
@@ -694,7 +694,7 @@ export default function MessageInput({
       {/* File preview */}
       {filePreview && (
         <div className="flex items-center gap-2 px-4 pt-3 pb-1 animate-slide-up">
-          <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg relative overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border/60 rounded-lg relative overflow-hidden shadow-sm">
             {filePreview.previewUrl ? (
               <img
                 src={filePreview.previewUrl}
@@ -847,7 +847,7 @@ export default function MessageInput({
                 onClick={handleClick}
                 onPaste={handlePaste}
                 data-placeholder={placeholder}
-                className="w-full px-3.5 pt-2.5 pb-8 bg-background border border-border rounded-2xl text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
+                className="w-full px-3.5 pt-2.5 pb-8 bg-background border border-border rounded-2xl text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-accent/50 focus:shadow-[0_0_0_3px_rgba(var(--acc-rgb),0.1),0_0_12px_rgba(var(--acc-rgb),0.06),0_0_32px_rgba(var(--acc-rgb),0.04)] text-base sm:text-sm min-h-[42px] max-h-[120px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted empty:before:pointer-events-none"
                 style={{ transition: "border-color 0.2s ease, box-shadow 0.2s ease", wordBreak: "break-word", userSelect: "text", WebkitUserSelect: "text", caretColor: "auto" }}
               />
               {/* Inline toolbar inside the input — formatting left, actions right */}
@@ -945,7 +945,7 @@ export default function MessageInput({
             disabled={disabled || uploading || aiChecking || (!value.trim() && !filePreview)}
             className={`p-2.5 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90 ${
               (value.trim() || filePreview) && !disabled
-                ? `bg-accent text-background shadow-md shadow-accent/30 hover:brightness-110 hover:shadow-lg hover:shadow-accent/20 ${justSent ? "animate-send-fly" : ""}`
+                ? `bg-gradient-to-b from-accent to-accent/85 text-background shadow-lg shadow-accent/30 hover:brightness-110 hover:shadow-xl hover:shadow-accent/25 ${justSent ? "animate-send-fly" : ""}`
                 : "bg-surface text-muted border border-border"
             }`}
           >
