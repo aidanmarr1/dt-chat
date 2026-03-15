@@ -336,13 +336,22 @@ export default function MediaGallery({ onClose }: MediaGalleryProps) {
                     style={{ animationDelay: `${i * 40}ms` }}
                     onClick={() => setLightboxSrc(getFileUrl(img))}
                   >
-                    <div className="absolute inset-0 animate-shimmer" />
+                    <div className="absolute inset-0 animate-shimmer" data-shimmer />
                     <img
                       src={getFileUrl(img)}
                       alt={img.fileName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
-                      onLoad={(e) => (e.currentTarget.style.opacity = "1")}
+                      onLoad={(e) => {
+                        e.currentTarget.style.opacity = "1";
+                        const shimmer = e.currentTarget.parentElement?.querySelector("[data-shimmer]") as HTMLElement | null;
+                        if (shimmer) shimmer.style.display = "none";
+                      }}
+                      onError={(e) => {
+                        const shimmer = e.currentTarget.parentElement?.querySelector("[data-shimmer]") as HTMLElement | null;
+                        if (shimmer) shimmer.style.display = "none";
+                        e.currentTarget.style.display = "none";
+                      }}
                       style={{ opacity: 0, transition: "opacity 0.3s ease" }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
